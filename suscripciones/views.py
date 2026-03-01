@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.db.models import Q
 from django.views.generic import ListView
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib import messages
@@ -14,7 +15,24 @@ class SuscripcionListView(UserPassesTestMixin, ListView):
 
     def get_queryset(self):
         # We generally want to see students. All subscriptions belong to users (usually students).
-        return Subscription.objects.select_related('user', 'creador').order_by('-id')
+        queryset = Subscription.objects.select_related('user', 'creador').order_by('-id')
+        
+        q = self.request.GET.get('q')
+        if q:
+            queryset = queryset.filter(
+                Q(user__first_name__unaccent__icontains=q) |
+                Q(user__last_name__unaccent__icontains=q) |
+                Q(user__username__unaccent__icontains=q) |
+                Q(user__email__unaccent__icontains=q) |
+                Q(user__numero_documento__icontains=q)
+            )
+            
+        return queryset
+        
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['q'] = self.request.GET.get('q', '')
+        return context
 
     def post(self, request, *args, **kwargs):
         # Handle bulk actions
