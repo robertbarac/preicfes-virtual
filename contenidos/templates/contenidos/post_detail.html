@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.titulo }} | PreVirtual{% endblock %}
+
+{% block content %}
+<article class="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden mb-12">
+    <!-- Encabezado del Post -->
+    <header class="bg-gradient-to-r from-indigo-600 to-blue-500 px-8 py-10 text-white">
+        <div class="flex items-center space-x-2 text-indigo-100 text-sm font-medium mb-3">
+            <span>{{ post.modulo.nombre|default:"Estructura Base" }}</span>
+            <span>&bull;</span>
+            <span>{{ post.tema.nombre|default:"Lección Core" }}</span>
+        </div>
+        <h1 class="text-4xl font-extrabold tracking-tight mb-2">{{ post.titulo }}</h1>
+        <div class="opacity-80 text-sm">
+            Publicado el {{ post.fecha_creacion|date:"d de F, Y" }}
+        </div>
+    </header>
+
+    <!-- Cuerpo y Rendiraje de Bloques Perfectamente en Orden -->
+    <div class="px-8 py-10 prose prose-indigo max-w-none text-gray-700 leading-relaxed">
+        
+        {% if bloques %}
+            {% for bloque in bloques %}
+                <div class="mb-8" id="bloque-{{ bloque.id }}">
+                    
+                    {% if bloque.tipo == 'texto' %}
+                        <!-- RENDERIZA TEXTO ENRIQUECIDO O PÁRRAFO -->
+                        <div class="text-lg">
+                            {{ bloque.contenido_texto|safe|linebreaks }}
+                        </div>
+                    
+                    {% elif bloque.tipo == 'imagen' %}
+                        <!-- RENDERIZA IMAGEN O GIF O CENTRADO -->
+                        {% if bloque.archivo_imagen %}
+                        <figure class="my-6 text-center">
+                            <img src="{{ bloque.archivo_imagen.url }}" alt="Imagen de soporte" class="rounded-xl shadow-lg mx-auto border border-gray-200" style="max-height: 500px">
+                        </figure>
+                        {% endif %}
+                    
+                    {% elif bloque.tipo == 'youtube' %}
+                        <!-- RENDERIZA VIDEO EMBED DE YOUTUBE PERFECTAMENTE RESPONSIVE -->
+                        {% if bloque.url %}
+                        <div class="relative w-full overflow-hidden rounded-xl shadow-lg my-8" style="padding-top: 56.25%;">
+                            <iframe class="absolute top-0 left-0 w-full h-full" src="{{ bloque.youtube_embed_url }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                        {% endif %}
+                    
+                    {% elif bloque.tipo == 'enlace' %}
+                        <!-- RENDERIZA ENLACE TIPO CALL TO ACTION -->
+                        <div class="my-6">
+                            <a href="{{ bloque.url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center bg-gray-100 hover:bg-indigo-50 text-indigo-700 font-semibold px-6 py-4 rounded-lg border border-indigo-100 transition-colors w-full sm:w-auto shadow-sm">
+                                <svg class="w-5 h-5 mr-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                <span>Ir a recurso externo</span>
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <!-- Acciones del bloque (Admin/Staff) -->
+                    {% if request.user.is_staff or post.creador == request.user %}
+                    <div class="flex justify-end space-x-2 mt-2 opacity-50 hover:opacity-100 transition-opacity">
+                        <a href="{% url 'contenidos:bloque_update' bloque.pk %}" class="text-xs bg-gray-100 hover:bg-indigo-100 text-gray-600 hover:text-indigo-800 px-2 py-1 rounded">Editar Bloque</a>
+                        <a href="{% url 'contenidos:bloque_delete' bloque.pk %}" class="text-xs bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-800 px-2 py-1 rounded">Eliminar</a>
+                    </div>
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+        {% else %}
+            <!-- El creador no ha añadido bloques todavía -->
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded text-yellow-700">
+                <p>Este post aún no tiene contenido. ¡Es hora de agregar bloques (Texto, Imágenes, Videos)!</p>
+            </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Navegación y Adms -->
+    <div class="bg-gray-50 border-t border-gray-100 px-8 py-5 flex justify-between items-center">
+        <a href="{% url 'contenidos:post_list' %}" class="text-indigo-600 hover:text-indigo-900 font-semibold flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Volver a contenidos
+        </a>
+        <div class="flex space-x-3">
+            {% if perms.contenidos.change_post or user.is_staff %}
+            <a href="{% url 'contenidos:post_update' post.pk %}" class="bg-white border hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded shadow-sm text-sm transition-colors">Editar Meta del Post</a>
+            {% endif %}
+            {% if perms.contenidos.add_bloquepost or user.is_staff %}
+            <a href="{% url 'contenidos:bloque_create' post.pk %}" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded shadow-sm text-sm transition-colors">+ Añadir Bloque</a>
+            {% endif %}
+        </div>
+    </div>
+</article>
+{% endblock %}

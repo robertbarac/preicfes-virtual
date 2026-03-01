@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">Programa Completo</h1>
+    <a href="{% url 'curriculo:modulo_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow">
+        + Nuevo Módulo
+    </a>
+</div>
+
+<div class="space-y-6">
+    {% for modulo in modulos %}
+    <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+        
+        <!-- Cabecera del Módulo -->
+        <div class="bg-gray-50 border-b border-gray-200 p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+            <div>
+                <h2 class="text-2xl font-bold text-indigo-700 flex items-center gap-2">
+                    {{ modulo.nombre }}
+                    <a href="{% url 'curriculo:modulo_update' modulo.pk %}" class="text-xs font-normal text-indigo-400 hover:text-indigo-600 hover:underline">(Editar Módulo)</a>
+                </h2>
+                {% if modulo.descripcion %}
+                <p class="text-sm text-gray-600 mt-1">{{ modulo.descripcion }}</p>
+                {% endif %}
+            </div>
+            <div class="mt-4 sm:mt-0 flex flex-wrap gap-2">
+                <a href="{% url 'contenidos:post_create' %}?modulo={{ modulo.id }}" class="text-xs font-semibold bg-indigo-100 hover:bg-indigo-200 text-indigo-800 py-1.5 px-3 rounded">
+                    + Contenido
+                </a>
+                <a href="{% url 'evaluaciones:taller_create' %}?modulo={{ modulo.id }}" class="text-xs font-semibold bg-green-100 hover:bg-green-200 text-green-800 py-1.5 px-3 rounded">
+                    + Taller
+                </a>
+                <a href="{% url 'evaluaciones:simulacro_create' %}?modulo={{ modulo.id }}" class="text-xs font-semibold bg-red-100 hover:bg-red-200 text-red-800 py-1.5 px-3 rounded">
+                    + Simulacro
+                </a>
+            </div>
+        </div>
+        
+        <!-- Contenidos del Módulo -->
+        <div class="p-5">
+            <details class="group">
+                <summary class="cursor-pointer text-sm font-semibold text-gray-700 hover:text-indigo-600 list-none flex items-center mb-2">
+                    <svg class="w-5 h-5 mr-2 transform group-open:rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    Ver Contenidos de esta Semana
+                </summary>
+                
+                <div class="mt-4 ml-7 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+                    
+                    <!-- Posts / Contenidos -->
+                    {% for post in modulo.posts.all %}
+                        {% if post.estado == 'publicado' or request.user.is_staff %}
+                        <div class="bg-white border rounded p-4 hover:shadow transition relative flex flex-col justify-between">
+                            <div>
+                                <div class="text-[10px] bg-indigo-100 text-indigo-800 rounded px-2 py-0.5 inline-block mb-2 font-bold uppercase tracking-wider">Lección / Contenido</div>
+                                <h3 class="font-bold text-gray-800 mb-1">
+                                    <a href="{% url 'contenidos:post_detail' post.pk %}" class="hover:text-indigo-600">{{ post.titulo }}</a>
+                                </h3>
+                                <p class="text-xs text-gray-500 mb-2">Estado: {{ post.get_estado_display }}</p>
+                            </div>
+                            <div class="flex justify-end gap-2 text-xs border-t pt-2 mt-2">
+                                <a href="{% url 'contenidos:post_update' post.pk %}" class="text-indigo-600 hover:underline">Editar</a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% empty %}
+                        <!-- No posts -->
+                    {% endfor %}
+
+                    <!-- Talleres -->
+                    {% for taller in modulo.talleres.all %}
+                        <div class="bg-white border rounded p-4 hover:shadow transition relative flex flex-col justify-between">
+                            <div>
+                                <div class="text-[10px] bg-green-100 text-green-800 rounded px-2 py-0.5 inline-block mb-2 font-bold uppercase tracking-wider">Taller Interactivo</div>
+                                <h3 class="font-bold text-gray-800 mb-1">
+                                    <a href="{% url 'evaluaciones:taller_detail' taller.pk %}" class="hover:text-green-600">{{ taller.titulo }}</a>
+                                </h3>
+                            </div>
+                            <div class="flex justify-end gap-2 text-xs border-t pt-2 mt-2">
+                                <a href="{% url 'evaluaciones:taller_update' taller.pk %}" class="text-green-600 hover:underline">Editar</a>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <!-- No talleres -->
+                    {% endfor %}
+
+                    <!-- Simulacros -->
+                    {% for simulacro in modulo.simulacros.all %}
+                        <div class="bg-white border rounded p-4 hover:shadow transition relative flex flex-col justify-between">
+                            <div>
+                                <div class="text-[10px] bg-red-100 text-red-800 rounded px-2 py-0.5 inline-block mb-2 font-bold uppercase tracking-wider">Simulacro ICFES</div>
+                                <h3 class="font-bold text-gray-800 mb-1">
+                                    <a href="{% url 'evaluaciones:simulacro_detail' simulacro.pk %}" class="hover:text-red-600">{{ simulacro.titulo }}</a>
+                                </h3>
+                            </div>
+                            <div class="flex justify-end gap-2 text-xs border-t pt-2 mt-2">
+                                <a href="{% url 'evaluaciones:simulacro_update' simulacro.pk %}" class="text-red-600 hover:underline">Editar</a>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <!-- No simulacros -->
+                    {% endfor %}
+                    
+                </div>
+            </details>
+        </div>
+
+    </div>
+    {% empty %}
+    <div class="text-center py-12 bg-white rounded-lg shadow border border-gray-100">
+        <p class="mt-4 font-medium text-gray-900">Aún no hay módulos creados en el programa.</p>
+        <p class="text-gray-500 mt-1">Acércate al panel de administración o usa el botón superior para crear el primero.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

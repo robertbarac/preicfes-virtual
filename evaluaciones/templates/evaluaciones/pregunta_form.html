@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Nueva Pregunta | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mb-12">
+    <!-- Encabezado -->
+    <header class="bg-white shadow-sm rounded-xl px-8 py-6 mb-8 border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-800">Crear Nueva Pregunta</h1>
+            <p class="text-gray-500 mt-1">Añade una pregunta al banco con sus opciones de respuesta.</p>
+        </div>
+        <div>
+            <a href="javascript:history.back()" class="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-5 py-2.5 rounded-lg transition-colors border border-gray-200 shadow-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Volver
+            </a>
+        </div>
+    </header>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="mb-6 px-4 py-3 rounded-lg shadow-sm border {% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-800{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-200 text-yellow-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %} flex justify-between items-center">
+                <span>{{ message }}</span>
+                <button type="button" onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-900 focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-8">
+        {% csrf_token %}
+        
+        <!-- Datos de la Pregunta -->
+        <section class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="bg-indigo-600 px-6 py-4 border-b border-indigo-700">
+                <h2 class="text-xl font-bold text-white">Detalles de la Pregunta</h2>
+            </div>
+            <div class="p-6 space-y-5">
+                <div>
+                    <label for="{{ form.tema.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Tema Asociado</label>
+                    {{ form.tema }}
+                    {% if form.tema.errors %}<p class="text-red-500 text-xs mt-1">{{ form.tema.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.enunciado.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Enunciado / Pregunta</label>
+                    {{ form.enunciado }}
+                    {% if form.enunciado.errors %}<p class="text-red-500 text-xs mt-1">{{ form.enunciado.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Imágenes de la Pregunta (Formset) -->
+        <section class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden" id="imagenes-section">
+            <div class="bg-blue-50 px-6 py-4 border-b border-blue-200 flex justify-between items-center text-blue-800">
+                <h2 class="text-xl font-bold flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Imágenes de Apoyo al Enunciado (Opcional)
+                </h2>
+                <button type="button" id="add-imagen-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded shadow transition-colors flex items-center text-sm">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Añadir Imagen
+                </button>
+            </div>
+            <div class="p-6">
+                {{ imagenes_pregunta.management_form }}
+                <div id="imagenes-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for img_form in imagenes_pregunta %}
+                    <div class="imagen-form bg-gray-50 border border-gray-200 rounded p-4 relative group hover:border-blue-300">
+                        {{ img_form.id }}
+                        <div class="mb-3">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Seleccionar Imagen</label>
+                            {{ img_form.imagen }}
+                        </div>
+                        <div class="mb-2">
+                            {{ img_form.descripcion }}
+                        </div>
+                        {% if imagenes_pregunta.can_delete %}
+                        <div class="flex justify-end border-t border-gray-200 pt-2 mt-3">
+                            <label class="flex items-center space-x-1 text-red-500 text-sm cursor-pointer hover:text-red-700">
+                                {{ img_form.DELETE }}
+                                <span>Eliminar Imagen</span>
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Opciones (Formset) -->
+        <section class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden" id="opciones-section">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <h2 class="text-xl font-bold text-gray-800">Opciones de Respuesta</h2>
+                    <span class="text-sm text-gray-500">(Marca al menos una como correcta)</span>
+                </div>
+                <button type="button" id="add-opcion-btn" class="bg-gray-800 hover:bg-black text-white font-bold py-1.5 px-3 rounded shadow transition-colors flex items-center text-sm">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Añadir Opción
+                </button>
+            </div>
+            <div class="p-6">
+                {{ opciones.management_form }}
+                
+                <div id="opciones-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% for opcion_form in opciones %}
+                        <div class="opcion-form bg-gray-50 rounded-lg p-5 border border-gray-200 relative group transition-all hover:bg-white hover:border-indigo-200 hover:shadow-md">
+                            
+                            {{ opcion_form.id }}
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Texto de la Opción</label>
+                                {{ opcion_form.texto }}
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1 border-t pt-3 border-gray-200 mt-2">O, Imagen de Opción</label>
+                                {{ opcion_form.imagen }}
+                            </div>
+                            
+                            <div class="flex items-center justify-between mt-5 pt-3 border-t border-gray-200">
+                                <label class="flex items-center space-x-2 cursor-pointer group-hover:text-indigo-700">
+                                    {{ opcion_form.es_correcta }}
+                                    <span class="text-sm font-bold text-gray-700">¿Es la respuesta correcta?</span>
+                                </label>
+                                
+                                {% if opciones.can_delete %}
+                                <label class="flex items-center space-x-1 text-red-500 text-sm cursor-pointer hover:text-red-700">
+                                    {{ opcion_form.DELETE }}
+                                    <span>Eliminar</span>
+                                </label>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Botones de Acción -->
+        <div class="flex justify-end space-x-4">
+            <a href="javascript:history.back()" class="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 font-bold py-3 px-6 rounded-lg shadow-sm transition-colors cursor-pointer">
+                Cancelar
+            </a>
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all flex items-center transform hover:scale-105">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Guardar Pregunta en el Banco
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Plantillas Ocultas para JavaScript -->
+<div id="imagen-empty-form" class="hidden">
+    <div class="imagen-form bg-gray-50 border border-gray-200 rounded p-4 relative group hover:border-blue-300">
+        {{ imagenes_pregunta.empty_form.id }}
+        <div class="mb-3">
+            <label class="block text-sm font-bold text-gray-700 mb-1">Seleccionar Imagen</label>
+            {{ imagenes_pregunta.empty_form.imagen }}
+        </div>
+        <div class="mb-2">
+            {{ imagenes_pregunta.empty_form.descripcion }}
+        </div>
+        <div class="flex justify-end border-t border-gray-200 pt-2 mt-3">
+            <label class="flex items-center space-x-1 text-red-500 text-sm cursor-pointer hover:text-red-700">
+                {{ imagenes_pregunta.empty_form.DELETE }}
+                <span>Eliminar Imagen</span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<div id="opcion-empty-form" class="hidden">
+    <div class="opcion-form bg-gray-50 rounded-lg p-5 border border-gray-200 relative group transition-all hover:bg-white hover:border-indigo-200 hover:shadow-md">
+        {{ opciones.empty_form.id }}
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Texto de la Opción</label>
+            {{ opciones.empty_form.texto }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1 border-t pt-3 border-gray-200 mt-2">O, Imagen de Opción</label>
+            {{ opciones.empty_form.imagen }}
+        </div>
+        <div class="flex items-center justify-between mt-5 pt-3 border-t border-gray-200">
+            <label class="flex items-center space-x-2 cursor-pointer group-hover:text-indigo-700">
+                {{ opciones.empty_form.es_correcta }}
+                <span class="text-sm font-bold text-gray-700">¿Es la respuesta correcta?</span>
+            </label>
+            <label class="flex items-center space-x-1 text-red-500 text-sm cursor-pointer hover:text-red-700">
+                {{ opciones.empty_form.DELETE }}
+                <span>Eliminar</span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function addFormsetLogic(prefix, btnId, containerId, emptyFormId, formClass) {
+        const addBtn = document.getElementById(btnId);
+        if (!addBtn) return;
+        
+        const container = document.getElementById(containerId);
+        const emptyForm = document.getElementById(emptyFormId).innerHTML;
+        const totalFormsInput = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
+        
+        addBtn.addEventListener('click', function() {
+            const formCount = parseInt(totalFormsInput.value);
+            
+            // Reemplazar __prefix__ por el índice actual
+            const newFormHtml = emptyForm.replace(/__prefix__/g, formCount);
+            
+            // Crear el elemento
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newFormHtml;
+            const newForm = tempDiv.firstElementChild;
+            
+            // Añadir al DOM
+            container.appendChild(newForm);
+            
+            // Actualizar el management form
+            totalFormsInput.value = formCount + 1;
+        });
+    }
+
+    // Inicializar lógica para Imágenes de Apoyo
+    addFormsetLogic('imagenes', 'add-imagen-btn', 'imagenes-container', 'imagen-empty-form', 'imagen-form');
+    
+    // Inicializar lógica para Opciones de Respuesta
+    addFormsetLogic('opciones', 'add-opcion-btn', 'opciones-container', 'opcion-empty-form', 'opcion-form');
+});
+</script>
+{% endblock %}

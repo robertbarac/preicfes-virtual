@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load tailwind_filters %}
+
+{% block title %}Iniciar Sesión | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="min-h-[70vh] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
+        <svg class="mx-auto h-16 w-16 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+        <h2 class="mt-4 text-center text-3xl font-extrabold text-gray-900 border-b-2 border-indigo-100 inline-block pb-2">
+            Iniciar Sesión
+        </h2>
+        <p class="mt-3 text-center text-sm text-gray-600 font-medium">
+            Accede a tu contenido interactivo de PreVirtual
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow-xl border border-gray-100 sm:rounded-xl sm:px-10 relative overflow-hidden">
+            <!-- Decorative accent -->
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+            
+            <form class="space-y-6" action="{% url 'login' %}" method="POST">
+                {% csrf_token %}
+                
+                {{ form|crispy }}
+
+                {% if form.errors %}
+                <div class="rounded-md bg-red-50 border border-red-200 p-4 mt-2">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-bold text-red-800">Error de Autenticación</h3>
+                            <div class="mt-1 text-sm text-red-700 font-medium">
+                                Por favor verifica tu usuario y contraseña.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div>
+                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        Acceder
+                    </button>
+                </div>
+                <!-- Redirect origin parameter -->
+                <input type="hidden" name="next" value="{{ next|default:'/' }}">
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

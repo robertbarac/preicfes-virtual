@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Preicfes Virtual{% endblock %}</title>
+    <!-- Tailwind CSS desde el CDN para desarrollo rápido (luego lo pasas a build) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos base para conservar la estética premium */
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased font-sans flex flex-col min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-gradient-to-r from-gray-900 via-slate-800 to-teal-900 shadow-lg border-b border-teal-800/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="text-white font-bold text-xl tracking-tight flex items-center gap-2">
+                        <span class="bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">PreVirtual</span>
+                    </a>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden lg:block flex-grow">
+                    <div class="ml-10 flex items-baseline space-x-2">
+                        <!-- Para todos los autenticados -->
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'curriculo:programa_list' %}" class="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors">Programa Virtual</a>
+                            
+                            <!-- Para Staff -->
+                            {% if user.is_staff %}
+                                <a href="{% url 'evaluaciones:pregunta_create' %}" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors">Banco de Preguntas</a>
+                                <a href="{% url 'contenidos:post_list' %}" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors">Contenidos</a>
+                                <a href="#" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors">Simulacros</a>
+                                <a href="#" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors">Talleres</a>
+                            {% endif %}
+                            
+                            <!-- Para Estudiantes o Superusuarios (Calificaciones personalizadas) -->
+                            {% if user.role == 'student' or user.is_superuser %}
+                                <a href="#" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors">Calificaciones</a>
+                            {% endif %}
+                            
+                            <!-- Exclusivo Estudiantes -->
+                            {% if user.role == 'student' %}
+                                <a href="#" class="text-teal-300 hover:text-teal-200 hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors">Mi Suscripción</a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Bloque Derecho (Auth) -->
+                <div class="hidden lg:block">
+                    <div class="ml-4 flex items-center md:ml-6">
+                        {% if user.is_authenticated %}
+                            <span class="text-sm font-bold text-teal-300 mr-4">{{ user.username }} {% if user.is_staff %}(Staff){% endif %}</span>
+                            <form method="POST" action="{% url 'logout' %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="bg-red-500/20 text-red-200 hover:bg-red-500/40 px-3 py-2 rounded-md text-sm font-medium transition-colors">Cerrar Sesión</button>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="bg-teal-600 text-white hover:bg-teal-500 px-4 py-2 rounded-md text-sm font-bold transition-colors shadow">Iniciar Sesión</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                    <div class="p-4 rounded-md {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock content %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-sm text-gray-500">&copy; {% now "Y" %} Preicfes Virtual. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Modo Lectura: {{ taller.titulo }} | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mb-12">
+    <!-- Encabezado de Modo Lectura -->
+    <header class="bg-blue-700 text-white shadow-md rounded-xl px-8 py-6 mb-8 border-b-4 border-blue-900">
+        <div class="flex items-center space-x-2 text-blue-200 text-sm font-bold mb-1 uppercase tracking-wide">
+            <span>{{ taller.modulo.nombre }}</span>
+            <span>&bull; {{ taller.tema.nombre|default:"Tema General" }}</span>
+        </div>
+        <h1 class="text-3xl font-extrabold flex items-center">
+            <svg class="w-8 h-8 mr-3 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            Modo Lectura: {{ taller.titulo }}
+        </h1>
+        <p class="text-blue-100 mt-2 font-medium">Visualización de preguntas en lista sin evaluación ni temporizador.</p>
+    </header>
+
+    <div class="space-y-10">
+        {% for pt in preguntas %}
+        <section class="bg-white rounded-xl shadow border border-gray-200 overflow-hidden" id="pregunta-{{ pt.pregunta.id }}">
+            
+            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h3 class="font-bold text-gray-700 text-lg">Pregunta {{ forloop.counter }}</h3>
+                <span class="text-xs bg-white text-gray-500 px-2 py-1 rounded border font-semibold">Tema: {{ pt.pregunta.tema.nombre|default:"General" }}</span>
+            </div>
+            
+            <div class="p-6 md:p-8">
+                <!-- Enunciado -->
+                <div class="prose max-w-none text-gray-800 font-medium text-lg leading-relaxed mb-6">
+                    {{ pt.pregunta.enunciado|linebreaks }}
+                </div>
+                
+                {% if pt.pregunta.imagenes.all %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        {% for img in pt.pregunta.imagenes.all %}
+                            <div class="bg-gray-50 border border-gray-200 rounded p-2 text-center">
+                                <img src="{{ img.imagen.url }}" alt="Imagen de pregunta {{ forloop.parentloop.counter }}" class="max-w-full h-auto mx-auto rounded">
+                                {% if img.descripcion %}<p class="text-sm text-gray-500 mt-2 font-medium italic">{{ img.descripcion }}</p>{% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <hr class="border-gray-100 my-6">
+
+                <!-- Opciones modo plano sin interactividad -->
+                <div class="space-y-3">
+                    {% for opcion in pt.pregunta.opciones.all %}
+                        <div class="flex rounded-lg border border-gray-200 p-4 shadow-sm bg-white items-center w-full">
+                            <div class="w-6 h-6 mr-4 flex-shrink-0 flex items-center justify-center rounded-full border border-gray-300">
+                                <span class="text-xs text-gray-400 font-bold">{{ forloop.counter }}</span>
+                            </div>
+                            <div class="flex-1">
+                                {% if opcion.texto %}
+                                    <span class="block text-gray-800">{{ opcion.texto }}</span>
+                                {% endif %}
+                                {% if opcion.imagen %}
+                                    <div class="mt-2 text-center bg-gray-50 rounded p-1 inline-block border border-gray-100">
+                                        <img src="{{ opcion.imagen.url }}" alt="Imagen de opción" class="max-w-xs h-auto rounded">
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% empty %}
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-md shadow-sm">
+            <div class="flex">
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Taller vacío</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <p>No se han asignado preguntas a este taller todavía.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Navegación -->
+    <div class="mt-10 text-center flex justify-center space-x-4">
+        <a href="{% url 'evaluaciones:taller_detail' taller.pk %}" class="inline-flex items-center text-gray-600 hover:text-gray-900 font-bold bg-white border border-gray-300 px-6 py-3 rounded-lg shadow-sm hover:shadow transition-all">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Volver al Taller
+        </a>
+    </div>
+</div>
+{% endblock %}

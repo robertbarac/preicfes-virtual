@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestionar Bloque | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md border border-gray-100">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex justify-between items-center">
+        <span>{% if form.instance.pk %}Editar Bloque{% else %}Añadir Bloque al Contenido{% endif %}</span>
+    </h2>
+    {% if post %}
+    <div class="mb-6 bg-indigo-50 text-indigo-800 px-4 py-3 rounded-md text-sm">
+        <strong>Contenido Destino:</strong> {{ post.titulo }}
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="space-y-4" id="bloqueForm">
+        {% csrf_token %}
+        
+        <!-- Campo: Tipo -->
+        <div class="mb-4">
+            <label for="{{ form.tipo.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                {{ form.tipo.label }}
+            </label>
+            {{ form.tipo }}
+            {% if form.tipo.errors %}<div class="text-red-500 text-sm mt-1">{{ form.tipo.errors }}</div>{% endif %}
+        </div>
+
+        <!-- Campo: Orden -->
+        <div class="mb-4">
+            <label for="{{ form.orden.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                {{ form.orden.label }}
+            </label>
+            {{ form.orden }}
+            {% if form.orden.errors %}<div class="text-red-500 text-sm mt-1">{{ form.orden.errors }}</div>{% endif %}
+        </div>
+
+        <!-- Grupo Dinámico: Contenido Texto -->
+        <div id="group_texto" class="mb-4 hidden dynamic-group">
+            <label for="{{ form.contenido_texto.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                Texto / Párrafo
+            </label>
+            {{ form.contenido_texto }}
+            {% if form.contenido_texto.errors %}<div class="text-red-500 text-sm mt-1">{{ form.contenido_texto.errors }}</div>{% endif %}
+        </div>
+
+        <!-- Grupo Dinámico: Archivo Imagen -->
+        <div id="group_imagen" class="mb-4 hidden dynamic-group">
+            <label for="{{ form.archivo_imagen.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                Subir Imagen / GIF
+            </label>
+            {{ form.archivo_imagen }}
+            {% if form.archivo_imagen.errors %}<div class="text-red-500 text-sm mt-1">{{ form.archivo_imagen.errors }}</div>{% endif %}
+        </div>
+
+        <!-- Grupo Dinámico: URL -->
+        <div id="group_url" class="mb-4 hidden dynamic-group">
+            <label for="{{ form.url.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                URL (YouTube o Enlace Externo)
+            </label>
+            {{ form.url }}
+            {% if form.url.errors %}<div class="text-red-500 text-sm mt-1">{{ form.url.errors }}</div>{% endif %}
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-4 border-t">
+            <a href="javascript:history.back()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 font-medium">
+                Cancelar
+            </a>
+            <button type="submit" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 text-white rounded font-medium shadow-md transition-all">
+                Guardar Bloque
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const tipoSelect = document.getElementById("{{ form.tipo.id_for_label }}");
+    const groupTexto = document.getElementById("group_texto");
+    const groupImagen = document.getElementById("group_imagen");
+    const groupUrl = document.getElementById("group_url");
+
+    function updateFields() {
+        const value = tipoSelect.value;
+        // Ocultar todos
+        document.querySelectorAll('.dynamic-group').forEach(el => el.classList.add('hidden'));
+
+        if(value === 'texto') {
+            groupTexto.classList.remove('hidden');
+        } else if(value === 'imagen') {
+            groupImagen.classList.remove('hidden');
+        } else if(value === 'youtube' || value === 'enlace') {
+            groupUrl.classList.remove('hidden');
+        }
+    }
+
+    tipoSelect.addEventListener("change", updateFields);
+    updateFields(); // inicializar
+});
+</script>
+{% endblock %}

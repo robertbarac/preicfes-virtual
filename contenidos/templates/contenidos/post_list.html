@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">Contenidos Educativos</h1>
+    {% if perms.contenidos.add_post or user.is_staff %}
+    <a href="{% url 'contenidos:post_create' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded shadow">
+        + Nuevo Post
+    </a>
+    {% endif %}
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for post in posts %}
+    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-100 relative">
+        <div class="p-5">
+            <div class="text-xs uppercase tracking-wider text-indigo-500 font-semibold mb-2">
+                {{ post.modulo.nombre|default:"Sin Módulo" }} &bull; {{ post.tema.nombre|default:"Tema General" }}
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">
+                <a href="{% url 'contenidos:post_detail' post.pk %}" class="hover:text-indigo-600">{{ post.titulo }}</a>
+            </h2>
+            <div class="flex items-center text-sm text-gray-500 mb-4">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                {{ post.fecha_creacion|date:"d M, Y" }}
+            </div>
+            
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                {% if post.estado == 'publicado' %}bg-green-100 text-green-800
+                {% elif post.estado == 'borrador' %}bg-gray-100 text-gray-800
+                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                {{ post.get_estado_display }}
+            </span>
+        </div>
+        
+        {% if perms.contenidos.change_post or perms.contenidos.delete_post or user.is_staff %}
+        <div class="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-end space-x-2">
+            {% if perms.contenidos.change_post or user.is_staff %}
+            <a href="{% url 'contenidos:post_update' post.pk %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Editar</a>
+            {% endif %}
+            {% if perms.contenidos.delete_post or user.is_staff %}
+            <a href="{% url 'contenidos:post_delete' post.pk %}" class="text-sm font-medium text-red-600 hover:text-red-800">Eliminar</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-12 bg-white rounded-lg shadow border border-gray-100">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+        <p class="mt-4 font-medium text-gray-900">Aún no hay posts curriculares creados.</p>
+        <p class="text-gray-500 mt-1">Comienza agregando tu primera lección interactiva.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

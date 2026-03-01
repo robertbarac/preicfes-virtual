@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Solucionario: {{ taller.titulo }} | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mb-12">
+    <!-- Encabezado del Solucionario -->
+    <header class="bg-indigo-700 text-white shadow-md rounded-xl px-8 py-6 mb-8 border-b-4 border-indigo-900">
+        <div class="flex items-center space-x-2 text-indigo-200 text-sm font-bold mb-1 uppercase tracking-wide">
+            <span>{{ taller.modulo.nombre }}</span>
+            <span>&bull; {{ taller.tema.nombre|default:"Tema General" }}</span>
+        </div>
+        <h1 class="text-3xl font-extrabold flex items-center">
+            <svg class="w-8 h-8 mr-3 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            Solucionario: {{ taller.titulo }}
+        </h1>
+        <p class="text-indigo-100 mt-2 font-medium">Secuencia de respuestas correctas del banco</p>
+    </header>
+
+    <div class="space-y-10">
+        {% for detalle in detalles_preguntas %}
+        <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" id="pregunta-{{ detalle.pregunta.id }}">
+            
+            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h3 class="font-bold text-gray-700 text-lg">Pregunta {{ forloop.counter }}</h3>
+                <span class="text-xs bg-white text-gray-500 px-2 py-1 rounded border font-semibold">ID: {{ detalle.pregunta.id }} | {{ detalle.pregunta.tema.nombre|default:"General" }}</span>
+            </div>
+            
+            <div class="p-6 md:p-8">
+                <!-- Enunciado -->
+                <div class="prose max-w-none text-gray-800 font-medium text-lg leading-relaxed mb-6">
+                    {{ detalle.pregunta.enunciado|linebreaks }}
+                </div>
+                
+                {% if detalle.pregunta.imagenes.all %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        {% for img in detalle.pregunta.imagenes.all %}
+                            <div class="bg-gray-50 border border-gray-200 rounded p-2 text-center">
+                                <img src="{{ img.imagen.url }}" alt="Imagen de pregunta {{ forloop.parentloop.counter }}" class="max-w-full h-auto mx-auto rounded">
+                                {% if img.descripcion %}<p class="text-sm text-gray-500 mt-2 font-medium italic">{{ img.descripcion }}</p>{% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <hr class="border-gray-100 my-6">
+
+                <!-- Opciones (Solo la correcta resaltada fuertemente, y las otras atenuadas) -->
+                <div class="space-y-3">
+                    {% for opcion in detalle.opciones %}
+                        <div class="relative flex rounded-lg border p-4 shadow-sm 
+                            {% if opcion.es_correcta %}
+                                bg-green-50 border-green-500
+                            {% else %}
+                                bg-white border-gray-200 opacity-50
+                            {% endif %}">
+
+                            <div class="flex items-center w-full">
+                                <div class="w-6 h-6 mr-4 flex-shrink-0 flex items-center justify-center rounded-full 
+                                    {% if opcion.es_correcta %}
+                                        bg-green-500 text-white
+                                    {% else %}
+                                        bg-gray-200 text-gray-400
+                                    {% endif %}">
+                                    {% if opcion.es_correcta %}
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    {% else %}
+                                        <div class="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1">
+                                    {% if opcion.texto %}
+                                        <span class="block text-gray-900 font-medium {% if not opcion.es_correcta %}text-gray-500{% endif %}">{{ opcion.texto }}</span>
+                                    {% endif %}
+                                    {% if opcion.imagen %}
+                                        <div class="mt-2 text-center bg-white rounded p-1 inline-block border {% if opcion.es_correcta %}border-green-200{% else %}border-gray-100{% endif %}">
+                                            <img src="{{ opcion.imagen.url }}" alt="Imagen de opción" class="max-w-xs h-auto rounded">
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% if opcion.es_correcta %}
+                                <div class="ml-4">
+                                    <span class="text-xs font-bold px-2 py-1 rounded bg-green-100 text-green-800 uppercase tracking-wider">Correcta</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endfor %}
+    </div>
+
+    <!-- Navegación -->
+    <div class="mt-10 text-center flex justify-center space-x-4">
+        <a href="{% url 'evaluaciones:taller_detail' taller.pk %}" class="inline-flex items-center text-gray-600 hover:text-gray-900 font-bold bg-white border border-gray-300 px-6 py-3 rounded-lg shadow-sm hover:shadow transition-all">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Volver al Taller
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ simulacro.titulo }} | PreVirtual{% endblock %}
+
+{% block content %}
+<article class="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden mb-12 border border-gray-100">
+    <!-- Encabezado del Simulacro -->
+    <header class="bg-gradient-to-r from-red-600 to-rose-500 px-8 py-10 text-white relative">
+        <div class="absolute top-0 right-0 opacity-10">
+            <svg class="w-48 h-48 transform translate-x-10 -translate-y-10" fill="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <div class="relative z-10">
+            <div class="flex items-center space-x-2 text-red-100 text-sm font-medium mb-3 tracking-wide uppercase">
+                <span>{{ simulacro.modulo.nombre|default:"Estructura Base" }}</span>
+                <span>&bull;</span>
+                <span>Evaluación Tipo ICFES</span>
+            </div>
+            <h1 class="text-4xl font-extrabold tracking-tight mb-3 drop-shadow-sm">{{ simulacro.titulo }}</h1>
+            
+            <div class="flex flex-wrap items-center gap-3 opacity-90 text-sm font-medium mt-4">
+                <span class="flex items-center bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Duración: {{ simulacro.duracion_minutos }} min
+                </span>
+                <span class="flex items-center bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Cierre: {{ simulacro.fecha_cierre|date:"d M, Y H:i" }}
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Cuerpo del Simulacro -->
+    <div class="px-8 py-10">
+        
+        <!-- Alertas de Fecha (Abierto/Cerrado) -->
+        <div class="mb-8">
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded text-blue-700 shadow-sm flex items-start">
+                <svg class="w-6 h-6 mr-3 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div>
+                    <h4 class="font-bold text-lg mb-1">Información de Disponibilidad</h4>
+                    <p><strong>Apertura:</strong> {{ simulacro.fecha_apertura|date:"l, d de F Y \a \l\a\s H:i" }}</p>
+                    <p><strong>Cierre:</strong> {{ simulacro.fecha_cierre|date:"l, d de F Y \a \l\a\s H:i" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado de intentos de Simulacro (Lugar de Trabajo Futuro) -->
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-8 mb-10 flex flex-col items-center justify-center text-center shadow-inner">
+            <h4 class="font-bold text-gray-800 text-xl mb-2">Comienza la Prueba</h4>
+            <p class="text-gray-600 max-w-lg mb-6 text-sm">Asegúrate de tener un entorno tranquilo. El simulacro tiene tiempo límite. Una vez iniciado, el cronómetro no se detendrá.</p>
+            
+            <a href="#" class="inline-flex justify-center items-center px-8 py-3.5 border border-transparent text-lg font-bold rounded-lg shadow-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all hover:scale-105">
+                Iniciar Simulacro Oficial
+            </a>
+        </div>
+
+        {% if request.user.is_staff %}
+        <!-- Vista de Profesor: Sesiones/Componentes -->
+        <div class="mt-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center border-b pb-2">
+                <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                Estructura del Simulacro
+            </h3>
+            
+            {% if simulacro.sesiones.exists %}
+            <div class="space-y-4">
+                {% for sesion in simulacro.sesiones.all %}
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+                        <span class="font-bold text-gray-800">{{ sesion.nombre }}</span>
+                        <span class="text-xs text-gray-500">{{ sesion.componentes.count }} Materias Evaluadas</span>
+                    </div>
+                    {% if sesion.componentes.exists %}
+                    <ul class="divide-y divide-gray-100 px-4 text-sm text-gray-600">
+                        {% for comp in sesion.componentes.all %}
+                        <li class="py-2 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            {{ comp.materia.nombre }} ({{ comp.preguntas_componente.count }} preguntas)
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-gray-50 border border-dashed border-gray-300 rounded p-6 text-center text-gray-500">
+                Aún no existen sesiones (Ej: Mañana/Tarde) o componentes vinculados.
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+    </div>
+
+    <!-- Navegación y Acciones -->
+    <div class="bg-gray-50 border-t border-gray-100 px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <a href="{% url 'curriculo:programa_list' %}" class="text-red-600 hover:text-red-800 font-semibold flex items-center transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Volver al Programa
+        </a>
+        
+        {% if request.user.is_staff %}
+        <div class="flex space-x-3 w-full sm:w-auto">
+            <a href="{% url 'evaluaciones:simulacro_update' simulacro.pk %}" class="w-full sm:w-auto text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-sm text-sm transition-all">
+                Editar Propiedades
+            </a>
+            <button class="w-full sm:w-auto text-center bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 font-medium py-2 px-4 rounded-lg shadow-sm text-sm transition-all">
+                + Gestionar Sesiones
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</article>
+{% endblock %}
