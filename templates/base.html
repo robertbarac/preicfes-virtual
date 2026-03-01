@@ -101,11 +101,18 @@
                 {% endif %}
             </nav>
 
-            <div class="px-4 mt-auto pt-6 w-full">
+            <div class="px-4 mt-auto pt-6 w-full pb-4">
                 {% if user.is_authenticated %}
-                <div class="bg-gray-800 rounded-lg py-3 px-4 flex items-center justify-between mb-2">
-                    <span class="text-sm font-bold text-teal-300 truncate pr-2">{{ user.username }}</span>
-                    {% if user.is_staff %}<span class="text-[10px] bg-red-600 px-1.5 py-0.5 rounded text-white font-bold ml-1">ADMIN</span>{% endif %}
+                <div class="bg-gray-800 rounded-lg py-3 px-4 flex flex-col mb-2 space-y-3">
+                    <div class="flex items-center justify-between border-b border-gray-700 pb-2">
+                        <span class="text-sm font-bold text-teal-300 truncate pr-2">{{ user.username }}</span>
+                        {% if user.is_staff %}<span class="text-[10px] bg-red-600 px-1.5 py-0.5 rounded text-white font-bold ml-1">ADMIN</span>{% endif %}
+                    </div>
+                    
+                    <a href="{% url 'password_change' %}" class="flex items-center text-gray-300 hover:text-white text-xs font-medium transition-colors">
+                        <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                        Cambiar Contraseña
+                    </a>
                 </div>
                 <form method="POST" action="{% url 'logout' %}">
                     {% csrf_token %}
