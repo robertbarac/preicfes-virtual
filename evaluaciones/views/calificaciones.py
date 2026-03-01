@@ -163,108 +163,13 @@ class ReporteEstudiantePDFView(View):
         p.save()
         buffer.seek(0)
         
-        filename = f"reporte_{estudiante.username}.pdf"
+        from django.utils import timezone
+        ahora_str = timezone.localtime().strftime("%Y%m%d_%H%M%S")
+        nombre_base = f"{estudiante.first_name} {estudiante.last_name}".strip().replace(" ", "_")
+        if not nombre_base:
+            nombre_base = estudiante.username
+            
+        filename = f"reporte_de_notas_{nombre_base}_{ahora_str}.pdf"
         return FileResponse(buffer, as_attachment=False, filename=filename)
 
-import io
-from django.http import FileResponse
-from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
-from django.views import View
-from django.contrib.admin.views.decorators import staff_member_required
-from django.utils.decorators import method_decorator
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.lib.units import inch
 
-User = get_user_model()
-
-@method_decorator(staff_member_required, name='dispatch')
-class ReporteEstudiantePDFView(View):
-    def get(self, request, *args, **kwargs):
-        estudiante_id = self.kwargs.get('pk')
-        estudiante = get_object_or_404(User, pk=estudiante_id)
-        
-        # Recolectar datos
-        intentos_simulacros = IntentoSimulacro.objects.filter(
-            usuario=estudiante, fecha_fin__isnull=False
-        ).select_related('simulacro').order_by('-fecha_inicio')
-        
-        mejores_intentos = IntentoTaller.objects.filter(
-            usuario=estudiante, fecha_fin__isnull=False
-        ).values('taller_id', 'taller__tema__materia__nombre').annotate(
-            mejor_puntaje=Max('puntaje_porcentaje')
-        )
-        
-        promedios_materia = {}
-        for item in mejores_intentos:
-            materia = item['taller__tema__materia__nombre'] or "Sin Materia Asignada"
-            if materia not in promedios_materia:
-                promedios_materia[materia] = {'suma': 0, 'conteo': 0}
-            promedios_materia[materia]['suma'] += item['mejor_puntaje']
-            promedios_materia[materia]['conteo'] += 1
-            
-        promedios_finales = [
-            {'materia': k, 'promedio': v['suma'] / v['conteo'], 'talleres': v['conteo']}
-            for k, v in promedios_materia.items()
-        ]
-        promedios_finales.sort(key=lambda x: x['materia'])
-
-        # Crear PDF
-        buffer = io.BytesIO()
-        p = canvas.Canvas(buffer, pagesize=letter)
-        width, height = letter
-        
-        # Header
-        p.setFont("Helvetica-Bold", 16)
-        p.drawString(50, height - 50, "Reporte de Rendimiento - PreICFES Virtual V.V.")
-        p.setFont("Helvetica", 12)
-        p.drawString(50, height - 70, f"Estudiante: {estudiante.get_full_name() or estudiante.username}")
-        if estudiante.numero_documento:
-            p.drawString(50, height - 85, f"Documento: {estudiante.numero_documento}")
-            
-        y = height - 120
-        
-        # Sección Simulacros
-        p.setFont("Helvetica-Bold", 14)
-        p.drawString(50, y, "Historial de Simulacros")
-        y -= 20
-        
-        p.setFont("Helvetica", 10)
-        if intentos_simulacros.exists():
-            for intento in intentos_simulacros:
-                texto = f"- {intento.simulacro.titulo}: {intento.puntaje_global or 0} / 500 Puntos"
-                p.drawString(60, y, texto)
-                y -= 15
-        else:
-            p.drawString(60, y, "No hay simulacros completados.")
-            y -= 15
-            
-        y -= 20
-        
-        # Sección Talleres (Promedios)
-        p.setFont("Helvetica-Bold", 14)
-        p.drawString(50, y, "Promedio de Talleres por Materia")
-        y -= 20
-        
-        p.setFont("Helvetica", 10)
-        if promedios_finales:
-            for item in promedios_finales:
-                texto = f"- {item['materia']}: {item['promedio']:.1f}% ({item['talleres']} talleres realizados)"
-                p.drawString(60, y, texto)
-                y -= 15
-        else:
-            p.drawString(60, y, "No hay talleres completados.")
-            y -= 15
-            
-        # Generar firma al pie
-        p.setFont("Helvetica-Oblique", 9)
-        p.drawString(50, 50, "Documento generado automáticamente por sistema PreICFES Virtual.")
-        
-        p.showPage()
-        p.save()
-        buffer.seek(0)
-        
-        filename = f"reporte_{estudiante.username}.pdf"
-        return FileResponse(buffer, as_attachment=False, filename=filename)
