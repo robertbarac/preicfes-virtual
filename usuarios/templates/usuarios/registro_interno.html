@@ -47,7 +47,7 @@
                     }
                 }, 100);
             ">
-                <form method="POST" class="space-y-4">
+                <form method="POST" action="{% url 'usuarios:registro_interno' %}" class="space-y-4">
                     {% csrf_token %}
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
