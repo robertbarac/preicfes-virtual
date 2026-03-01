@@ -2,6 +2,7 @@ from django.urls import path
 from .views.talleres import TallerCreateView, TallerUpdateView, TallerDetailView, TallerPreguntaManageView, TallerResolverView, TallerIntentoDetailView, TallerSolucionView, TallerLecturaView, TallerListView
 from .views.simulacros import SimulacroCreateView, SimulacroUpdateView, SimulacroDetailView, SimulacroListView
 from .views.banco import PreguntaCreateView, PreguntaListView
+from .views.calificaciones import MisCalificacionesView, ReporteEstudiantePDFView
 
 app_name = 'evaluaciones'
 
@@ -26,4 +27,8 @@ urlpatterns = [
     path('simulacros/crear/', SimulacroCreateView.as_view(), name='simulacro_create'),
     path('simulacros/<int:pk>/', SimulacroDetailView.as_view(), name='simulacro_detail'),
     path('simulacros/<int:pk>/editar/', SimulacroUpdateView.as_view(), name='simulacro_update'),
+    
+    # Calificaciones / Reportes
+    path('mis-calificaciones/', MisCalificacionesView.as_view(), name='mis_calificaciones'),
+    path('reporte-pdf/<int:pk>/', ReporteEstudiantePDFView.as_view(), name='reporte_estudiante_pdf'),
 ]
