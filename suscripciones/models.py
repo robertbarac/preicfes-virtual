@@ -4,6 +4,7 @@ from django.utils import timezone
 
 class Subscription(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='subscriptions')
+    creador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='suscripciones_creadas')
     start_date = models.DateField()
     end_date = models.DateField()
     active = models.BooleanField(default=True)

@@ -41,3 +41,44 @@ class AdminPasswordResetView(UserPassesTestMixin, FormView):
         context['affected_user'] = user
         context['new_password'] = new_password
         return render(self.request, self.template_name, context)
+
+from .forms import RegistroInternoForm
+from suscripciones.models import Subscription
+from django.contrib import messages
+
+class RegistroUsuarioView(UserPassesTestMixin, FormView):
+    template_name = 'usuarios/registro_interno.html'
+    form_class = RegistroInternoForm
+    success_url = reverse_lazy('usuarios:registro_interno')
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
+
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.creador = self.request.user
+        
+        # Generar contraseña temporal segura
+        alphabet = string.ascii_letters + string.digits
+        temporal_password = ''.join(secrets.choice(alphabet) for i in range(10))
+        user.set_password(temporal_password)
+        user.save()
+
+        # Si es estudiante, crear suscripción
+        if user.role == 'student':
+            Subscription.objects.create(
+                user=user,
+                creador=self.request.user,
+                start_date=form.cleaned_data['start_date'],
+                end_date=form.cleaned_data['end_date']
+            )
+            messages.success(self.request, f"Estudiante {user.username} registrado con éxito. Contraseña temporal: {temporal_password}. Suscripción activada.")
+        else:
+            messages.success(self.request, f"Usuario {user.role} registrado con éxito. Contraseña temporal: {temporal_password}.")
+
+        # Renderizar la respuesta con una bandera de éxito para que copien la password
+        context = self.get_context_data(form=self.form_class())
+        context['registration_success'] = True
+        context['new_user'] = user
+        context['temp_password'] = temporal_password
+        return render(self.request, self.template_name, context)

@@ -28,4 +28,5 @@ urlpatterns = [
     path('evaluaciones/', include('evaluaciones.urls', namespace='evaluaciones')),
     path('contenidos/', include('contenidos.urls', namespace='contenidos')),
     path('usuarios/', include('usuarios.urls', namespace='usuarios')),
+    path('suscripciones/', include('suscripciones.urls', namespace='suscripciones')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
