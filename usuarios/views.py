@@ -55,14 +55,34 @@ class RegistroUsuarioView(UserPassesTestMixin, FormView):
         return self.request.user.is_staff or self.request.user.is_superuser
 
     def form_valid(self, form):
+        from django.contrib.auth.models import Group
+        
         user = form.save(commit=False)
         user.creador = self.request.user
         
+        # Asignar nivel de Staff basado en el Rol elegido
+        if user.role == 'teacher':
+            user.is_staff = True
+        elif user.role == 'student':
+            user.is_staff = False
+            
         # Generar contraseña temporal segura
         alphabet = string.ascii_letters + string.digits
         temporal_password = ''.join(secrets.choice(alphabet) for i in range(10))
         user.set_password(temporal_password)
         user.save()
+
+        # Asignación de Grupos de Permisos
+        try:
+            if user.role == 'teacher':
+                teacher_group, created = Group.objects.get_or_create(name='Teacher')
+                user.groups.add(teacher_group)
+            elif user.role == 'student':
+                student_group, created = Group.objects.get_or_create(name='Student')
+                user.groups.add(student_group)
+        except Exception as e:
+            # Silently pass or log if group creation fails, to not break registration flow
+            pass
 
         # Si es estudiante, crear suscripción
         if user.role == 'student':
