@@ -3,11 +3,34 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from contenidos.models import Post
 from contenidos.forms import PostForm
 from curriculo.views.mixins import HistorialMixin
+from curriculo.models import Materia, Tema
 
 class PostListView(ListView):
     model = Post
     template_name = 'contenidos/post_list.html'
     context_object_name = 'posts'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filtros opcionales
+        materia_id = self.request.GET.get('materia')
+        tema_id = self.request.GET.get('tema')
+        
+        if materia_id:
+            queryset = queryset.filter(tema__materia_id=materia_id)
+        if tema_id:
+            queryset = queryset.filter(tema_id=tema_id)
+            
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['materias'] = Materia.objects.all().order_by('nombre')
+        context['temas'] = Tema.objects.all().order_by('materia__nombre', 'nombre')
+        context['current_materia'] = self.request.GET.get('materia', '')
+        context['current_tema'] = self.request.GET.get('tema', '')
+        return context
 
 class PostDetailView(DetailView):
     model = Post

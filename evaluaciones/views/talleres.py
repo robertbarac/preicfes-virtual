@@ -287,3 +287,36 @@ class TallerLecturaView(LoginRequiredMixin, DetailView):
         taller = self.object
         context['preguntas'] = taller.preguntas_taller.select_related('pregunta', 'pregunta__tema').prefetch_related('pregunta__opciones').all()
         return context
+
+from django.views.generic import ListView
+from curriculo.models import Materia, Tema
+
+class TallerListView(ListView):
+    model = Taller
+    template_name = 'evaluaciones/taller_list.html'
+    context_object_name = 'talleres'
+    paginate_by = 12
+
+    def get_queryset(self):
+        qs = super().get_queryset().select_related('modulo', 'tema', 'tema__materia', 'creador')
+        q = self.request.GET.get('q', '')
+        materia_id = self.request.GET.get('materia')
+        tema_id = self.request.GET.get('tema')
+        
+        if q:
+            qs = qs.filter(titulo__icontains=q)
+        if materia_id:
+            qs = qs.filter(tema__materia_id=materia_id)
+        if tema_id:
+            qs = qs.filter(tema_id=tema_id)
+            
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['materias'] = Materia.objects.all().order_by('nombre')
+        context['temas'] = Tema.objects.select_related('materia').all().order_by('materia__nombre', 'nombre')
+        context['q_val'] = self.request.GET.get('q', '')
+        context['materia_val'] = self.request.GET.get('materia', '')
+        context['tema_val'] = self.request.GET.get('tema', '')
+        return context

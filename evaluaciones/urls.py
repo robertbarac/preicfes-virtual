@@ -1,15 +1,17 @@
 from django.urls import path
-from .views.talleres import TallerCreateView, TallerUpdateView, TallerDetailView, TallerPreguntaManageView, TallerResolverView, TallerIntentoDetailView, TallerSolucionView, TallerLecturaView
-from .views.simulacros import SimulacroCreateView, SimulacroUpdateView, SimulacroDetailView
-from .views.banco import PreguntaCreateView
+from .views.talleres import TallerCreateView, TallerUpdateView, TallerDetailView, TallerPreguntaManageView, TallerResolverView, TallerIntentoDetailView, TallerSolucionView, TallerLecturaView, TallerListView
+from .views.simulacros import SimulacroCreateView, SimulacroUpdateView, SimulacroDetailView, SimulacroListView
+from .views.banco import PreguntaCreateView, PreguntaListView
 
 app_name = 'evaluaciones'
 
 urlpatterns = [
     # Banco
+    path('banco/preguntas/', PreguntaListView.as_view(), name='pregunta_list'),
     path('banco/preguntas/crear/', PreguntaCreateView.as_view(), name='pregunta_create'),
 
     # Talleres
+    path('talleres/', TallerListView.as_view(), name='taller_list'),
     path('talleres/crear/', TallerCreateView.as_view(), name='taller_create'),
     path('talleres/<int:pk>/', TallerDetailView.as_view(), name='taller_detail'),
     path('talleres/<int:pk>/editar/', TallerUpdateView.as_view(), name='taller_update'),
@@ -20,6 +22,7 @@ urlpatterns = [
     path('talleres/<int:pk>/lectura/', TallerLecturaView.as_view(), name='taller_lectura'),
     
     # Simulacros
+    path('simulacros/', SimulacroListView.as_view(), name='simulacro_list'),
     path('simulacros/crear/', SimulacroCreateView.as_view(), name='simulacro_create'),
     path('simulacros/<int:pk>/', SimulacroDetailView.as_view(), name='simulacro_detail'),
     path('simulacros/<int:pk>/editar/', SimulacroUpdateView.as_view(), name='simulacro_update'),

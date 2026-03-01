@@ -35,3 +35,15 @@ class SuscripcionListView(UserPassesTestMixin, ListView):
             messages.success(request, f"Se han desactivado {subs.count()} suscripciones.")
 
         return redirect('suscripciones:lista')
+
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+class MiSuscripcionDetailView(LoginRequiredMixin, TemplateView):
+    template_name = 'suscripciones/mi_suscripcion.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        subscription = Subscription.objects.filter(user=self.request.user).first()
+        context['suscripcion'] = subscription
+        return context

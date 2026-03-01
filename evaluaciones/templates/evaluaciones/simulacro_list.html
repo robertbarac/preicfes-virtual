@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+    <h1 class="text-3xl font-bold text-gray-800">Simulacros ICFES</h1>
+    {% if user.is_staff %}
+    <a href="{% url 'evaluaciones:simulacro_create' %}" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded shadow whitespace-nowrap">
+        + Nuevo Simulacro
+    </a>
+    {% endif %}
+</div>
+
+<!-- Filtros -->
+<div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
+    <form method="GET" class="flex flex-col md:flex-row gap-4 items-end">
+        <div class="w-full md:w-1/2">
+            <label for="q" class="block text-sm font-medium text-gray-700 mb-1">Buscar Simulacro</label>
+            <input type="text" name="q" id="q" value="{{ q_val }}" placeholder="Título del simulacro..." class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+        </div>
+        <div class="w-full md:w-auto flex gap-2">
+            <button type="submit" class="bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 font-medium py-2 px-4 rounded shadow-sm text-sm transition">Buscar</button>
+            {% if q_val %}
+            <a href="{% url 'evaluaciones:simulacro_list' %}" class="bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 font-medium py-2 px-4 rounded shadow-sm text-sm transition">Limpiar</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Grid de Simulacros -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for simulacro in simulacros %}
+    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-red-100 flex flex-col relative">
+        <div class="absolute top-0 right-0 p-3">
+            <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                {{ simulacro.duracion_minutos }} min
+            </span>
+        </div>
+        <div class="p-5 flex-grow pt-8">
+            <div class="text-[10px] bg-red-100 text-red-800 rounded px-2 py-0.5 inline-block mb-3 font-bold uppercase tracking-wider">
+                {{ simulacro.modulo.nombre|default:"GLOBAL" }}
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-4">
+                <a href="{% url 'evaluaciones:simulacro_detail' simulacro.pk %}" class="hover:text-red-600">{{ simulacro.titulo }}</a>
+            </h2>
+            
+            <div class="space-y-2 text-sm text-gray-600">
+                <div class="flex items-start">
+                    <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <div>
+                        <span class="block font-medium text-gray-700">Apertura:</span>
+                        {{ simulacro.fecha_apertura|date:"d M Y, h:i A" }}
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div>
+                        <span class="block font-medium text-gray-700">Cierre:</span>
+                        {{ simulacro.fecha_cierre|date:"d M Y, h:i A" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 flex flex-wrap justify-end gap-2 text-sm">
+            <a href="{% url 'evaluaciones:simulacro_detail' simulacro.pk %}" class="bg-red-600 text-white hover:bg-red-700 font-medium py-1 px-4 rounded shadow-sm">Entrar</a>
+            {% if user.is_staff %}
+            <a href="{% url 'evaluaciones:simulacro_update' simulacro.pk %}" class="text-indigo-600 hover:text-indigo-900 border border-transparent font-medium py-1 px-2">Editar</a>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-12 bg-white rounded-lg shadow border border-gray-100">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        <p class="mt-4 font-medium text-gray-900">No se encontraron simulacros.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% if is_paginated %}
+<div class="mt-8">
+    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if q_val %}&q={{ q_val }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Anterior</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if q_val %}&q={{ q_val }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Siguiente</a>
+        {% endif %}
+    </nav>
+</div>
+{% endif %}
+{% endblock %}

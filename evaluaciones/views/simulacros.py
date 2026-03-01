@@ -33,3 +33,23 @@ class SimulacroDetailView(DetailView):
     model = Simulacro
     template_name = 'evaluaciones/simulacro_detail.html'
     context_object_name = 'simulacro'
+
+from django.views.generic import ListView
+
+class SimulacroListView(ListView):
+    model = Simulacro
+    template_name = 'evaluaciones/simulacro_list.html'
+    context_object_name = 'simulacros'
+    paginate_by = 12
+
+    def get_queryset(self):
+        qs = super().get_queryset().select_related('modulo', 'creador')
+        q = self.request.GET.get('q', '')
+        if q:
+            qs = qs.filter(titulo__icontains=q)
+        return qs.order_by('orden')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['q_val'] = self.request.GET.get('q', '')
+        return context

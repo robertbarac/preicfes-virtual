@@ -58,3 +58,36 @@ class PreguntaCreateView(HistorialMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('curriculo:programa_list') # O el listado global de preguntas cuando exista
+
+from django.views.generic import ListView
+from curriculo.models import Materia, Tema
+
+class PreguntaListView(ListView):
+    model = Pregunta
+    template_name = 'evaluaciones/pregunta_list.html'
+    context_object_name = 'preguntas'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        qs = super().get_queryset().select_related('tema', 'tema__materia', 'creador').prefetch_related('opciones')
+        q = self.request.GET.get('q', '')
+        materia_id = self.request.GET.get('materia')
+        tema_id = self.request.GET.get('tema')
+        
+        if q:
+            qs = qs.filter(enunciado__icontains=q)
+        if materia_id:
+            qs = qs.filter(tema__materia_id=materia_id)
+        if tema_id:
+            qs = qs.filter(tema_id=tema_id)
+            
+        return qs.order_by('-fecha_creacion')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['materias'] = Materia.objects.all().order_by('nombre')
+        context['temas'] = Tema.objects.select_related('materia').all().order_by('materia__nombre', 'nombre')
+        context['q_val'] = self.request.GET.get('q', '')
+        context['materia_val'] = self.request.GET.get('materia', '')
+        context['tema_val'] = self.request.GET.get('tema', '')
+        return context
