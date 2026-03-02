@@ -4,7 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}PreICFES Virtual V.V. | Tu Camino a la U{% endblock %}</title>
+    <title>{% block title %}PreICFES Virtual | Prepárate e ingresa a la universidad{% endblock %}</title>
+    
+    <!-- Meta Tags Básicos SEO -->
+    <meta name="description" content="Plataforma de preparación PreICFES 100% Virtual. Prepárate para la prueba Saber 11 con simulacros, talleres de refuerzo y contenido temático especializado.">
+    <meta name="keywords" content="PreICFES, Saber 11, ICFES virtual, preparación universidad, simulacros ICFES, preicfes online, Victor Valdez">
+    <meta name="author" content="PreICFES Victor Valdez">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Redes Sociales (Facebook, LinkedIn) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.victorvirtual.com/">
+    <meta property="og:title" content="PreICFES Virtual Victor Valdez | Asegura tu cupo en la U">
+    <meta property="og:description" content="Prepárate para la prueba Saber 11 con simulacros oficiales, clases interactivas y talleres en un entorno digital flexible.">
+    <meta property="og:image" content="{% static 'images/logo.png' %}">
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PreICFES Virtual Victor Valdez | Preparación Saber 11">
+    <meta name="twitter:description" content="Simulacros, talleres dirigidos y analíticas en tiempo real para reventar el ICFES.">
+    <meta name="twitter:image" content="{% static 'images/logo.png' %}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/logo.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/logo.png' %}">
     <!-- Tailwind CSS desde el CDN para desarrollo rápido -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
