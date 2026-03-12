@@ -4,11 +4,17 @@ from curriculo.models import Modulo, Tema
 from .banco import Pregunta, Opcion
 
 class Taller(models.Model):
+    ESTADOS = (
+        ('borrador', 'Borrador'),
+        ('publicado', 'Publicado'),
+        ('oculto', 'Oculto'),
+    )
     modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE, related_name='talleres')
     tema = models.ForeignKey(Tema, on_delete=models.SET_NULL, null=True, blank=True, related_name='talleres')
     creador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='talleres_creados')
     titulo = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True, null=True)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='borrador')
     orden = models.PositiveIntegerField(default=0)
     intentos_permitidos = models.PositiveIntegerField(default=2)
 

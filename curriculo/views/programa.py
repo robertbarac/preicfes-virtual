@@ -1,7 +1,9 @@
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView
+from django.db.models import Prefetch
 from curriculo.models import Modulo
 from curriculo.views.mixins import HistorialMixin
+from evaluaciones.models.talleres import Taller
 from django import forms
 
 class ModuloForm(forms.ModelForm):
@@ -24,12 +26,17 @@ class ProgramaListView(ListView):
         # Prefetch related objects to avoid N+1 queries in the template
         # Mostramos también los inactivos si es staff o podemos aplicar lógica diferente
         qs = Modulo.objects.all()
+        
         if not self.request.user.is_staff:
             qs = qs.filter(activo=True)
+            # Filtramos los talleres por estado='publicado' usando Prefetch para estudiantes
+            talleres_prefetch = Prefetch('talleres', queryset=Taller.objects.filter(estado='publicado'))
+        else:
+            talleres_prefetch = Prefetch('talleres')
             
         return qs.prefetch_related(
             'posts', 
-            'talleres', 
+            talleres_prefetch, 
             'simulacros'
         ).order_by('orden')
 
