@@ -223,6 +223,11 @@ class TallerIntentoDetailView(LoginRequiredMixin, DetailView):
         )
         opciones_correctas_dict = {oc.pregunta_id: oc for oc in opciones_correctas_qs}
         
+        # Verificar intentos restantes para ver si mostramos la respuesta correcta
+        intentos_realizados = IntentoTaller.objects.filter(usuario=self.request.user, taller=taller).count()
+        mostrar_respuestas = self.request.user.is_staff or (intentos_realizados >= taller.intentos_permitidos)
+        context['mostrar_respuestas'] = mostrar_respuestas
+
         # Estructurar los datos para la plantilla
         detalles_preguntas = []
         preguntas_taller = taller.preguntas_taller.select_related('pregunta', 'pregunta__tema').prefetch_related('pregunta__opciones')
@@ -236,7 +241,7 @@ class TallerIntentoDetailView(LoginRequiredMixin, DetailView):
                 'pregunta': pregunta,
                 'opciones': pregunta.opciones.all(),
                 'respuesta_dada': respuesta_dada,
-                'opcion_correcta': opcion_correcta,
+                'opcion_correcta': opcion_correcta if mostrar_respuestas else None,
                 'fue_correcta': respuesta_dada.es_correcta if respuesta_dada else False,
                 'omitida': respuesta_dada is None
             })
@@ -247,11 +252,22 @@ class TallerIntentoDetailView(LoginRequiredMixin, DetailView):
 class TallerSolucionView(LoginRequiredMixin, DetailView):
     """
     Despliega la secuencia de respuestas correctas del Taller
-    (Para uso de profesores o revisión general sin contexto de un intento específico)
+    (Para uso de profesores o estudiantes que agotaron sus intentos)
     """
     model = Taller
     template_name = 'evaluaciones/taller_solucion.html'
     context_object_name = 'taller'
+
+    def dispatch(self, request, *args, **kwargs):
+        taller = self.get_object()
+        
+        if not request.user.is_staff:
+            intentos_realizados = IntentoTaller.objects.filter(usuario=request.user, taller=taller).count()
+            if intentos_realizados < taller.intentos_permitidos:
+                messages.warning(request, f"¡Atención! La solución oficial solo estará disponible cuando consumas tus {taller.intentos_permitidos} intentos permitidos.")
+                return redirect('evaluaciones:taller_detail', pk=taller.pk)
+                
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
