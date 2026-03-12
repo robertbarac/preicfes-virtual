@@ -31,13 +31,23 @@ class ProgramaListView(ListView):
             qs = qs.filter(activo=True)
             # Filtramos los talleres por estado='publicado' usando Prefetch para estudiantes
             talleres_prefetch = Prefetch('talleres', queryset=Taller.objects.filter(estado='publicado'))
+            # Para las clases virtuales, prebuscamos las asistencias correspondientes al estudiante
+            from curriculo.models.core import Asistencia
+            clases_prefetch = Prefetch(
+                'clases_virtuales',
+                queryset=ClaseVirtual.objects.prefetch_related(
+                    Prefetch('asistencias', queryset=Asistencia.objects.filter(alumno=self.request.user), to_attr='mi_asistencia')
+                )
+            )
         else:
             talleres_prefetch = Prefetch('talleres')
+            clases_prefetch = Prefetch('clases_virtuales')
             
         return qs.prefetch_related(
             'posts', 
             talleres_prefetch, 
-            'simulacros'
+            'simulacros',
+            clases_prefetch
         ).order_by('orden')
 
 class ModuloCreateView(HistorialMixin, CreateView):
@@ -56,3 +66,40 @@ class ModuloUpdateView(HistorialMixin, UpdateView):
     def get_success_url(self):
         # Tras editar también redirigimos al listado
         return reverse_lazy('curriculo:programa_list')
+
+
+from django.views import View
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from curriculo.models.core import ClaseVirtual, Asistencia
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+class RegistrarAsistenciaView(LoginRequiredMixin, View):
+    def post(self, request, clase_id):
+        clase = get_object_or_404(ClaseVirtual, id=clase_id)
+        
+        # 1. Validar que la ventana de tiempo sea la correcta
+        if not clase.is_active_for_attendance():
+            messages.error(request, f"No puedes registrar asistencia para '{clase.titulo}' en este momento. La clase no está en curso.")
+            return redirect('curriculo:programa_list')
+        
+        # 2. Buscar o crear el registro de asistencia del alumno
+        # Normalmente debió crearse por el Signal al crear la clase, pero si el alumno se 
+        # registró después, usamos get_or_create como fallback seguro
+        asistencia, created = Asistencia.objects.get_or_create(
+            clase=clase,
+            alumno=request.user,
+            defaults={'asistio': True}
+        )
+        
+        if not created:
+            if asistencia.asistio:
+                messages.info(request, "Ya habías registrado tu asistencia previamente.")
+            else:
+                asistencia.asistio = True
+                asistencia.save()
+                messages.success(request, f"¡Asistencia registrada exitosamente para {clase.titulo}!")
+        else:
+            messages.success(request, f"¡Asistencia registrada exitosamente para {clase.titulo}!")
+            
+        return redirect('curriculo:programa_list')
