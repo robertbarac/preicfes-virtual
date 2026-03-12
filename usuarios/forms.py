@@ -62,8 +62,9 @@ class RegistroPublicoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Solo permitimos roles de estudiantes
         self.fields['role'].choices = [
-            ('student', 'Student'),
-            ('virtual_student', 'VirtualStudent'),
+            ('', '--- Selecciona tu Modalidad ---'),
+            ('student', 'Estudiante Presencial (Asiste a clases físicas)'),
+            ('virtual_student', 'Estudiante 100% Virtual (Plataforma)'),
         ]
 
     def clean(self):
