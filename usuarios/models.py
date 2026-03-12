@@ -24,3 +24,22 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
+
+from django.utils import timezone
+
+class VentanaRegistro(models.Model):
+    fecha_inicio = models.DateTimeField(help_text="Fecha y hora de inicio de apertura")
+    fecha_fin = models.DateTimeField(help_text="Fecha y hora de cierre")
+    creador = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='ventanas_creadas')
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha_creacion']
+
+    def is_active(self):
+        now = timezone.now()
+        return self.fecha_inicio <= now <= self.fecha_fin
+
+    def __str__(self):
+        estado = "ACTIVA" if self.is_active() else "CERRADA"
+        return f"Ventana {self.id} ({estado}) - {self.fecha_inicio.strftime('%Y-%m-%d %H:%M')} a {self.fecha_fin.strftime('%Y-%m-%d %H:%M')}"

@@ -6,4 +6,7 @@ app_name = 'usuarios'
 urlpatterns = [
     path('admin/reset-password/', views.AdminPasswordResetView.as_view(), name='admin_reset_password'),
     path('admin/registrar-usuario/', views.RegistroUsuarioView.as_view(), name='registro_interno'),
+    path('admin/ventanas-registro/', views.VentanaRegistroListView.as_view(), name='ventanas_list'),
+    path('admin/ventanas-registro/crear/', views.VentanaRegistroCreateView.as_view(), name='ventanas_crear'),
+    path('registro/', views.RegistroPublicoView.as_view(), name='registro_publico'),
 ]

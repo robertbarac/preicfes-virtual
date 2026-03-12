@@ -106,3 +106,90 @@ class RegistroUsuarioView(UserPassesTestMixin, FormView):
         context['new_user'] = user
         context['temp_password'] = temporal_password
         return render(self.request, self.template_name, context)
+
+from django.views.generic import TemplateView
+from django.shortcuts import redirect
+
+class LandingView(TemplateView):
+    template_name = 'landing.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('curriculo:programa_list')
+        return super().dispatch(request, *args, **kwargs)
+
+from django.views.generic import ListView, CreateView
+from django.contrib.auth.models import Group
+from django.utils import timezone
+from .models import VentanaRegistro
+from .forms import VentanaRegistroForm, RegistroPublicoForm
+from dateutil.relativedelta import relativedelta
+
+class VentanaRegistroListView(UserPassesTestMixin, ListView):
+    model = VentanaRegistro
+    template_name = 'usuarios/ventanas_list.html'
+    context_object_name = 'ventanas'
+    
+    def test_func(self):
+        return self.request.user.is_superuser
+
+class VentanaRegistroCreateView(UserPassesTestMixin, CreateView):
+    model = VentanaRegistro
+    form_class = VentanaRegistroForm
+    template_name = 'usuarios/ventana_form.html'
+    success_url = reverse_lazy('usuarios:ventanas_list')
+    
+    def test_func(self):
+        return self.request.user.is_superuser
+        
+    def form_valid(self, form):
+        form.instance.creador = self.request.user
+        return super().form_valid(form)
+
+class RegistroPublicoView(FormView):
+    template_name = 'usuarios/registro_publico.html'
+    form_class = RegistroPublicoForm
+    success_url = reverse_lazy('home')
+
+    def dispatch(self, request, *args, **kwargs):
+        # Allow superusers to preview it even if closed (optional) or restrict strictly
+        active_window = VentanaRegistro.objects.filter(
+            fecha_inicio__lte=timezone.now(),
+            fecha_fin__gte=timezone.now()
+        ).exists()
+        
+        if not active_window:
+            return render(request, 'usuarios/registro_cerrado.html', status=403)
+            
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.set_password(form.cleaned_data['password'])
+        user.is_staff = False  # Strictly override just in case
+        user.save()
+
+        # Group assignment
+        try:
+            if user.role == 'student':
+                group, _ = Group.objects.get_or_create(name='Student')
+                user.groups.add(group)
+            elif user.role == 'virtual_student':
+                group, _ = Group.objects.get_or_create(name='VirtualStudent')
+                user.groups.add(group)
+        except Exception:
+            pass
+
+        # Calculate a default generic subscription (e.g. 1 year from now)
+        start_date = timezone.now().date()
+        end_date = start_date + relativedelta(years=1)
+        
+        Subscription.objects.create(
+            user=user,
+            creador=None,  # Was registered by themselves
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        messages.success(self.request, f"¡Tu cuenta como {user.get_role_display()} ha sido creada! Ya puedes iniciar sesión.")
+        return super().form_valid(form)

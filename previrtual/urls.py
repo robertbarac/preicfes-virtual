@@ -19,9 +19,10 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from usuarios.views import LandingView
 
 urlpatterns = [
-    path('', TemplateView.as_view(template_name='landing.html'), name='home'),
+    path('', LandingView.as_view(), name='home'),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),    
     path('programa/', include('curriculo.urls', namespace='curriculo')),
