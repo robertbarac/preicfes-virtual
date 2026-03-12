@@ -19,7 +19,7 @@ class RegistroInternoForm(forms.ModelForm):
         start_date = cleaned_data.get('start_date')
         end_date = cleaned_data.get('end_date')
 
-        if role == 'student':
+        if role in ['student', 'virtual_student']:
             if not start_date:
                 self.add_error('start_date', 'La fecha de inicio es requerida para estudiantes.')
             if not end_date:

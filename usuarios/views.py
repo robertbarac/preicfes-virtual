@@ -63,7 +63,7 @@ class RegistroUsuarioView(UserPassesTestMixin, FormView):
         # Asignar nivel de Staff basado en el Rol elegido
         if user.role == 'teacher':
             user.is_staff = True
-        elif user.role == 'student':
+        elif user.role in ['student', 'virtual_student']:
             user.is_staff = False
             
         # Generar contraseña temporal segura
@@ -80,19 +80,23 @@ class RegistroUsuarioView(UserPassesTestMixin, FormView):
             elif user.role == 'student':
                 student_group, created = Group.objects.get_or_create(name='Student')
                 user.groups.add(student_group)
+            elif user.role == 'virtual_student':
+                virtual_student_group, created = Group.objects.get_or_create(name='VirtualStudent')
+                user.groups.add(virtual_student_group)
         except Exception as e:
             # Silently pass or log if group creation fails, to not break registration flow
             pass
 
-        # Si es estudiante, crear suscripción
-        if user.role == 'student':
+        # Si es estudiante o estudiante virtual, crear suscripción
+        if user.role in ['student', 'virtual_student']:
             Subscription.objects.create(
                 user=user,
                 creador=self.request.user,
                 start_date=form.cleaned_data['start_date'],
                 end_date=form.cleaned_data['end_date']
             )
-            messages.success(self.request, f"Estudiante {user.username} registrado con éxito. Contraseña temporal: {temporal_password}. Suscripción activada.")
+            formato_rol = "Estudiante" if user.role == 'student' else "Estudiante Virtual"
+            messages.success(self.request, f"{formato_rol} {user.username} registrado con éxito. Contraseña temporal: {temporal_password}. Suscripción activada.")
         else:
             messages.success(self.request, f"Usuario {user.role} registrado con éxito. Contraseña temporal: {temporal_password}.")
 

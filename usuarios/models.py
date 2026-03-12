@@ -5,6 +5,7 @@ class User(AbstractUser):
     ROLE_CHOICES = (
         ('student', 'Student'),
         ('teacher', 'Teacher'),
+        ('virtual_student', 'VirtualStudent'),
     )
     # Admin role is handled by is_superuser and is_staff boolean properties inherited from AbstractUser
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
