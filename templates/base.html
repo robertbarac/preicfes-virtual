@@ -134,6 +134,7 @@
                     </svg>
                     Talleres
                 </a>
+                {% if user.role != 'teacher' %}
                 <a href="{% url 'suscripciones:lista' %}"
                     class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
                     <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
@@ -154,12 +155,16 @@
                     </svg>
                     Registrar Usuario
                 </a>
-                
+                {% endif %}
+
                 {% if user.is_superuser %}
                 <a href="{% url 'usuarios:ventanas_list' %}"
                     class="text-indigo-300 hover:bg-white/10 hover:text-indigo-100 group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors mt-2 border border-indigo-900/50 bg-indigo-900/10">
-                    <svg class="text-indigo-400 group-hover:text-indigo-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    <svg class="text-indigo-400 group-hover:text-indigo-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                        </path>
                     </svg>
                     Ventanas de Registro
                 </a>
