@@ -32,8 +32,8 @@ class SubscriptionCheckMiddleware:
         if request.user.is_staff or request.user.is_superuser:
             return self.get_response(request)
             
-        # 2. Bypass if user is not a student
-        if request.user.role != 'student':
+        # 2. Bypass if user is not a student or virtual_student
+        if request.user.role not in ['student', 'virtual_student']:
             return self.get_response(request)
 
         # 3. Bypass if the path is in the allowed list or starts with allowed prefixes
@@ -41,7 +41,7 @@ class SubscriptionCheckMiddleware:
         if path in self.allowed_urls or path.startswith('/admin/') or path.startswith('/static/') or path.startswith('/media/'):
             return self.get_response(request)
 
-        # 4. Enforce subscription check for Students on protected paths
+        # 4. Enforce subscription check for Students/VirtualStudents on protected paths
         suscripcion = request.user.subscriptions.order_by('-id').first()
         
         # If the student DOES NOT have a subscription or it's INVALID

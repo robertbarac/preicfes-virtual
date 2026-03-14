@@ -180,9 +180,17 @@ class RegistroPublicoView(FormView):
         except Exception:
             pass
 
-        # Calculate a default generic subscription (e.g. 1 year from now)
-        start_date = timezone.now().date()
-        end_date = start_date + relativedelta(years=1)
+        # Calculate subscription dates based on active config or fallback
+        from suscripciones.models import SubscriptionConfig
+        config = SubscriptionConfig.objects.filter(active=True).first()
+        
+        if config:
+            start_date = config.default_start_date
+            end_date = config.default_end_date
+        else:
+            # Fallback if no active config exists
+            start_date = timezone.now().date()
+            end_date = start_date + relativedelta(years=1)
         
         Subscription.objects.create(
             user=user,
