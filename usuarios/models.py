@@ -32,6 +32,14 @@ class User(AbstractUser):
         validators=[RegexValidator(regex=r'^\d+$', message='El número de documento solo debe contener números, sin puntos ni espacios.')],
         help_text="Número de identificación legal"
     )
+
+    telefono = models.CharField(
+        max_length=10,
+        blank=False,
+        null=False,
+        validators=[RegexValidator(regex=r'^\d{10}$', message='El teléfono debe tener exactamente 10 dígitos, sin comas, puntos ni espacios.')],
+        help_text="Número de teléfono celular (10 dígitos)"
+    )
     
     creador = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='usuarios_registrados', help_text="Usuario que registró a esta persona (ej. Admin/Secretaría)")
 

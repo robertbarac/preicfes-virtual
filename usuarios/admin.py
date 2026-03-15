@@ -39,14 +39,14 @@ class SuscripcionActivaFilter(admin.SimpleListFilter):
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     model = User
-    list_display = ['username', 'email', 'get_full_name', 'numero_documento', 'role', 'tiene_suscripcion', 'suscripcion_activa', 'fin_suscripcion', 'is_active']
+    list_display = ['username', 'email', 'get_full_name', 'numero_documento', 'telefono', 'role', 'tiene_suscripcion', 'suscripcion_activa', 'fin_suscripcion', 'is_active']
     list_filter = ['role', TieneSuscripcionFilter, SuscripcionActivaFilter, 'is_staff', 'is_active']
-    search_fields = ('username', 'first_name', 'last_name', 'numero_documento', 'email')
+    search_fields = ('username', 'first_name', 'last_name', 'numero_documento', 'telefono', 'email')
     fieldsets = UserAdmin.fieldsets + (
-        ('Información de PreVirtual', {'fields': ('role', 'tipo_documento', 'numero_documento', 'creador')}),
+        ('Información de PreVirtual', {'fields': ('role', 'tipo_documento', 'numero_documento', 'telefono', 'creador')}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Información de PreVirtual', {'fields': ('role', 'tipo_documento', 'numero_documento')}),
+        ('Información de PreVirtual', {'fields': ('role', 'tipo_documento', 'numero_documento', 'telefono')}),
     )
 
     def tiene_suscripcion(self, obj):

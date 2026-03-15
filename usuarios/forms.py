@@ -11,7 +11,7 @@ class RegistroInternoForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['tipo_documento', 'numero_documento', 'first_name', 'last_name', 'email', 'username', 'role']
+        fields = ['tipo_documento', 'numero_documento', 'first_name', 'last_name', 'email', 'telefono', 'username', 'role']
 
     def clean(self):
         cleaned_data = super().clean()
@@ -47,13 +47,14 @@ class RegistroPublicoForm(forms.ModelForm):
     
     class Meta:
         model = User
-        fields = ['tipo_documento', 'numero_documento', 'first_name', 'last_name', 'email', 'username', 'role']
+        fields = ['tipo_documento', 'numero_documento', 'first_name', 'last_name', 'email', 'telefono', 'username', 'role']
         widgets = {
             'tipo_documento': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
             'numero_documento': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
             'first_name': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
             'last_name': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
             'email': forms.EmailInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
+            'telefono': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
             'username': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
             'role': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
         }
