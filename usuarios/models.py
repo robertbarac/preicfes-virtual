@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 
 class User(AbstractUser):
     ROLE_CHOICES = (
@@ -10,6 +11,8 @@ class User(AbstractUser):
     # Admin role is handled by is_superuser and is_staff boolean properties inherited from AbstractUser
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
     
+    email = models.EmailField('email address', unique=True)
+    
     # Identificación para Pico y Cédula
     TIPO_DOC_CHOICES = (
         ('CC', 'Cédula de Ciudadanía'),
@@ -18,7 +21,17 @@ class User(AbstractUser):
         ('PAS', 'Pasaporte'),
     )
     tipo_documento = models.CharField(max_length=3, choices=TIPO_DOC_CHOICES, default='CC')
-    numero_documento = models.CharField(max_length=20, blank=True, null=True, unique=True, help_text="Número de identificación legal")
+    first_name = models.CharField('first name', max_length=150, blank=False, null=False)
+    last_name = models.CharField('last name', max_length=150, blank=False, null=False)
+
+    numero_documento = models.CharField(
+        max_length=20, 
+        blank=False, 
+        null=False, 
+        unique=True, 
+        validators=[RegexValidator(regex=r'^\d+$', message='El número de documento solo debe contener números, sin puntos ni espacios.')],
+        help_text="Número de identificación legal"
+    )
     
     creador = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='usuarios_registrados', help_text="Usuario que registró a esta persona (ej. Admin/Secretaría)")
 
