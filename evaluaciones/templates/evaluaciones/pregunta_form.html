@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title %}Crear Nueva Pregunta | PreVirtual{% endblock %}
+{% block title %}{% if is_edit %}Editar Pregunta{% else %}Crear Nueva Pregunta{% endif %} | PreVirtual{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto mb-12">
     <!-- Encabezado -->
     <header class="bg-white shadow-sm rounded-xl px-8 py-6 mb-8 border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-            <h1 class="text-3xl font-extrabold text-gray-800">Crear Nueva Pregunta</h1>
-            <p class="text-gray-500 mt-1">Añade una pregunta al banco con sus opciones de respuesta.</p>
+            <h1 class="text-3xl font-extrabold text-gray-800">{% if is_edit %}Editar Pregunta #{{ object.id }}{% else %}Crear Nueva Pregunta{% endif %}</h1>
+            <p class="text-gray-500 mt-1">{% if is_edit %}Modifica el enunciado, opciones e imágenes de la pregunta.{% else %}Añade una pregunta al banco con sus opciones de respuesta.{% endif %}</p>
         </div>
         <div>
             <a href="javascript:history.back()" class="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-5 py-2.5 rounded-lg transition-colors border border-gray-200 shadow-sm">

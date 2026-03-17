@@ -59,6 +59,57 @@ class PreguntaCreateView(HistorialMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('curriculo:programa_list') # O el listado global de preguntas cuando exista
 
+class PreguntaUpdateView(HistorialMixin, UpdateView):
+    model = Pregunta
+    form_class = PreguntaForm
+    template_name = 'evaluaciones/pregunta_form.html'
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        if self.request.POST:
+            data['opciones'] = OpcionFormSet(self.request.POST, self.request.FILES, instance=self.object)
+            data['imagenes_pregunta'] = ImagenPreguntaFormSet(self.request.POST, self.request.FILES, instance=self.object)
+        else:
+            data['opciones'] = OpcionFormSet(instance=self.object)
+            data['imagenes_pregunta'] = ImagenPreguntaFormSet(instance=self.object)
+        data['is_edit'] = True
+        return data
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        opciones = context['opciones']
+        imagenes_pregunta = context['imagenes_pregunta']
+
+        self.object = form.save()
+
+        if opciones.is_valid() and imagenes_pregunta.is_valid():
+            opciones.instance = self.object
+            opciones.save()
+
+            imagenes_pregunta.instance = self.object
+            imagenes_pregunta.save()
+
+            # Verificar si se indicó al menos una respuesta correcta
+            tiene_correcta = False
+            for form_opcion in opciones.forms:
+                if form_opcion.cleaned_data and not form_opcion.cleaned_data.get('DELETE', False):
+                    if form_opcion.cleaned_data.get('es_correcta', False):
+                        tiene_correcta = True
+                        break
+
+            if not tiene_correcta:
+                messages.warning(self.request, "Atención: Guardaste la pregunta sin marcar ninguna opción como correcta.")
+            else:
+                messages.success(self.request, "Pregunta actualizada correctamente.")
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
+
+        return redirect('evaluaciones:pregunta_list')
+
+    def get_success_url(self):
+        return reverse_lazy('evaluaciones:pregunta_list')
+
+
 from django.views.generic import ListView
 from curriculo.models import Materia, Tema
 
