@@ -169,6 +169,16 @@
                     Ventanas de Registro
                 </a>
                 {% endif %}
+                <a href="{% url 'evaluaciones:reporte_rendimiento' %}"
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-yellow-400 group-hover:text-yellow-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                        </path>
+                    </svg>
+                    Reporte Rendimiento
+                </a>
                 <a href="{% url 'admin:index' %}"
                     class="text-red-300 hover:bg-white/10 hover:text-red-100 group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors mt-2 border border-red-900/50 bg-red-900/10">
                     <svg class="text-red-400 group-hover:text-red-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"

@@ -173,3 +173,125 @@ class ReporteEstudiantePDFView(View):
         return FileResponse(buffer, as_attachment=False, filename=filename)
 
 
+# ─── Reporte de Rendimiento (Staff) ──────────────────────────────────────────
+import json
+from collections import defaultdict
+from django.db.models import Avg, Count, Sum, Max as DjMax
+from django.db.models import IntegerField
+from django.db.models.functions import Cast
+
+@method_decorator(staff_member_required, name='dispatch')
+class ReporteRendimientoView(TemplateView):
+    template_name = 'evaluaciones/reporte_rendimiento.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Extraer el filtro de materia desde el GET
+        filtro_materia_id = self.request.GET.get('materia')
+        try:
+            filtro_materia_id = int(filtro_materia_id) if filtro_materia_id else None
+        except (ValueError, TypeError):
+            filtro_materia_id = None
+
+        # ── 1. Promedio por taller (gráfica) ──────────────────────────────────
+        # Filtramos talleres que SI tengan materia asociada, y por filtro si existe.
+        talleres_qs = IntentoTaller.objects.filter(
+            fecha_fin__isnull=False, 
+            puntaje_porcentaje__isnull=False,
+            taller__tema__materia__isnull=False
+        )
+        if filtro_materia_id:
+            talleres_qs = talleres_qs.filter(taller__tema__materia_id=filtro_materia_id)
+
+        promedios_por_taller = (
+            talleres_qs
+            .values('taller__titulo', 'taller__modulo__nombre')
+            .annotate(promedio=Avg('puntaje_porcentaje'), total=Count('id'))
+            .order_by('taller__modulo__nombre', 'taller__titulo')
+        )
+        chart_labels = [r['taller__titulo'] for r in promedios_por_taller]
+        chart_values = [round(r['promedio'], 1) for r in promedios_por_taller]
+        chart_counts = [r['total'] for r in promedios_por_taller]
+        context['chart_data'] = json.dumps({
+            'labels': chart_labels,
+            'values': chart_values,
+            'counts': chart_counts,
+        })
+
+        # ── 2. Tabla: promedio por estudiante y materia ───────────────────────
+        from curriculo.models.core import Materia
+        materias = list(Materia.objects.order_by('nombre'))
+        estudiantes = list(
+            User.objects.filter(is_staff=False, is_active=True)
+            .order_by('last_name', 'first_name')
+        )
+
+        mejores = (
+            IntentoTaller.objects
+            .filter(fecha_fin__isnull=False, puntaje_porcentaje__isnull=False)
+            .values('usuario_id', 'taller_id', 'taller__tema__materia_id',
+                    'taller__tema__materia__nombre')
+            .annotate(mejor=DjMax('puntaje_porcentaje'))
+        )
+
+        datos = defaultdict(lambda: defaultdict(list))
+        for m in mejores:
+            if m['taller__tema__materia_id']:
+                datos[m['usuario_id']][m['taller__tema__materia_id']].append(m['mejor'])
+
+        tabla = []
+        for est in estudiantes:
+            filas_materia = []
+            for mat in materias:
+                if filtro_materia_id and mat.id != filtro_materia_id:
+                    continue
+                puntajes = datos[est.id].get(mat.id, [])
+                if puntajes:
+                    filas_materia.append({
+                        'materia': mat.nombre,
+                        'promedio': round(sum(puntajes) / len(puntajes), 1),
+                        'talleres': len(puntajes),
+                    })
+            if filas_materia:
+                tabla.append({
+                    'estudiante': est.get_full_name() or est.username,
+                    'filas': filas_materia,
+                })
+
+        context['tabla'] = tabla
+        context['materias'] = materias
+        context['filtro_materia_id'] = filtro_materia_id
+
+        # ── 3. Top/Bottom 3 ejes temáticos ────────────────────────────────────
+        from ..models.talleres import RespuestaTaller
+
+        respuestas_qs = RespuestaTaller.objects.filter(pregunta__tema__isnull=False)
+        if filtro_materia_id:
+            respuestas_qs = respuestas_qs.filter(pregunta__tema__materia_id=filtro_materia_id)
+
+        aciertos_por_tema = (
+            respuestas_qs
+            .values('pregunta__tema__nombre', 'pregunta__tema__materia__nombre')
+            .annotate(total=Count('id'), correctas=Sum(Cast('es_correcta', output_field=IntegerField())))
+            .filter(total__gte=5)
+        )
+
+        temas_lista = []
+        for t in aciertos_por_tema:
+            pct = round((t['correctas'] / t['total']) * 100, 1) if t['total'] else 0
+            temas_lista.append({
+                'tema': t['pregunta__tema__nombre'],
+                'materia': t['pregunta__tema__materia__nombre'] or '—',
+                'porcentaje': pct,
+                'total': t['total'],
+            })
+
+        temas_lista.sort(key=lambda x: x['porcentaje'], reverse=True)
+        context['top_temas'] = temas_lista[:3]
+        context['bottom_temas'] = list(reversed(temas_lista[-3:])) if len(temas_lista) >= 3 else temas_lista
+
+        return context
+
+
+
