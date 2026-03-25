@@ -133,29 +133,13 @@
                                 </a>
                                 
                                 {% if not request.user.is_staff %}
-                                    {% if clase.mi_asistencia %}
-                                        {% with asis=clase.mi_asistencia.0 %}
-                                            {% if asis and asis.asistio %}
-                                                <div class="text-[11px] font-bold text-green-700 bg-green-50 py-1.5 px-2 rounded text-center border border-green-200 flex items-center justify-center">
-                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Asistencia Registrada
-                                                </div>
-                                            {% else %}
-                                                <form action="{% url 'curriculo:registrar_asistencia' clase.id %}" method="POST" class="w-full m-0">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="w-full text-[11px] font-bold py-1.5 px-2 rounded text-center transition-all border
-                                                        {% if clase.is_active_for_attendance %}
-                                                            bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-700
-                                                        {% else %}
-                                                            bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed
-                                                        {% endif %}"
-                                                        {% if not clase.is_active_for_attendance %}disabled title="Solo disponible durante el horario de la clase"{% endif %}>
-                                                        Registrar Asistencia
-                                                    </button>
-                                                </form>
-                                            {% endif %}
-                                        {% endwith %}
+                                    {% if clase.id in clases_asistidas %}
+                                        <!-- Ya marcó asistencia y asistió -->
+                                        <div class="text-[11px] font-bold text-green-700 bg-green-50 py-1.5 px-2 rounded text-center border border-green-200 flex items-center justify-center">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Asistencia Registrada
+                                        </div>
                                     {% else %}
-                                        <!-- En caso de no tener registro preliminar por Signal -->
+                                        <!-- No ha marcado o marcó como ausente -->
                                         <form action="{% url 'curriculo:registrar_asistencia' clase.id %}" method="POST" class="w-full m-0">
                                             {% csrf_token %}
                                             <button type="submit" class="w-full text-[11px] font-bold py-1.5 px-2 rounded text-center transition-all border

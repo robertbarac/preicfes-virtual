@@ -47,3 +47,29 @@ class RespuestaTaller(models.Model):
     pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE)
     opcion_seleccionada = models.ForeignKey(Opcion, on_delete=models.SET_NULL, null=True, blank=True)
     es_correcta = models.BooleanField(default=False)
+
+
+# ─── Invalidación de caché ────────────────────────────────────────────────────
+from django.db.models.signals import pre_save, post_save
+from django.dispatch import receiver
+from django.core.cache import cache
+from curriculo.cache_keys import PROGRAMA_CACHE_KEY
+
+@receiver(pre_save, sender=Taller)
+def invalidar_cache_por_cambio_taller(sender, instance, **kwargs):
+    """
+    Borra el caché del programa cuando un Taller cambia de estado
+    (ej: borrador → publicado, o publicado → oculto).
+    """
+    if instance.pk:
+        try:
+            anterior = Taller.objects.get(pk=instance.pk)
+            if anterior.estado != instance.estado:
+                cache.delete(PROGRAMA_CACHE_KEY)
+        except Taller.DoesNotExist:
+            pass
+    else:
+        # Taller nuevo: si nace publicado, invalida de una vez
+        if instance.estado == 'publicado':
+            cache.delete(PROGRAMA_CACHE_KEY)
+

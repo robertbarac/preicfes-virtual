@@ -100,6 +100,7 @@ class Asistencia(models.Model):
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 
 User = get_user_model()
 
@@ -118,3 +119,30 @@ def crear_registros_asistencia(sender, instance, created, **kwargs):
         ]
         if asistencias_a_crear:
             Asistencia.objects.bulk_create(asistencias_a_crear, ignore_conflicts=True)
+
+
+# ─── Invalidación de caché ────────────────────────────────────────────────────
+from curriculo.cache_keys import PROGRAMA_CACHE_KEY
+
+def _invalidar_programa_cache():
+    """Borra el caché compartido del programa."""
+    cache.delete(PROGRAMA_CACHE_KEY)
+
+
+@receiver(post_save, sender=ClaseVirtual)
+def invalidar_cache_por_clase_virtual(sender, instance, **kwargs):
+    """
+    Borra el caché cuando se crea o edita una ClaseVirtual
+    (puede haber cambiado fecha, hora o enlace).
+    """
+    _invalidar_programa_cache()
+
+
+@receiver(post_save, sender=Modulo)
+def invalidar_cache_por_modulo(sender, instance, **kwargs):
+    """
+    Borra el caché cuando se crea o edita un Módulo
+    (nombre, orden, activo pueden haber cambiado).
+    """
+    _invalidar_programa_cache()
+

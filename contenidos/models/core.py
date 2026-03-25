@@ -62,3 +62,27 @@ class BloqueContenido(models.Model):
             return f"https://www.youtube-nocookie.com/embed/{video_id}"
         return self.url
 
+
+# ─── Invalidación de caché ────────────────────────────────────────────────────
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+from django.core.cache import cache
+
+@receiver(pre_save, sender=Post)
+def invalidar_cache_por_cambio_post(sender, instance, **kwargs):
+    """
+    Borra el caché del programa cuando un Post cambia de estado
+    (ej: borrador → publicado, o publicado → oculto).
+    """
+    from curriculo.cache_keys import PROGRAMA_CACHE_KEY
+    if instance.pk:
+        try:
+            anterior = Post.objects.get(pk=instance.pk)
+            if anterior.estado != instance.estado:
+                cache.delete(PROGRAMA_CACHE_KEY)
+        except Post.DoesNotExist:
+            pass
+    else:
+        # Post nuevo publicado directamente
+        if instance.estado == 'publicado':
+            cache.delete(PROGRAMA_CACHE_KEY)
