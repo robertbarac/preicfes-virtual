@@ -1,14 +1,17 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}PreICFES Virtual | Prepárate e ingresa a la universidad{% endblock %}</title>
-    
+
     <!-- Meta Tags Básicos SEO -->
-    <meta name="description" content="Plataforma de preparación PreICFES 100% Virtual. Prepárate para la prueba Saber 11 con simulacros, talleres de refuerzo y contenido temático especializado.">
-    <meta name="keywords" content="PreICFES, Saber 11, ICFES virtual, preparación universidad, simulacros ICFES, preicfes online, Victor Valdez">
+    <meta name="description"
+        content="Plataforma de preparación PreICFES 100% Virtual. Prepárate para la prueba Saber 11 con simulacros, talleres de refuerzo y contenido temático especializado.">
+    <meta name="keywords"
+        content="PreICFES, Saber 11, ICFES virtual, preparación universidad, simulacros ICFES, preicfes online, Victor Valdez">
     <meta name="author" content="PreICFES Victor Valdez">
     <meta name="robots" content="index, follow">
 
@@ -16,13 +19,15 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.victorvirtual.com/">
     <meta property="og:title" content="PreICFES Virtual Victor Valdez | Asegura tu cupo en la U">
-    <meta property="og:description" content="Prepárate para la prueba Saber 11 con simulacros oficiales, clases interactivas y talleres en un entorno digital flexible.">
+    <meta property="og:description"
+        content="Prepárate para la prueba Saber 11 con simulacros oficiales, clases interactivas y talleres en un entorno digital flexible.">
     <meta property="og:image" content="{% static 'images/logo.png' %}">
 
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="PreICFES Virtual Victor Valdez | Preparación Saber 11">
-    <meta name="twitter:description" content="Simulacros, talleres dirigidos y analíticas en tiempo real para reventar el ICFES.">
+    <meta name="twitter:description"
+        content="Simulacros, talleres dirigidos y analíticas en tiempo real para reventar el ICFES.">
     <meta name="twitter:image" content="{% static 'images/logo.png' %}">
 
     <!-- Favicon -->
@@ -33,90 +38,185 @@
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
     <style>
         /* Estilos base para conservar la estética premium */
-        body { font-family: 'Inter', system-ui, sans-serif; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
     </style>
 </head>
+
 <body class="bg-gray-50 text-gray-800 antialiased h-screen flex overflow-hidden">
 
     <!-- SIDEBAR -->
     <div x-data="{ sidebarOpen: false }" class="flex h-full w-full">
         <!-- Sidebar para móviles (Overlay oscuro) -->
-        <div :class="{'block': sidebarOpen, 'hidden': !sidebarOpen}" @click="sidebarOpen = false" class="fixed inset-0 z-20 transition-opacity bg-gray-900 bg-opacity-50 lg:hidden hidden"></div>
+        <div :class="{'block': sidebarOpen, 'hidden': !sidebarOpen}" @click="sidebarOpen = false"
+            class="fixed inset-0 z-20 transition-opacity bg-gray-900 bg-opacity-50 lg:hidden hidden"></div>
 
         <!-- Panel Lateral -->
-        <div :class="{'translate-x-0 ease-out': sidebarOpen, '-translate-x-full ease-in': !sidebarOpen}" class="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition duration-300 transform bg-gradient-to-b from-gray-900 via-slate-800 to-teal-900 lg:translate-x-0 lg:static lg:inset-0 shadow-2xl flex flex-col pt-5 pb-4">
-            
+        <div :class="{'translate-x-0 ease-out': sidebarOpen, '-translate-x-full ease-in': !sidebarOpen}"
+            class="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition duration-300 transform bg-gradient-to-b from-gray-900 via-slate-800 to-teal-900 lg:translate-x-0 lg:static lg:inset-0 shadow-2xl flex flex-col pt-5 pb-4">
+
             <!-- Logo y Marca -->
             <div class="flex items-center justify-center flex-shrink-0 px-4 mb-6 relative">
                 <!-- Cuando tengas tu logo, usarás la etiqueta img como la comentada abajo -->
                 <img class="h-10 w-auto" src="{% static 'images/logo.png' %}" alt="PreICFES Victor Valdez Logo">
                 <a href="/" class="text-white font-black text-xl tracking-tight flex items-center gap-1">
-                    <span class="bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">PREICFES</span>V.V.
+                    <span
+                        class="bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">PREICFES</span>V.V.
                 </a>
-                <button @click="sidebarOpen = false" class="lg:hidden absolute right-4 text-gray-400 hover:text-white focus:outline-none">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                <button @click="sidebarOpen = false"
+                    class="lg:hidden absolute right-4 text-gray-400 hover:text-white focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                 </button>
             </div>
 
             <!-- Menú de Navegación -->
             <nav class="mt-5 flex-1 px-2 space-y-2">
                 {% if user.is_authenticated %}
-                    
-                    <!-- Para todos -->
-                    <a href="{% url 'curriculo:programa_list' %}" class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                        <svg class="text-teal-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                        Programa Virtual
-                    </a>
 
-                    <!-- Staff/Profesores/Admin -->
-                    {% if user.is_staff %}
-                    <div class="pt-4 pb-2">
-                        <p class="px-3 text-xs font-bold tracking-wider text-gray-500 uppercase">Administración</p>
-                    </div>
-                    <a href="{% url 'evaluaciones:pregunta_list' %}" class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                        <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                        Banco de Preguntas
-                    </a>
-                    <a href="{% url 'contenidos:post_list' %}" class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                        <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        Contenidos
-                    </a>
-                    <a href="{% url 'evaluaciones:simulacro_list' %}" class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                        <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                        Simulacros
-                    </a>
-                    <a href="{% url 'evaluaciones:taller_list' %}" class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                        <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        Talleres
-                    </a>
-                    <a href="{% url 'suscripciones:lista' %}" class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                        <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        Suscripciones
-                    </a>
-                    <a href="{% url 'usuarios:registro_interno' %}" class="text-indigo-300 hover:bg-white/10 hover:text-indigo-100 group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors mt-2 border border-indigo-900/50 bg-indigo-900/10">
-                        <svg class="text-indigo-400 group-hover:text-indigo-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-                        Registrar Usuario
-                    </a>
-                    <a href="{% url 'admin:index' %}" class="text-red-300 hover:bg-white/10 hover:text-red-100 group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors mt-2 border border-red-900/50 bg-red-900/10">
-                        <svg class="text-red-400 group-hover:text-red-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        Admin (Django)
-                    </a>
-                    {% endif %}
+                <!-- Para todos -->
+                <a href="{% url 'curriculo:programa_list' %}"
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-teal-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                        </path>
+                    </svg>
+                    Programa Virtual
+                </a>
 
-                    <!-- Estudiantes y Superusers -->
-                    {% if user.role == 'student' or user.is_superuser %}
-                    <div class="pt-4 pb-2">
-                        <p class="px-3 text-xs font-bold tracking-wider text-gray-500 uppercase">Mi Progreso</p>
-                    </div>
-                    <a href="{% url 'evaluaciones:mis_calificaciones' %}" class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                        <svg class="text-yellow-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                        Calificaciones
-                    </a>
-                    {% endif %}
+                <!-- Staff/Profesores/Admin -->
+                {% if user.is_staff %}
+                <div class="pt-4 pb-2">
+                    <p class="px-3 text-xs font-bold tracking-wider text-gray-500 uppercase">Administración</p>
+                </div>
+                <a href="{% url 'evaluaciones:pregunta_list' %}"
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                        </path>
+                    </svg>
+                    Banco de Preguntas
+                </a>
+                <a href="{% url 'contenidos:post_list' %}"
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    Contenidos
+                </a>
+                <a href="{% url 'evaluaciones:simulacro_list' %}"
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                        </path>
+                    </svg>
+                    Simulacros
+                </a>
+                <a href="{% url 'evaluaciones:taller_list' %}"
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                        </path>
+                    </svg>
+                    Talleres
+                </a>
+                {% if user.role != 'teacher' %}
+                <a href="{% url 'suscripciones:lista' %}"
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                        </path>
+                    </svg>
+                    Suscripciones
+                </a>
+                <a href="{% url 'usuarios:registro_interno' %}"
+                    class="text-indigo-300 hover:bg-white/10 hover:text-indigo-100 group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors mt-2 border border-indigo-900/50 bg-indigo-900/10">
+                    <svg class="text-indigo-400 group-hover:text-indigo-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
+                        </path>
+                    </svg>
+                    Registrar Usuario
+                </a>
+                {% endif %}
 
-                    {% if user.role == 'student' %}
-                <a href="{% url 'suscripciones:mi_suscripcion' %}" class="flex items-center text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 px-3 py-2 rounded-lg transition-colors">
-                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                {% if user.is_superuser %}
+                <a href="{% url 'usuarios:ventanas_list' %}"
+                    class="text-indigo-300 hover:bg-white/10 hover:text-indigo-100 group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors mt-2 border border-indigo-900/50 bg-indigo-900/10">
+                    <svg class="text-indigo-400 group-hover:text-indigo-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                    Ventanas de Registro
+                </a>
+                {% endif %}
+                <a href="{% url 'evaluaciones:reporte_rendimiento' %}"
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-yellow-400 group-hover:text-yellow-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                        </path>
+                    </svg>
+                    Reporte Rendimiento
+                </a>
+                <a href="{% url 'admin:index' %}"
+                    class="text-red-300 hover:bg-white/10 hover:text-red-100 group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors mt-2 border border-red-900/50 bg-red-900/10">
+                    <svg class="text-red-400 group-hover:text-red-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Admin (Django)
+                </a>
+                {% endif %}
+
+                <!-- Estudiantes y Superusers -->
+                {% if user.role == 'student' or user.role == 'virtual_student' or user.is_superuser %}
+                <div class="pt-4 pb-2">
+                    <p class="px-3 text-xs font-bold tracking-wider text-gray-500 uppercase">Mi Progreso</p>
+                </div>
+                <a href="{% url 'evaluaciones:mis_calificaciones' %}"
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-yellow-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                    Calificaciones
+                </a>
+                {% endif %}
+
+                {% if user.role == 'student' or user.role == 'virtual_student' %}
+                <a href="{% url 'suscripciones:mi_suscripcion' %}"
+                    class="flex items-center text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 px-3 py-2 rounded-lg transition-colors">
+                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z">
+                        </path>
+                    </svg>
                     Mi suscripción
                 </a>
                 {% endif %}
@@ -129,24 +229,40 @@
                 <div class="bg-gray-800 rounded-lg py-3 px-4 flex flex-col mb-2 space-y-3">
                     <div class="flex items-center justify-between border-b border-gray-700 pb-2">
                         <span class="text-sm font-bold text-teal-300 truncate pr-2">{{ user.username }}</span>
-                        {% if user.is_staff %}<span class="text-[10px] bg-red-600 px-1.5 py-0.5 rounded text-white font-bold ml-1">ADMIN</span>{% endif %}
+                        {% if user.is_staff %}<span
+                            class="text-[10px] bg-red-600 px-1.5 py-0.5 rounded text-white font-bold ml-1">ADMIN</span>{% endif %}
                     </div>
-                    
-                    <a href="{% url 'password_change' %}" class="flex items-center text-gray-300 hover:text-white text-xs font-medium transition-colors">
-                        <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+
+                    <a href="{% url 'password_change' %}"
+                        class="flex items-center text-gray-300 hover:text-white text-xs font-medium transition-colors">
+                        <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
+                            </path>
+                        </svg>
                         Cambiar Contraseña
                     </a>
                 </div>
                 <form method="POST" action="{% url 'logout' %}">
                     {% csrf_token %}
-                    <button type="submit" class="w-full flex items-center justify-center bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <button type="submit"
+                        class="w-full flex items-center justify-center bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                            </path>
+                        </svg>
                         Cerrar Sesión
                     </button>
                 </form>
                 {% else %}
-                <a href="{% url 'login' %}" class="w-full flex justify-center items-center bg-teal-600 text-white hover:bg-teal-500 px-4 py-3 rounded-lg font-bold shadow-lg transition-colors border border-teal-400">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                <a href="{% url 'login' %}"
+                    class="w-full flex justify-center items-center bg-teal-600 text-white hover:bg-teal-500 px-4 py-3 rounded-lg font-bold shadow-lg transition-colors border border-teal-400">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1">
+                        </path>
+                    </svg>
                     Iniciar Sesión
                 </a>
                 {% endif %}
@@ -159,34 +275,41 @@
             <header class="bg-white shadow-sm lg:hidden border-b border-gray-200">
                 <div class="flex items-center justify-between px-4 py-3">
                     <a href="/" class="text-gray-900 font-bold text-xl tracking-tight">PREICFES V.V.</a>
-                    <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 focus:outline-none focus:text-gray-700">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    <button @click="sidebarOpen = !sidebarOpen"
+                        class="text-gray-500 focus:outline-none focus:text-gray-700">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
                     </button>
                 </div>
             </header>
 
             <div class="px-4 py-8 mx-auto w-full max-w-7xl sm:px-6 lg:px-8 flex-grow">
                 {% if messages %}
-                    <div class="mb-6 space-y-2">
-                        {% for message in messages %}
-                            <div class="p-4 rounded-lg shadow-sm font-medium {% if message.tags == 'error' %}bg-red-50 text-red-800 border-l-4 border-red-500{% else %}bg-green-50 text-green-800 border-l-4 border-green-500{% endif %}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
+                <div class="mb-6 space-y-2">
+                    {% for message in messages %}
+                    <div
+                        class="p-4 rounded-lg shadow-sm font-medium {% if message.tags == 'error' %}bg-red-50 text-red-800 border-l-4 border-red-500{% else %}bg-green-50 text-green-800 border-l-4 border-green-500{% endif %}">
+                        {{ message }}
                     </div>
+                    {% endfor %}
+                </div>
                 {% endif %}
 
                 {% block content %}
                 {% endblock content %}
             </div>
-            
+
             <footer class="bg-white border-t border-gray-200 py-6 mt-auto">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <p class="text-center text-sm text-gray-500 font-medium">&copy; {% now "Y" %} PreICFES Virtual Victor Valdez. Todos los derechos reservados.</p>
+                    <p class="text-center text-sm text-gray-500 font-medium">&copy; {% now "Y" %} PreICFES Virtual
+                        Victor Valdez. Todos los derechos reservados.</p>
                 </div>
             </footer>
         </main>
     </div>
 
 </body>
+
 </html>

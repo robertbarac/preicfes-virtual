@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Crear Ventana de Registro | PreICFES Virtual{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto mt-8">
+    <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                Nueva Ventana de Registro
+            </h2>
+            <p class="text-sm text-gray-500 mt-1">
+                Define el intervalo de tiempo exacto en el que permitirás nuevas inscripciones desde afuera.
+            </p>
+        </div>
+        
+        <form method="post" class="p-6 space-y-6">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="p-3 bg-red-50 text-red-700 rounded-lg text-sm mb-4">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+            
+            <div class="grid grid-cols-1 gap-6">
+                <!-- Fecha Inicio -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Apertura (Fecha y Hora)</label>
+                    {{ form.fecha_inicio }}
+                    {% if form.fecha_inicio.errors %}
+                        <p class="text-xs text-red-600 mt-1">{{ form.fecha_inicio.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Fecha Fin -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Cierre (Fecha y Hora)</label>
+                    {{ form.fecha_fin }}
+                    {% if form.fecha_fin.errors %}
+                        <p class="text-xs text-red-600 mt-1">{{ form.fecha_fin.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="pt-4 flex items-center justify-end space-x-3 border-t border-gray-100">
+                <a href="{% url 'usuarios:ventanas_list' %}" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition font-medium text-sm">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition font-medium text-sm shadow">
+                    Crear Ventana
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

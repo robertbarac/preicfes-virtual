@@ -51,11 +51,98 @@ class Modulo(models.Model):
     def __str__(self):
         return self.nombre
 
+from django.utils import timezone
+from datetime import datetime, time
+
 class ClaseVirtual(models.Model):
     modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE, related_name='clases_virtuales')
     titulo = models.CharField(max_length=200, help_text="Ej: Clase de Matemáticas - Ecuaciones")
     enlace = models.URLField()
-    fecha_programada = models.DateTimeField(blank=True, null=True)
+    fecha = models.DateField(blank=True, null=True)
+    hora_inicio = models.TimeField(blank=True, null=True)
+    hora_fin = models.TimeField(blank=True, null=True)
+
+    def is_active_for_attendance(self):
+        """
+        Retorna True si la fecha y hora actual están dentro de la ventana de la clase.
+        """
+        if not self.fecha or not self.hora_inicio or not self.hora_fin:
+            return False
+            
+        now = timezone.localtime(timezone.now())
+        today = now.date()
+        current_time = now.time()
+        
+        if today == self.fecha:
+            if self.hora_inicio <= current_time <= self.hora_fin:
+                return True
+        return False
 
     def __str__(self):
         return self.titulo
+        
+        
+class Asistencia(models.Model):
+    clase = models.ForeignKey(ClaseVirtual, on_delete=models.CASCADE, related_name='asistencias')
+    alumno = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='asistencias')
+    asistio = models.BooleanField(default=False)
+    fecha_registro = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('clase', 'alumno')
+        verbose_name = 'Asistencia'
+        verbose_name_plural = 'Asistencias'
+
+    def __str__(self):
+        estado = "Presente" if self.asistio else "Ausente"
+        return f"{self.alumno.username} - {self.clase.titulo}: {estado}"
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.contrib.auth import get_user_model
+from django.core.cache import cache
+
+User = get_user_model()
+
+@receiver(post_save, sender=ClaseVirtual)
+def crear_registros_asistencia(sender, instance, created, **kwargs):
+    """
+    Cuando se crea una ClaseVirtual, matricular a todos los alumnos 
+    con asistencia False por defecto.
+    """
+    if created:
+        # Extraer a todos los usuarios con rol de estudiante o virtual
+        alumnos = User.objects.filter(role__in=['student', 'virtual_student'], is_active=True)
+        asistencias_a_crear = [
+            Asistencia(clase=instance, alumno=alumno) 
+            for alumno in alumnos
+        ]
+        if asistencias_a_crear:
+            Asistencia.objects.bulk_create(asistencias_a_crear, ignore_conflicts=True)
+
+
+# ─── Invalidación de caché ────────────────────────────────────────────────────
+from curriculo.cache_keys import PROGRAMA_CACHE_KEY
+
+def _invalidar_programa_cache():
+    """Borra el caché compartido del programa."""
+    cache.delete(PROGRAMA_CACHE_KEY)
+
+
+@receiver(post_save, sender=ClaseVirtual)
+def invalidar_cache_por_clase_virtual(sender, instance, **kwargs):
+    """
+    Borra el caché cuando se crea o edita una ClaseVirtual
+    (puede haber cambiado fecha, hora o enlace).
+    """
+    _invalidar_programa_cache()
+
+
+@receiver(post_save, sender=Modulo)
+def invalidar_cache_por_modulo(sender, instance, **kwargs):
+    """
+    Borra el caché cuando se crea o edita un Módulo
+    (nombre, orden, activo pueden haber cambiado).
+    """
+    _invalidar_programa_cache()
+

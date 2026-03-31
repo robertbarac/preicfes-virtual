@@ -8,7 +8,10 @@
     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="bg-gradient-to-r from-slate-800 to-slate-700 px-6 py-4 border-b border-gray-200">
             <h2 class="text-xl font-bold text-white flex items-center">
-                <svg class="w-5 h-5 mr-3 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                <svg class="w-5 h-5 mr-3 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
                 Registrar Nuevo Usuario
             </h2>
         </div>
@@ -17,39 +20,44 @@
             {% if registration_success %}
             <div class="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
                 <div class="flex items-center mb-4">
-                    <svg class="h-8 w-8 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <svg class="h-8 w-8 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
                     <h3 class="text-lg font-bold text-green-800">¡Usuario registrado exitosamente!</h3>
                 </div>
                 <div class="bg-white rounded p-4 border border-green-100 mb-4 font-mono text-sm">
                     <p class="mb-2"><span class="font-bold text-gray-700">Usuario:</span> {{ new_user.username }}</p>
-                    <p class="mb-2"><span class="font-bold text-gray-700">Contraseña temporal:</span> <span class="bg-yellow-100 px-2 py-1 rounded text-yellow-800 select-all">{{ temp_password }}</span></p>
+                    <p class="mb-2"><span class="font-bold text-gray-700">Contraseña temporal:</span> <span
+                            class="bg-yellow-100 px-2 py-1 rounded text-yellow-800 select-all">{{ temp_password }}</span></p>
                     <p><span class="font-bold text-gray-700">Rol:</span> {{ new_user.get_role_display }}</p>
                 </div>
-                <p class="text-sm text-green-700">Copia esta contraseña y entrégala al usuario. Le pedirá que la cambie cuando inicie sesión por primera vez (si está configurado).</p>
+                <p class="text-sm text-green-700">Copia esta contraseña y entrégala al usuario. Le pedirá que la cambie
+                    cuando inicie sesión por primera vez (si está configurado).</p>
                 <div class="mt-4">
-                    <a href="{% url 'usuarios:registro_interno' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200">
+                    <a href="{% url 'usuarios:registro_interno' %}"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200">
                         Registrar otro usuario
                     </a>
                 </div>
             </div>
             {% else %}
-            
+
             <p class="text-gray-600 mb-6 pb-4 border-b border-gray-100">
-                Llena el formulario para matricular a un estudiante o crear cuentas para Staff/Profesores. La contraseña se generará automáticamente de forma segura.
+                Llena el formulario para matricular a un estudiante o crear cuentas para Staff/Profesores. La contraseña
+                se generará automáticamente de forma segura.
             </p>
 
             <div x-data="{ role: 'student' }" x-init="
                 setTimeout(() => {
                     const roleSel = document.getElementById('id_role');
-                    if(roleSel) {
-                        role = roleSel.value;
-                        roleSel.addEventListener('change', (e) => role = e.target.value);
-                    }
+                    if(roleSel) { role = roleSel.value; }
                 }, 100);
             ">
-                <form method="POST" action="{% url 'usuarios:registro_interno' %}" class="space-y-4">
+                <form method="POST" action="{% url 'usuarios:registro_interno' %}" class="space-y-4" 
+                      @change="if($event.target.id === 'id_role') role = $event.target.value">
                     {% csrf_token %}
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {{ form.tipo_documento|as_crispy_field }}
                         {{ form.numero_documento|as_crispy_field }}
@@ -62,6 +70,10 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {{ form.email|as_crispy_field }}
+                        {{ form.telefono|as_crispy_field }}
+                    </div>
+
+                    <div>
                         {{ form.username|as_crispy_field }}
                     </div>
 
@@ -70,13 +82,18 @@
                     </div>
 
                     <!-- Panel Condicional de Suscripción para Estudiantes -->
-                    <div x-show="role === 'student'" x-transition 
-                         class="bg-indigo-50 p-5 rounded-xl mt-6 border border-indigo-100">
+                    <div x-show="role === 'student' || role === 'virtual_student'" style="display: none;" x-transition
+                        class="bg-indigo-50 p-5 rounded-xl mt-6 border border-indigo-100">
                         <h3 class="font-bold text-indigo-800 mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
+                            </svg>
                             Plan de Suscripción (PreICFES)
                         </h3>
-                        <p class="text-sm text-indigo-600 mb-4">Define el periodo de acceso a la plataforma para este estudiante.</p>
+                        <p class="text-sm text-indigo-600 mb-4">Define el periodo de acceso a la plataforma para este
+                            estudiante.</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {{ form.start_date|as_crispy_field }}
                             {{ form.end_date|as_crispy_field }}
@@ -84,8 +101,12 @@
                     </div>
 
                     <div class="pt-6 border-t border-gray-100 flex justify-end">
-                        <button type="submit" class="bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700 transition flex items-center shadow-md">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <button type="submit"
+                            class="bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700 transition flex items-center shadow-md">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7"></path>
+                            </svg>
                             Crear Usuario y Generar Credenciales
                         </button>
                     </div>

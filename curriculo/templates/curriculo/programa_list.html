@@ -112,6 +112,53 @@
                     {% empty %}
                         <!-- No simulacros -->
                     {% endfor %}
+                    <!-- Clases Virtuales -->
+                    {% for clase in modulo.clases_virtuales.all %}
+                        <div class="bg-white border border-blue-100 rounded p-4 shadow-sm hover:shadow transition relative flex flex-col justify-between">
+                            <div>
+                                <div class="text-[10px] bg-blue-100 text-blue-800 rounded px-2 py-0.5 inline-block mb-2 font-bold uppercase tracking-wider">Clase Virtual</div>
+                                <h3 class="font-bold text-gray-800 mb-1 leading-snug">
+                                    {{ clase.titulo }}
+                                </h3>
+                                <div class="text-xs text-gray-600 mt-2 space-y-1 font-medium">
+                                    <p class="flex items-center"><svg class="w-3.5 h-3.5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> {{ clase.fecha|date:"D d M Y"|default:"Por definir" }}</p>
+                                    <p class="flex items-center"><svg class="w-3.5 h-3.5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> {{ clase.hora_inicio|time:"h:i A" }} - {{ clase.hora_fin|time:"h:i A" }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 pt-3 border-t border-gray-100 flex flex-col gap-2">
+                                <a href="{{ clase.enlace }}" target="_blank" rel="noopener noreferrer" class="text-xs font-bold text-center bg-blue-50 text-blue-700 hover:bg-blue-100 py-2 rounded transition-colors w-full flex items-center justify-center">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    Unirse a la Clase
+                                </a>
+                                
+                                {% if not request.user.is_staff %}
+                                    {% if clase.id in clases_asistidas %}
+                                        <!-- Ya marcó asistencia y asistió -->
+                                        <div class="text-[11px] font-bold text-green-700 bg-green-50 py-1.5 px-2 rounded text-center border border-green-200 flex items-center justify-center">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Asistencia Registrada
+                                        </div>
+                                    {% else %}
+                                        <!-- No ha marcado o marcó como ausente -->
+                                        <form action="{% url 'curriculo:registrar_asistencia' clase.id %}" method="POST" class="w-full m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="w-full text-[11px] font-bold py-1.5 px-2 rounded text-center transition-all border
+                                                {% if clase.is_active_for_attendance %}
+                                                    bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-700
+                                                {% else %}
+                                                    bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed
+                                                {% endif %}"
+                                                {% if not clase.is_active_for_attendance %}disabled title="Solo disponible durante el horario de la clase"{% endif %}>
+                                                Registrar Asistencia
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <!-- No clases virtuales -->
+                    {% endfor %}
                     
                 </div>
             </details>

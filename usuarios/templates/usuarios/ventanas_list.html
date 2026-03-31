@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Ventanas de Registro | PreICFES Virtual{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Ventanas de Registro Automático</h1>
+        <p class="text-gray-500 mt-2">
+            Gestiona los intervalos de tiempo en los que el público general puede crear cuentas.
+        </p>
+    </div>
+    <a href="{% url 'usuarios:ventanas_crear' %}" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition font-medium flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Nueva Ventana
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+    <table class="w-full text-left text-sm text-gray-600">
+        <thead class="bg-gray-50 text-gray-700 border-b border-gray-200">
+            <tr>
+                <th class="px-6 py-4 font-semibold">ID</th>
+                <th class="px-6 py-4 font-semibold">Estado Actual</th>
+                <th class="px-6 py-4 font-semibold">Inicio</th>
+                <th class="px-6 py-4 font-semibold">Cierre</th>
+                <th class="px-6 py-4 font-semibold">Creada Por</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for ventana in ventanas %}
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">#{{ ventana.id }}</td>
+                <td class="px-6 py-4">
+                    {% if ventana.is_active %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span class="w-2 h-2 mr-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                        ACTIVA
+                    </span>
+                    {% else %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        CERRADA
+                    </span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4">{{ ventana.fecha_inicio|date:"d M Y H:i" }}</td>
+                <td class="px-6 py-4">{{ ventana.fecha_fin|date:"d M Y H:i" }}</td>
+                <td class="px-6 py-4">{{ ventana.creador.username|default:"Sistema" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                    No hay ventanas de registro configuradas. 
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

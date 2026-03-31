@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Subscription
+from .models import Subscription, SubscriptionConfig
 
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
@@ -7,3 +7,8 @@ class SubscriptionAdmin(admin.ModelAdmin):
     list_filter = ['active', 'start_date', 'end_date']
     search_fields = ['user__username', 'user__email']
     date_hierarchy = 'start_date'
+
+@admin.register(SubscriptionConfig)
+class SubscriptionConfigAdmin(admin.ModelAdmin):
+    list_display = ['default_start_date', 'default_end_date', 'active']
+    list_filter = ['active']

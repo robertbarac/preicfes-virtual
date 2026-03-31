@@ -30,6 +30,23 @@
         </div>
     </header>
 
+    {% if not mostrar_respuestas %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8 rounded-r-lg shadow-sm">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-yellow-800 font-medium">
+                    Tienes intentos disponibles. Las respuestas correctas de este taller se revelarán únicamente cuando hayas agotado la totalidad de tus intentos permitidos ({{ taller.intentos_permitidos }} intentos).
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Detalle de Preguntas -->
     <div class="space-y-10">
         {% for detalle in detalles_preguntas %}
@@ -37,9 +54,14 @@
         <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" id="pregunta-{{ pregunta.id }}">
             
             <!-- Encabezado de la Pregunta -->
-            <div class="{% if detalle.fue_correcta %}bg-green-50 border-b border-green-200{% elif detalle.omitida %}bg-yellow-50 border-b border-yellow-200{% else %}bg-red-50 border-b border-red-200{% endif %} px-6 py-4 flex items-center justify-between">
+            <div class="{% if not mostrar_respuestas %}bg-gray-50 border-b border-gray-200{% elif detalle.fue_correcta %}bg-green-50 border-b border-green-200{% elif detalle.omitida %}bg-yellow-50 border-b border-yellow-200{% else %}bg-red-50 border-b border-red-200{% endif %} px-6 py-4 flex items-center justify-between">
                 <div class="flex items-center">
-                    {% if detalle.fue_correcta %}
+                    {% if not mostrar_respuestas %}
+                        <div class="bg-gray-400 text-white rounded-full p-1 mr-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-lg">Pregunta {{ forloop.counter }}</h3>
+                    {% elif detalle.fue_correcta %}
                         <div class="bg-green-500 text-white rounded-full p-1 mr-3">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         </div>
@@ -85,46 +107,70 @@
                 <div class="space-y-3">
                     {% for opcion in opciones %}
                         <div class="relative flex rounded-lg border p-4 shadow-sm 
-                            {% if opcion.es_correcta and respuesta and respuesta.opcion_seleccionada == opcion %}
-                                bg-green-50 border-green-500
-                            {% elif opcion.es_correcta %}
-                                bg-green-50 border-green-400 border-dashed
-                            {% elif respuesta and respuesta.opcion_seleccionada == opcion %}
-                                bg-red-50 border-red-500
+                            {% if mostrar_respuestas %}
+                                {% if opcion.es_correcta and respuesta and respuesta.opcion_seleccionada == opcion %}
+                                    bg-green-50 border-green-500
+                                {% elif opcion.es_correcta %}
+                                    bg-green-50 border-green-400 border-dashed
+                                {% elif respuesta and respuesta.opcion_seleccionada == opcion %}
+                                    bg-red-50 border-red-500
+                                {% else %}
+                                    bg-white border-gray-200 opacity-60
+                                {% endif %}
                             {% else %}
-                                bg-white border-gray-200 opacity-60
+                                {% if respuesta and respuesta.opcion_seleccionada == opcion %}
+                                    bg-indigo-50 border-indigo-300
+                                {% else %}
+                                    bg-white border-gray-200 opacity-60
+                                {% endif %}
                             {% endif %}">
 
                             <div class="flex items-center w-full">
                                 <!-- Indicador Visual -->
                                 <div class="w-6 h-6 mr-4 flex-shrink-0 flex items-center justify-center rounded-full 
-                                    {% if opcion.es_correcta and respuesta and respuesta.opcion_seleccionada == opcion %}
-                                        bg-green-500 text-white
-                                    {% elif opcion.es_correcta %}
-                                        bg-green-200 text-green-700
-                                    {% elif respuesta and respuesta.opcion_seleccionada == opcion %}
-                                        bg-red-500 text-white
+                                    {% if mostrar_respuestas %}
+                                        {% if opcion.es_correcta and respuesta and respuesta.opcion_seleccionada == opcion %}
+                                            bg-green-500 text-white
+                                        {% elif opcion.es_correcta %}
+                                            bg-green-200 text-green-700
+                                        {% elif respuesta and respuesta.opcion_seleccionada == opcion %}
+                                            bg-red-500 text-white
+                                        {% else %}
+                                            bg-gray-200 text-gray-400
+                                        {% endif %}
                                     {% else %}
-                                        bg-gray-200 text-gray-400
+                                        {% if respuesta and respuesta.opcion_seleccionada == opcion %}
+                                            bg-indigo-500 text-white
+                                        {% else %}
+                                            bg-gray-200 text-gray-400
+                                        {% endif %}
                                     {% endif %}">
                                     
-                                    {% if opcion.es_correcta %}
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                    {% elif respuesta and respuesta.opcion_seleccionada == opcion %}
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    {% if mostrar_respuestas %}
+                                        {% if opcion.es_correcta %}
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        {% elif respuesta and respuesta.opcion_seleccionada == opcion %}
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        {% else %}
+                                            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                                        {% endif %}
                                     {% else %}
-                                        <div class="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                                        {% if respuesta and respuesta.opcion_seleccionada == opcion %}
+                                            <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
+                                        {% else %}
+                                            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                                 
                                 <div class="flex-1">
                                     {% if opcion.texto %}
-                                        <span class="block text-gray-900 font-medium {% if not opcion.es_correcta and not respuesta.opcion_seleccionada == opcion %}text-gray-500{% endif %}">
+                                        <span class="block text-gray-900 font-medium {% if not mostrar_respuestas %}{% if not respuesta.opcion_seleccionada == opcion %}text-gray-500{% endif %}{% elif not opcion.es_correcta and not respuesta.opcion_seleccionada == opcion %}text-gray-500{% endif %}">
                                             {{ opcion.texto }}
                                         </span>
                                     {% endif %}
                                     {% if opcion.imagen %}
-                                        <div class="mt-2 text-center bg-white rounded p-1 inline-block border {% if opcion.es_correcta %}border-green-200{% elif respuesta and respuesta.opcion_seleccionada == opcion %}border-red-200{% else %}border-gray-100{% endif %}">
+                                        <div class="mt-2 text-center bg-white rounded p-1 inline-block border {% if mostrar_respuestas %}{% if opcion.es_correcta %}border-green-200{% elif respuesta and respuesta.opcion_seleccionada == opcion %}border-red-200{% else %}border-gray-100{% endif %}{% else %}border-gray-100{% endif %}">
                                             <img src="{{ opcion.imagen.url }}" alt="Imagen de opción" class="max-w-xs h-auto rounded">
                                         </div>
                                     {% endif %}
@@ -133,11 +179,11 @@
                                 <!-- Etiquetas Laterales -->
                                 <div class="ml-4 flex flex-col items-end space-y-1">
                                     {% if respuesta and respuesta.opcion_seleccionada == opcion %}
-                                        <span class="text-xs font-bold px-2 py-1 rounded uppercase tracking-wider {% if opcion.es_correcta %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                        <span class="text-xs font-bold px-2 py-1 rounded uppercase tracking-wider {% if mostrar_respuestas %}{% if opcion.es_correcta %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}{% else %}bg-indigo-100 text-indigo-800{% endif %}">
                                             Tu respuesta
                                         </span>
                                     {% endif %}
-                                    {% if opcion.es_correcta and not respuesta.opcion_seleccionada == opcion %}
+                                    {% if mostrar_respuestas and opcion.es_correcta and not respuesta.opcion_seleccionada == opcion %}
                                         <span class="text-xs font-bold px-2 py-1 rounded bg-green-100 text-green-800 uppercase tracking-wider">
                                             Respuesta Correcta
                                         </span>

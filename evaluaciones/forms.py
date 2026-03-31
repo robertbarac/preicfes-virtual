@@ -5,10 +5,11 @@ from .models.simulacros import Simulacro
 class TallerForm(forms.ModelForm):
     class Meta:
         model = Taller
-        fields = ['modulo', 'tema', 'titulo', 'descripcion', 'orden', 'intentos_permitidos']
+        fields = ['modulo', 'tema', 'titulo', 'descripcion', 'estado', 'orden', 'intentos_permitidos']
         widgets = {
             'titulo': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
             'descripcion': forms.Textarea(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none', 'rows': 3}),
+            'estado': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'modulo': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'tema': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'orden': forms.NumberInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),

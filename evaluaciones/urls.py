@@ -1,8 +1,8 @@
 from django.urls import path
 from .views.talleres import TallerCreateView, TallerUpdateView, TallerDetailView, TallerPreguntaManageView, TallerResolverView, TallerIntentoDetailView, TallerSolucionView, TallerLecturaView, TallerListView
 from .views.simulacros import SimulacroCreateView, SimulacroUpdateView, SimulacroDetailView, SimulacroListView
-from .views.banco import PreguntaCreateView, PreguntaListView
-from .views.calificaciones import MisCalificacionesView, ReporteEstudiantePDFView
+from .views.banco import PreguntaCreateView, PreguntaListView, PreguntaUpdateView
+from .views.calificaciones import MisCalificacionesView, ReporteEstudiantePDFView, ReporteRendimientoView
 
 app_name = 'evaluaciones'
 
@@ -10,6 +10,7 @@ urlpatterns = [
     # Banco
     path('banco/preguntas/', PreguntaListView.as_view(), name='pregunta_list'),
     path('banco/preguntas/crear/', PreguntaCreateView.as_view(), name='pregunta_create'),
+    path('banco/preguntas/<int:pk>/editar/', PreguntaUpdateView.as_view(), name='pregunta_update'),
 
     # Talleres
     path('talleres/', TallerListView.as_view(), name='taller_list'),
@@ -31,4 +32,7 @@ urlpatterns = [
     # Calificaciones / Reportes
     path('mis-calificaciones/', MisCalificacionesView.as_view(), name='mis_calificaciones'),
     path('reporte-pdf/<int:pk>/', ReporteEstudiantePDFView.as_view(), name='reporte_estudiante_pdf'),
+    path('reporte-rendimiento/', ReporteRendimientoView.as_view(), name='reporte_rendimiento'),
 ]
+
+

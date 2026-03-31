@@ -161,3 +161,15 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 # Crispy Forms Config
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
+
+# Cache — Filesystem (no extra dependencies, safe for production)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.join(BASE_DIR, '.django_cache'),
+        'TIMEOUT': 86400,  # 24 horas (plan B — los signals invalidan antes)
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000
+        }
+    }
+}
