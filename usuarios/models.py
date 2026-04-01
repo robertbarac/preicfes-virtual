@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
+from datetime import timedelta
 
 class User(AbstractUser):
     ROLE_CHOICES = (
@@ -64,3 +65,20 @@ class VentanaRegistro(models.Model):
     def __str__(self):
         estado = "ACTIVA" if self.is_active() else "CERRADA"
         return f"Ventana {self.id} ({estado}) - {self.fecha_inicio.strftime('%Y-%m-%d %H:%M')} a {self.fecha_fin.strftime('%Y-%m-%d %H:%M')}"
+
+class WhatsAppResetCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='whatsapp_reset_codes')
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def is_valid(self):
+        ahora = timezone.now()
+        tiempo_transcurrido = ahora - self.created_at
+        return not self.is_used and tiempo_transcurrido <= timedelta(minutes=5)
+
+    def __str__(self):
+        return f"Código {self.code} para {self.user.username} (Usado: {self.is_used})"

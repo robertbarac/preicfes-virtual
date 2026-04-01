@@ -199,5 +199,127 @@ class RegistroPublicoView(FormView):
             end_date=end_date
         )
 
-        messages.success(self.request, f"¡Tu cuenta como {user.get_role_display()} ha sido creada! Ya puedes iniciar sesión.")
+        Messages.success(self.request, f"¡Tu cuenta como {user.get_role_display()} ha sido creada! Ya puedes iniciar sesión.")
         return super().form_valid(form)
+
+from django.conf import settings
+from twilio.rest import Client
+from django.shortcuts import get_object_or_404
+from django.utils.crypto import get_random_string
+from .models import WhatsAppResetCode
+from .forms import WhatsAppResetRequestForm, WhatsAppResetVerifyForm, WhatsAppResetPasswordForm
+import os
+
+class WhatsAppResetRequestView(FormView):
+    template_name = 'registration/whatsapp_reset_request.html'
+    form_class = WhatsAppResetRequestForm
+    success_url = reverse_lazy('usuarios:whatsapp_reset_verify')
+
+    def form_valid(self, form):
+        telefono = form.cleaned_data['telefono']
+        users = User.objects.filter(telefono=telefono)
+        count = users.count()
+
+        if count == 0:
+            messages.error(self.request, "El número no está registrado en el sistema.")
+            return self.form_invalid(form)
+        elif count > 1:
+            messages.error(self.request, "Hay varios usuarios con este número. Por favor, contacta a soporte.")
+            return self.form_invalid(form)
+        
+        user = users.first()
+        code = get_random_string(length=6, allowed_chars='0123456789')
+        
+        # Eliminar códigos antiguos no usados de este usuario (opcional para limpieza)
+        WhatsAppResetCode.objects.filter(user=user, is_used=False).delete()
+        WhatsAppResetCode.objects.create(user=user, code=code)
+
+        try:
+            # Twilio envio
+            account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+            auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
+            twilio_number = os.environ.get('TWILIO_WHATSAPP_NUMBER')
+            
+            if account_sid and auth_token and twilio_number:
+                client = Client(account_sid, auth_token)
+                message = client.messages.create(
+                    from_=f'whatsapp:{twilio_number}',
+                    body=f'Tu código de seguridad para PreICFES Virtual Victor Valdez es: {code}. Este código expirará en 5 minutos.',
+                    to=f'whatsapp:+57{telefono}'
+                )
+                messages.success(self.request, f"Te hemos enviado un código de 6 dígitos a tu WhatsApp terminado en {telefono[-4:]}.")
+            else:
+                 messages.warning(self.request, "Variables de entorno de Twilio no configuradas. " + f"Código en modo local: {code}")
+        except Exception as e:
+            messages.error(self.request, f"Error al enviar el WhatsApp: {str(e)}")
+            return self.form_invalid(form)
+
+        # Guardar teléfono en sesión para el siguiente paso
+        self.request.session['reset_phone'] = telefono
+        return super().form_valid(form)
+
+
+class WhatsAppResetVerifyView(FormView):
+    template_name = 'registration/whatsapp_reset_verify.html'
+    form_class = WhatsAppResetVerifyForm
+    success_url = reverse_lazy('usuarios:whatsapp_reset_password')
+
+    def dispatch(self, request, *args, **kwargs):
+        if 'reset_phone' not in request.session:
+            messages.error(request, "Por favor, inicia la solicitud de recuperación primero.")
+            return redirect('usuarios:whatsapp_reset_request')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['telefono'] = self.request.session.get('reset_phone')
+        return context
+
+    def form_valid(self, form):
+        code_input = form.cleaned_data['code']
+        telefono = self.request.session.get('reset_phone')
+        user = User.objects.filter(telefono=telefono).first()
+
+        if not user:
+            messages.error(self.request, "Error interno. Usuario no encontrado.")
+            return self.form_invalid(form)
+
+        reset_code = WhatsAppResetCode.objects.filter(user=user, code=code_input).first()
+
+        if reset_code and reset_code.is_valid():
+            reset_code.is_used = True
+            reset_code.save()
+            self.request.session['reset_verified'] = True
+            messages.success(self.request, "Código verificado correctamente.")
+            return super().form_valid(form)
+        else:
+            messages.error(self.request, "El código es incorrecto o ha expirado.")
+            return self.form_invalid(form)
+
+
+class WhatsAppResetPasswordView(FormView):
+    template_name = 'registration/whatsapp_reset_password.html'
+    form_class = WhatsAppResetPasswordForm
+    success_url = reverse_lazy('login')
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.session.get('reset_verified') or not request.session.get('reset_phone'):
+            messages.error(request, "Debes verificar tu código primero.")
+            return redirect('usuarios:whatsapp_reset_request')
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        telefono = self.request.session.get('reset_phone')
+        user = User.objects.filter(telefono=telefono).first()
+
+        if user:
+            user.set_password(form.cleaned_data['new_password'])
+            user.save()
+            messages.success(self.request, "¡Tu contraseña se ha restablecido exitosamente! Ya puedes iniciar sesión.")
+            # Limpiar sesión
+            del self.request.session['reset_phone']
+            del self.request.session['reset_verified']
+            return super().form_valid(form)
+        else:
+            messages.error(self.request, "Usuario no válido.")
+            return self.form_invalid(form)

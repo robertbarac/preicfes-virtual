@@ -77,3 +77,42 @@ class RegistroPublicoForm(forms.ModelForm):
             self.add_error('password_confirm', 'Las contraseñas no coinciden.')
 
         return cleaned_data
+
+class WhatsAppResetRequestForm(forms.Form):
+    telefono = forms.CharField(
+        max_length=10, 
+        widget=forms.TextInput(attrs={
+            'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none',
+            'placeholder': 'Ej. 3001234567'
+        }),
+        help_text="Ingresa el número de 10 dígitos sin espacios ni guiones."
+    )
+
+class WhatsAppResetVerifyForm(forms.Form):
+    code = forms.CharField(
+        max_length=6,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none uppercase text-center tracking-widest',
+            'placeholder': '123456'
+        }),
+        help_text="Ingresa el código de 6 dígitos que recibiste por WhatsApp."
+    )
+
+class WhatsAppResetPasswordForm(forms.Form):
+    new_password = forms.CharField(
+        label="Nueva Contraseña",
+        widget=forms.PasswordInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'})
+    )
+    confirm_password = forms.CharField(
+        label="Confirmar Contraseña",
+        widget=forms.PasswordInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'})
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get('new_password')
+        p2 = cleaned_data.get('confirm_password')
+
+        if p1 and p2 and p1 != p2:
+            self.add_error('confirm_password', 'Las contraseñas no coinciden.')
+        return cleaned_data
