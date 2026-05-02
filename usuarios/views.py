@@ -199,7 +199,7 @@ class RegistroPublicoView(FormView):
             end_date=end_date
         )
 
-        Messages.success(self.request, f"¡Tu cuenta como {user.get_role_display()} ha sido creada! Ya puedes iniciar sesión.")
+        messages.success(self.request, f"¡Tu cuenta como {user.get_role_display()} ha sido creada! Ya puedes iniciar sesión.")
         return super().form_valid(form)
 
 from django.conf import settings
