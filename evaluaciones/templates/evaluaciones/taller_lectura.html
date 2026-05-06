@@ -29,7 +29,7 @@
             <div class="p-6 md:p-8">
                 <!-- Enunciado -->
                 <div class="prose max-w-none text-gray-800 font-medium text-lg leading-relaxed mb-6">
-                    {{ pt.pregunta.enunciado|linebreaks }}
+                    {{ pt.pregunta.enunciado|safe }}
                 </div>
                 
                 {% if pt.pregunta.imagenes.all %}
@@ -54,7 +54,7 @@
                             </div>
                             <div class="flex-1">
                                 {% if opcion.texto %}
-                                    <span class="block text-gray-800">{{ opcion.texto }}</span>
+                                    <span class="block text-gray-800">{{ opcion.texto|safe }}</span>
                                 {% endif %}
                                 {% if opcion.imagen %}
                                     <div class="mt-2 text-center bg-gray-50 rounded p-1 inline-block border border-gray-100">

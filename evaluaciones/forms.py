@@ -37,7 +37,7 @@ class PreguntaForm(forms.ModelForm):
         fields = ['tema', 'enunciado']
         widgets = {
             'tema': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
-            'enunciado': forms.Textarea(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none', 'rows': 4}),
+            'enunciado': forms.Textarea(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none tinymce-enunciado', 'rows': 4}),
         }
 
 class ImagenPreguntaForm(forms.ModelForm):
@@ -63,7 +63,7 @@ class OpcionForm(forms.ModelForm):
         model = Opcion
         fields = ['texto', 'imagen', 'es_correcta']
         widgets = {
-            'texto': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
+            'texto': forms.Textarea(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none tinymce-opcion', 'rows': 3}),
             'imagen': forms.FileInput(attrs={'class': 'p-1 text-sm text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100'}),
             'es_correcta': forms.CheckboxInput(attrs={'class': 'w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300'})
         }

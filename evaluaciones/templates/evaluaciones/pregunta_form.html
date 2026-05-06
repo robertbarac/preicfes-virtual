@@ -197,40 +197,129 @@
     </div>
 </div>
 
+<!-- Quill.js — open source MIT, sin API key ni registro -->
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+<style>
+  /* Ajuste visual para que los editores Quill encajen con el diseño */
+  .ql-container { font-family: Inter, sans-serif; font-size: 15px; border-radius: 0 0 6px 6px; }
+  .ql-toolbar { border-radius: 6px 6px 0 0; background: #f9fafb; }
+  .ql-editor { min-height: 100px; }
+  .ql-editor.ql-opcion { min-height: 70px; font-size: 14px; }
+  /* Ocultar los textareas originales que Quill reemplaza */
+  .quill-hidden { display: none !important; }
+</style>
+
 <script>
+// ── Registro global de instancias Quill ───────────────────────────────────────
+const quillInstances = [];
+
+// Herramientas para el enunciado (completo)
+const TOOLBAR_ENUNCIADO = [
+    ['bold', 'italic', 'underline'],
+    [{ 'script': 'sub' }, { 'script': 'super' }],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['clean']
+];
+
+// Herramientas para las opciones (mínimo)
+const TOOLBAR_OPCION = [
+    ['bold', 'italic', 'underline'],
+    [{ 'script': 'sub' }, { 'script': 'super' }],
+    ['clean']
+];
+
+/**
+ * Convierte un <textarea> en un editor Quill.
+ * Crea un <div> encima, oculta el textarea y mantiene la sincronización.
+ */
+function initQuill(textarea, toolbar) {
+    // Crear contenedor del editor
+    const wrapper = document.createElement('div');
+    wrapper.className = 'quill-wrapper';
+    textarea.parentNode.insertBefore(wrapper, textarea);
+    textarea.classList.add('quill-hidden');
+
+    // Inicializar Quill en el wrapper
+    const quill = new Quill(wrapper, {
+        theme: 'snow',
+        modules: { toolbar: toolbar },
+        placeholder: textarea.placeholder || '',
+    });
+
+    // Cargar contenido HTML existente (si la pregunta ya tiene texto)
+    if (textarea.value) {
+        quill.clipboard.dangerouslyPasteHTML(textarea.value);
+    }
+
+    // Guardar referencia para sincronizar al hacer submit
+    quillInstances.push({ quill, textarea });
+
+    return quill;
+}
+
+// ── Inicializar al cargar la página ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-    function addFormsetLogic(prefix, btnId, containerId, emptyFormId, formClass) {
+
+    // Enunciado de la pregunta
+    document.querySelectorAll('textarea.tinymce-enunciado').forEach(function(ta) {
+        initQuill(ta, TOOLBAR_ENUNCIADO);
+    });
+
+    // Opciones ya existentes en la página
+    document.querySelectorAll('textarea.tinymce-opcion').forEach(function(ta) {
+        initQuill(ta, TOOLBAR_OPCION);
+    });
+
+    // ── Sincronizar Quill → textarea antes del submit ─────────────────────────
+    document.querySelector('form').addEventListener('submit', function() {
+        quillInstances.forEach(function({ quill, textarea }) {
+            textarea.value = quill.root.innerHTML;
+        });
+    });
+
+    // ── Lógica de formsets dinámicos ──────────────────────────────────────────
+    function addFormsetLogic(prefix, btnId, containerId, emptyFormId) {
         const addBtn = document.getElementById(btnId);
         if (!addBtn) return;
-        
+
         const container = document.getElementById(containerId);
         const emptyForm = document.getElementById(emptyFormId).innerHTML;
         const totalFormsInput = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
-        
+
         addBtn.addEventListener('click', function() {
             const formCount = parseInt(totalFormsInput.value);
-            
+
             // Reemplazar __prefix__ por el índice actual
             const newFormHtml = emptyForm.replace(/__prefix__/g, formCount);
-            
+
             // Crear el elemento
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = newFormHtml;
             const newForm = tempDiv.firstElementChild;
-            
+
             // Añadir al DOM
             container.appendChild(newForm);
-            
+
             // Actualizar el management form
             totalFormsInput.value = formCount + 1;
+
+            // Si es una opción nueva, inicializar Quill en su textarea
+            if (prefix === 'opciones') {
+                const newTextarea = newForm.querySelector('textarea.tinymce-opcion');
+                if (newTextarea) {
+                    initQuill(newTextarea, TOOLBAR_OPCION);
+                }
+            }
         });
     }
 
-    // Inicializar lógica para Imágenes de Apoyo
-    addFormsetLogic('imagenes', 'add-imagen-btn', 'imagenes-container', 'imagen-empty-form', 'imagen-form');
-    
-    // Inicializar lógica para Opciones de Respuesta
-    addFormsetLogic('opciones', 'add-opcion-btn', 'opciones-container', 'opcion-empty-form', 'opcion-form');
+    // Imágenes de Apoyo
+    addFormsetLogic('imagenes', 'add-imagen-btn', 'imagenes-container', 'imagen-empty-form');
+
+    // Opciones de Respuesta
+    addFormsetLogic('opciones', 'add-opcion-btn', 'opciones-container', 'opcion-empty-form');
 });
 </script>
 {% endblock %}
