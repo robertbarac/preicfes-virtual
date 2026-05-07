@@ -82,3 +82,24 @@ class WhatsAppResetCode(models.Model):
 
     def __str__(self):
         return f"Código {self.code} para {self.user.username} (Usado: {self.is_used})"
+
+class ConfiguracionPlataforma(models.Model):
+    THEME_CHOICES = (
+        ('teal', 'Original (Oscuro-Teal)'),
+        ('gold', 'Proyecto 500 (Negro-Dorado)'),
+        ('christmas', 'Navidad (Rojo-Verde)'),
+        ('colombia', 'Bandera de Colombia (Amarillo-Azul-Rojo)'),
+    )
+    tema_menu = models.CharField(
+        max_length=20, 
+        choices=THEME_CHOICES, 
+        default='teal', 
+        help_text="Paleta de colores para el menú lateral."
+    )
+    
+    class Meta:
+        verbose_name = "Configuración de la Plataforma"
+        verbose_name_plural = "Configuraciones de la Plataforma"
+
+    def __str__(self):
+        return f"Configuración Activa ({self.get_tema_menu_display()})"

@@ -66,3 +66,29 @@ class CustomUserAdmin(UserAdmin):
             return suscripcion.end_date
         return '-'
     fin_suscripcion.short_description = 'Fin Suscripción'
+
+from .models import ConfiguracionPlataforma
+
+@admin.register(ConfiguracionPlataforma)
+class ConfiguracionPlataformaAdmin(admin.ModelAdmin):
+    def has_module_permission(self, request):
+        return request.user.is_superuser and request.user.username == 'robertbarac'
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser and request.user.username == 'robertbarac'
+
+    def has_add_permission(self, request):
+        if not (request.user.is_superuser and request.user.username == 'robertbarac'):
+            return False
+        try:
+            if ConfiguracionPlataforma.objects.exists():
+                return False
+        except Exception:
+            pass
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser and request.user.username == 'robertbarac'
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser and request.user.username == 'robertbarac'
