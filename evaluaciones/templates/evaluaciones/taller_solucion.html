@@ -17,12 +17,14 @@
         <p class="text-indigo-100 mt-2 font-medium">Secuencia de respuestas correctas del banco</p>
     </header>
 
-    <div class="space-y-10">
-        {% for detalle in detalles_preguntas %}
+    <div class="space-y-8">
+        {% for grupo in grupos %}
+            {% include 'evaluaciones/_bloque_contexto.html' with bloque=grupo.bloque %}
+            {% for detalle in grupo.items %}
         <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" id="pregunta-{{ detalle.pregunta.id }}">
             
             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                <h3 class="font-bold text-gray-700 text-lg">Pregunta {{ forloop.counter }}</h3>
+                <h3 class="font-bold text-gray-700 text-lg">Pregunta {{ detalle.numero_global }}</h3>
                 <span class="text-xs bg-white text-gray-500 px-2 py-1 rounded border font-semibold">ID: {{ detalle.pregunta.id }} | {{ detalle.pregunta.tema.nombre|default:"General" }}</span>
             </div>
             
@@ -89,6 +91,7 @@
                 </div>
             </div>
         </section>
+            {% endfor %}
         {% endfor %}
     </div>
 

@@ -12,6 +12,7 @@ class TallerForm(forms.ModelForm):
             'estado': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'modulo': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'tema': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
+            'bloque_contexto': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'orden': forms.NumberInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'intentos_permitidos': forms.NumberInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
         }
@@ -28,15 +29,16 @@ class SimulacroForm(forms.ModelForm):
             'duracion_minutos': forms.NumberInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
         }
 
-from .models.banco import Pregunta, Opcion, ImagenPregunta
+from .models.banco import Pregunta, Opcion, ImagenPregunta, BloqueContexto, ImagenContexto
 from django.forms import inlineformset_factory
 
 class PreguntaForm(forms.ModelForm):
     class Meta:
         model = Pregunta
-        fields = ['tema', 'enunciado']
+        fields = ['tema', 'bloque_contexto', 'enunciado']
         widgets = {
             'tema': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
+            'bloque_contexto': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'enunciado': forms.Textarea(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none tinymce-enunciado', 'rows': 4}),
         }
 
@@ -76,3 +78,32 @@ OpcionFormSet = inlineformset_factory(
     extra=4, # 4 opciones por defecto (ICFES), pero el JS permite añadir más
     can_delete=True
 )
+
+
+# ─── BloqueContexto ───────────────────────────────────────────────────────────
+
+class ImagenContextoForm(forms.ModelForm):
+    class Meta:
+        model = ImagenContexto
+        fields = ['imagen', 'descripcion']
+        widgets = {
+            'imagen': forms.FileInput(attrs={'class': 'w-full p-2 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'}),
+            'descripcion': forms.TextInput(attrs={'class': 'w-full mt-2 p-2 border border-gray-300 rounded focus:border-blue-500 outline-none', 'placeholder': 'Descripción (Ej: Figura 1)'}),
+        }
+
+ImagenContextoFormSet = inlineformset_factory(
+    BloqueContexto,
+    ImagenContexto,
+    form=ImagenContextoForm,
+    extra=0,
+    can_delete=True,
+)
+
+class BloqueContextoForm(forms.ModelForm):
+    class Meta:
+        model = BloqueContexto
+        fields = ['materia', 'texto']
+        widgets = {
+            'materia': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-blue-500 outline-none'}),
+            'texto': forms.Textarea(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-blue-500 outline-none tinymce-contexto', 'rows': 6}),
+        }

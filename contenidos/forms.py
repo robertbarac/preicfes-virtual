@@ -20,7 +20,7 @@ class BloqueContenidoForm(forms.ModelForm):
         widgets = {
             'tipo': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'orden': forms.NumberInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
-            'contenido_texto': forms.Textarea(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none', 'rows': 5}),
+            'contenido_texto': forms.Textarea(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none tinymce-contenido', 'rows': 5}),
             'archivo_imagen': forms.ClearableFileInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'url': forms.URLInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
         }

@@ -1,16 +1,22 @@
 from django.urls import path
 from .views.talleres import TallerCreateView, TallerUpdateView, TallerDetailView, TallerPreguntaManageView, TallerResolverView, TallerIntentoDetailView, TallerSolucionView, TallerLecturaView, TallerListView
 from .views.simulacros import SimulacroCreateView, SimulacroUpdateView, SimulacroDetailView, SimulacroListView
-from .views.banco import PreguntaCreateView, PreguntaListView, PreguntaUpdateView
+from .views.banco import PreguntaCreateView, PreguntaListView, PreguntaUpdateView, BloqueContextoListView, BloqueContextoCreateView, BloqueContextoUpdateView, BloqueContextoDeleteView
 from .views.calificaciones import MisCalificacionesView, ReporteEstudiantePDFView, ReporteRendimientoView
 
 app_name = 'evaluaciones'
 
 urlpatterns = [
-    # Banco
+    # Banco — Preguntas
     path('banco/preguntas/', PreguntaListView.as_view(), name='pregunta_list'),
     path('banco/preguntas/crear/', PreguntaCreateView.as_view(), name='pregunta_create'),
     path('banco/preguntas/<int:pk>/editar/', PreguntaUpdateView.as_view(), name='pregunta_update'),
+
+    # Banco — Bloques de Contexto
+    path('banco/contextos/', BloqueContextoListView.as_view(), name='bloque_contexto_list'),
+    path('banco/contextos/crear/', BloqueContextoCreateView.as_view(), name='bloque_contexto_create'),
+    path('banco/contextos/<int:pk>/editar/', BloqueContextoUpdateView.as_view(), name='bloque_contexto_update'),
+    path('banco/contextos/<int:pk>/eliminar/', BloqueContextoDeleteView.as_view(), name='bloque_contexto_delete'),
 
     # Talleres
     path('talleres/', TallerListView.as_view(), name='taller_list'),

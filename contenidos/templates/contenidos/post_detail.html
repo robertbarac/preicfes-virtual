@@ -27,7 +27,7 @@
                     {% if bloque.tipo == 'texto' %}
                         <!-- RENDERIZA TEXTO ENRIQUECIDO O PÁRRAFO -->
                         <div class="text-lg">
-                            {{ bloque.contenido_texto|safe|linebreaks }}
+                            {{ bloque.contenido_texto|safe }}
                         </div>
                     
                     {% elif bloque.tipo == 'imagen' %}

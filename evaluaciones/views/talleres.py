@@ -4,6 +4,34 @@ from ..models.talleres import Taller
 from ..forms import TallerForm
 from curriculo.views.mixins import HistorialMixin
 
+
+# ─── Helper: agrupar preguntas por su bloque de contexto ─────────────────────
+def agrupar_por_bloque(items_con_pregunta, get_pregunta=lambda x: x):
+    """
+    Agrupa una lista de items en bloques de contexto.
+    items_con_pregunta: iterable (ej: PreguntaTaller o dicts con clave 'pregunta')
+    get_pregunta: callable que extrae el objeto Pregunta del item.
+    Retorna lista de {'bloque': BloqueContexto|None, 'items': [...]}
+    """
+    grupos = []
+    bloque_actual = "INICIO"  # centinela diferente a None
+    global_counter = 1
+    for item in items_con_pregunta:
+        pregunta = get_pregunta(item)
+        bloque = pregunta.bloque_contexto
+        if bloque != bloque_actual:
+            bloque_actual = bloque
+            grupos.append({'bloque': bloque, 'items': []})
+            
+        if isinstance(item, dict):
+            item['numero_global'] = global_counter
+        else:
+            item.numero_global = global_counter
+            
+        grupos[-1]['items'].append(item)
+        global_counter += 1
+    return grupos
+
 class TallerCreateView(HistorialMixin, CreateView):
     model = Taller
     form_class = TallerForm
@@ -130,7 +158,9 @@ class TallerResolverView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         taller = get_object_or_404(Taller, pk=self.kwargs['pk'])
         context['taller'] = taller
-        context['preguntas'] = taller.preguntas_taller.select_related('pregunta').all()
+        preguntas_taller = taller.preguntas_taller.select_related('pregunta').all()
+        context['preguntas'] = preguntas_taller
+        context['grupos'] = agrupar_por_bloque(preguntas_taller, get_pregunta=lambda pt: pt.pregunta)
         
         # Verificar intentos previos
         intentos = IntentoTaller.objects.filter(usuario=self.request.user, taller=taller)
@@ -230,7 +260,9 @@ class TallerIntentoDetailView(LoginRequiredMixin, DetailView):
 
         # Estructurar los datos para la plantilla
         detalles_preguntas = []
-        preguntas_taller = taller.preguntas_taller.select_related('pregunta', 'pregunta__tema').prefetch_related('pregunta__opciones')
+        preguntas_taller = taller.preguntas_taller.select_related(
+            'pregunta', 'pregunta__tema', 'pregunta__bloque_contexto'
+        ).prefetch_related('pregunta__opciones', 'pregunta__bloque_contexto__imagenes')
         
         for pt in preguntas_taller:
             pregunta = pt.pregunta
@@ -247,6 +279,7 @@ class TallerIntentoDetailView(LoginRequiredMixin, DetailView):
             })
             
         context['detalles_preguntas'] = detalles_preguntas
+        context['grupos'] = agrupar_por_bloque(detalles_preguntas, get_pregunta=lambda d: d['pregunta'])
         return context
 
 class TallerSolucionView(LoginRequiredMixin, DetailView):
@@ -274,7 +307,9 @@ class TallerSolucionView(LoginRequiredMixin, DetailView):
         taller = self.object
         
         detalles_preguntas = []
-        preguntas_taller = taller.preguntas_taller.select_related('pregunta', 'pregunta__tema').prefetch_related('pregunta__opciones').all()
+        preguntas_taller = taller.preguntas_taller.select_related(
+            'pregunta', 'pregunta__tema', 'pregunta__bloque_contexto'
+        ).prefetch_related('pregunta__opciones', 'pregunta__bloque_contexto__imagenes').all()
         
         for pt in preguntas_taller:
             pregunta = pt.pregunta
@@ -286,6 +321,7 @@ class TallerSolucionView(LoginRequiredMixin, DetailView):
             })
             
         context['detalles_preguntas'] = detalles_preguntas
+        context['grupos'] = agrupar_por_bloque(detalles_preguntas, get_pregunta=lambda d: d['pregunta'])
         return context
 
 class TallerLecturaView(LoginRequiredMixin, DetailView):
@@ -301,7 +337,11 @@ class TallerLecturaView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         taller = self.object
-        context['preguntas'] = taller.preguntas_taller.select_related('pregunta', 'pregunta__tema').prefetch_related('pregunta__opciones').all()
+        preguntas_lectura = taller.preguntas_taller.select_related(
+            'pregunta', 'pregunta__tema', 'pregunta__bloque_contexto'
+        ).prefetch_related('pregunta__opciones', 'pregunta__bloque_contexto__imagenes').all()
+        context['preguntas'] = preguntas_lectura
+        context['grupos'] = agrupar_por_bloque(preguntas_lectura, get_pregunta=lambda pt: pt.pregunta)
         return context
 
 from django.views.generic import ListView

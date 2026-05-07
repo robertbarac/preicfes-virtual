@@ -17,12 +17,14 @@
         <p class="text-blue-100 mt-2 font-medium">Visualización de preguntas en lista sin evaluación ni temporizador.</p>
     </header>
 
-    <div class="space-y-10">
-        {% for pt in preguntas %}
+    <div class="space-y-8">
+        {% for grupo in grupos %}
+            {% include 'evaluaciones/_bloque_contexto.html' with bloque=grupo.bloque %}
+            {% for pt in grupo.items %}
         <section class="bg-white rounded-xl shadow border border-gray-200 overflow-hidden" id="pregunta-{{ pt.pregunta.id }}">
             
             <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                <h3 class="font-bold text-gray-700 text-lg">Pregunta {{ forloop.counter }}</h3>
+                <h3 class="font-bold text-gray-700 text-lg">Pregunta {{ pt.numero_global }}</h3>
                 <span class="text-xs bg-white text-gray-500 px-2 py-1 rounded border font-semibold">Tema: {{ pt.pregunta.tema.nombre|default:"General" }}</span>
             </div>
             
@@ -67,6 +69,7 @@
                 </div>
             </div>
         </section>
+            {% endfor %}
         {% empty %}
         <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-md shadow-sm">
             <div class="flex">

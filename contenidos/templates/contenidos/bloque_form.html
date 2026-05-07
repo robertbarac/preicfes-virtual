@@ -97,4 +97,58 @@ document.addEventListener("DOMContentLoaded", function() {
     updateFields(); // inicializar
 });
 </script>
+
+<!-- Quill.js — editor de texto enriquecido (MIT, sin API key) -->
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<style>
+  .ql-container { font-family: Inter, sans-serif; font-size: 15px; border-radius: 0 0 6px 6px; }
+  .ql-toolbar { border-radius: 6px 6px 0 0; background: #f9fafb; }
+  .ql-editor { min-height: 140px; }
+  .quill-hidden { display: none !important; }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const textoArea = document.querySelector('textarea.tinymce-contenido');
+    if (!textoArea) return;
+
+    const wrapper = document.createElement('div');
+    textoArea.parentNode.insertBefore(wrapper, textoArea);
+    textoArea.classList.add('quill-hidden');
+
+    const quill = new Quill(wrapper, {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'script': 'sub' }, { 'script': 'super' }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                ['clean']
+            ]
+        },
+    });
+
+    // Cargar contenido existente al editar
+    if (textoArea.value) {
+        quill.clipboard.dangerouslyPasteHTML(textoArea.value);
+    }
+
+    // Sincronizar con el textarea al enviar
+    document.getElementById('bloqueForm').addEventListener('submit', function () {
+        textoArea.value = quill.root.innerHTML;
+    });
+
+    // Re-mostrar el editor si el tipo es "texto" (ya lo hace el JS anterior,
+    // pero Quill necesita estar visible para renderizarse correctamente)
+    const tipoSel = document.getElementById("{{ form.tipo.id_for_label }}");
+    if (tipoSel) {
+        tipoSel.addEventListener('change', function () {
+            if (this.value === 'texto') {
+                // Forzar reflow del editor por si estaba oculto
+                setTimeout(() => quill.focus(), 50);
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

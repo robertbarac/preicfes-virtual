@@ -49,7 +49,9 @@
 
     <!-- Detalle de Preguntas -->
     <div class="space-y-10">
-        {% for detalle in detalles_preguntas %}
+        {% for grupo in grupos %}
+    {% include 'evaluaciones/_bloque_contexto.html' with bloque=grupo.bloque %}
+    {% for detalle in grupo.items %}
         {% with pregunta=detalle.pregunta opciones=detalle.opciones respuesta=detalle.respuesta_dada correcta=detalle.opcion_correcta %}
         <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" id="pregunta-{{ pregunta.id }}">
             
@@ -60,22 +62,22 @@
                         <div class="bg-gray-400 text-white rounded-full p-1 mr-3">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
-                        <h3 class="font-bold text-gray-800 text-lg">Pregunta {{ forloop.counter }}</h3>
+                        <h3 class="font-bold text-gray-800 text-lg">Pregunta {{ detalle.numero_global }}</h3>
                     {% elif detalle.fue_correcta %}
                         <div class="bg-green-500 text-white rounded-full p-1 mr-3">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         </div>
-                        <h3 class="font-bold text-green-800 text-lg">Pregunta {{ forloop.counter }} (Correcta)</h3>
+                        <h3 class="font-bold text-green-800 text-lg">Pregunta {{ detalle.numero_global }} (Correcta)</h3>
                     {% elif detalle.omitida %}
                         <div class="bg-yellow-500 text-white rounded-full p-1 mr-3">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                         </div>
-                        <h3 class="font-bold text-yellow-800 text-lg">Pregunta {{ forloop.counter }} (Sin Responder)</h3>
+                        <h3 class="font-bold text-yellow-800 text-lg">Pregunta {{ detalle.numero_global }} (Sin Responder)</h3>
                     {% else %}
                         <div class="bg-red-500 text-white rounded-full p-1 mr-3">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </div>
-                        <h3 class="font-bold text-red-800 text-lg">Pregunta {{ forloop.counter }} (Incorrecta)</h3>
+                        <h3 class="font-bold text-red-800 text-lg">Pregunta {{ detalle.numero_global }} (Incorrecta)</h3>
                     {% endif %}
                 </div>
                 <span class="text-xs bg-white text-gray-500 px-2 py-1 rounded border font-semibold">{{ pregunta.tema.nombre|default:"General" }}</span>
