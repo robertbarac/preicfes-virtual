@@ -4,7 +4,7 @@ from .views.simulacros import (
     SimulacroCreateView, SimulacroUpdateView, SimulacroDetailView, SimulacroListView,
     VentanaSimulacroCreateView, SimulacroResolverView, SimulacroEnviarView, SimulacroResultadoView
 )
-from .views.banco import PreguntaCreateView, PreguntaListView, PreguntaUpdateView, BloqueContextoListView, BloqueContextoCreateView, BloqueContextoUpdateView, BloqueContextoDeleteView
+from .views.banco import PreguntaCreateView, PreguntaListView, PreguntaUpdateView, PreguntaDetailView, BloqueContextoListView, BloqueContextoCreateView, BloqueContextoUpdateView, BloqueContextoDeleteView
 from .views.calificaciones import MisCalificacionesView, ReporteEstudiantePDFView, ReporteRendimientoView
 
 app_name = 'evaluaciones'
@@ -13,6 +13,7 @@ urlpatterns = [
     # Banco — Preguntas
     path('banco/preguntas/', PreguntaListView.as_view(), name='pregunta_list'),
     path('banco/preguntas/crear/', PreguntaCreateView.as_view(), name='pregunta_create'),
+    path('banco/preguntas/<int:pk>/', PreguntaDetailView.as_view(), name='pregunta_detail'),
     path('banco/preguntas/<int:pk>/editar/', PreguntaUpdateView.as_view(), name='pregunta_update'),
 
     # Banco — Bloques de Contexto

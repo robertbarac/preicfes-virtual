@@ -36,9 +36,11 @@
                 <a href="{% url 'evaluaciones:taller_create' %}?modulo={{ modulo.id }}" class="text-xs font-semibold bg-green-100 hover:bg-green-200 text-green-800 py-1.5 px-3 rounded">
                     + Taller
                 </a>
+                {% if request.user.role == 'virtual_student' or request.user.is_staff or request.user.is_superuser %}
                 <a href="{% url 'evaluaciones:simulacro_create' %}?modulo={{ modulo.id }}" class="text-xs font-semibold bg-red-100 hover:bg-red-200 text-red-800 py-1.5 px-3 rounded">
                     + Simulacro
                 </a>
+                {% endif %}
             </div>
             {% endif %}
         </div>
@@ -94,24 +96,26 @@
                         <!-- No talleres -->
                     {% endfor %}
 
-                    <!-- Simulacros -->
-                    {% for simulacro in modulo.simulacros.all %}
-                        <div class="bg-white border rounded p-4 hover:shadow transition relative flex flex-col justify-between">
-                            <div>
-                                <div class="text-[10px] bg-red-100 text-red-800 rounded px-2 py-0.5 inline-block mb-2 font-bold uppercase tracking-wider">Simulacro ICFES</div>
-                                <h3 class="font-bold text-gray-800 mb-1">
-                                    <a href="{% url 'evaluaciones:simulacro_detail' simulacro.pk %}" class="hover:text-red-600">{{ simulacro.titulo }}</a>
-                                </h3>
+                    <!-- Simulacros (Solo Virtuales/Staff) -->
+                    {% if request.user.role == 'virtual_student' or request.user.is_staff or request.user.is_superuser %}
+                        {% for simulacro in modulo.simulacros.all %}
+                            <div class="bg-white border rounded p-4 hover:shadow transition relative flex flex-col justify-between">
+                                <div>
+                                    <div class="text-[10px] bg-red-100 text-red-800 rounded px-2 py-0.5 inline-block mb-2 font-bold uppercase tracking-wider">Simulacro ICFES</div>
+                                    <h3 class="font-bold text-gray-800 mb-1">
+                                        <a href="{% url 'evaluaciones:simulacro_detail' simulacro.pk %}" class="hover:text-red-600">{{ simulacro.titulo }}</a>
+                                    </h3>
+                                </div>
+                                {% if request.user.is_staff %}
+                                <div class="flex justify-end gap-2 text-xs border-t pt-2 mt-2">
+                                    <a href="{% url 'evaluaciones:simulacro_update' simulacro.pk %}" class="text-red-600 hover:underline">Editar</a>
+                                </div>
+                                {% endif %}
                             </div>
-                            {% if request.user.is_staff %}
-                            <div class="flex justify-end gap-2 text-xs border-t pt-2 mt-2">
-                                <a href="{% url 'evaluaciones:simulacro_update' simulacro.pk %}" class="text-red-600 hover:underline">Editar</a>
-                            </div>
-                            {% endif %}
-                        </div>
-                    {% empty %}
-                        <!-- No simulacros -->
-                    {% endfor %}
+                        {% empty %}
+                            <!-- No simulacros -->
+                        {% endfor %}
+                    {% endif %}
                     <!-- Clases Virtuales -->
                     {% for clase in modulo.clases_virtuales.all %}
                         <div class="bg-white border border-blue-100 rounded p-4 shadow-sm hover:shadow transition relative flex flex-col justify-between">

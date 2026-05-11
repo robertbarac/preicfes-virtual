@@ -58,7 +58,7 @@ class PreguntaCreateView(HistorialMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy('curriculo:programa_list') # O el listado global de preguntas cuando exista
+        return reverse_lazy('evaluaciones:pregunta_list')
 
 class PreguntaUpdateView(HistorialMixin, UpdateView):
     model = Pregunta
@@ -111,7 +111,7 @@ class PreguntaUpdateView(HistorialMixin, UpdateView):
         return reverse_lazy('evaluaciones:pregunta_list')
 
 
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView
 from curriculo.models import Materia, Tema
 
 class PreguntaListView(ListView):
@@ -144,6 +144,13 @@ class PreguntaListView(ListView):
         context['tema_val'] = self.request.GET.get('tema', '')
         return context
 
+class PreguntaDetailView(DetailView):
+    model = Pregunta
+    template_name = 'evaluaciones/pregunta_detail.html'
+    context_object_name = 'pregunta'
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('tema', 'tema__materia', 'bloque_contexto').prefetch_related('opciones', 'imagenes')
 
 # ─── BloqueContexto CRUD ──────────────────────────────────────────────────────
 

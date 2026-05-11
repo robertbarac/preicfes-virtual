@@ -4,9 +4,14 @@
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
     <h1 class="text-3xl font-bold text-gray-800">Banco de Preguntas</h1>
     {% if user.is_staff %}
-    <a href="{% url 'evaluaciones:pregunta_create' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded shadow whitespace-nowrap">
-        + Nueva Pregunta
-    </a>
+    <div class="flex gap-2">
+        <a href="{% url 'evaluaciones:bloque_contexto_list' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-medium py-2 px-4 rounded shadow-sm whitespace-nowrap transition-colors">
+            Gestionar Contextos
+        </a>
+        <a href="{% url 'evaluaciones:pregunta_create' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded shadow whitespace-nowrap transition-colors">
+            + Nueva Pregunta
+        </a>
+    </div>
     {% endif %}
 </div>
 
@@ -61,7 +66,9 @@
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{{ pregunta.id }}</td>
                 <td class="px-6 py-4 text-sm text-gray-900">
-                    <div class="line-clamp-2" title="{{ pregunta.enunciado }}">{{ pregunta.enunciado|truncatechars:100 }}</div>
+                    <a href="{% url 'evaluaciones:pregunta_detail' pregunta.pk %}" class="hover:text-indigo-600 font-medium transition-colors">
+                        <div class="line-clamp-2" title="{{ pregunta.enunciado }}">{{ pregunta.enunciado|truncatechars:100|safe }}</div>
+                    </a>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div class="font-medium text-indigo-600">{{ pregunta.tema.materia.nombre|default:"N/A" }}</div>
@@ -71,6 +78,7 @@
                     {{ pregunta.opciones.count }} opc.
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="{% url 'evaluaciones:pregunta_detail' pregunta.pk %}" class="text-gray-600 hover:text-gray-900 font-medium mr-3">Ver</a>
                     {% if user.is_staff %}
                     <a href="{% url 'evaluaciones:pregunta_update' pregunta.pk %}" class="text-indigo-600 hover:text-indigo-900 font-medium">Editar</a>
                     {% endif %}

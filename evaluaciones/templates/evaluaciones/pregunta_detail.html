@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Pregunta #{{ pregunta.id }} | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mb-12">
+    <!-- Breadcrumb & Header -->
+    <div class="mb-6">
+        <nav class="flex text-sm text-gray-500 mb-4">
+            <a href="{% url 'evaluaciones:pregunta_list' %}" class="hover:text-indigo-600">Banco de Preguntas</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-800 font-medium">Pregunta #{{ pregunta.id }}</span>
+        </nav>
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">Detalle de Pregunta</h1>
+            {% if user.is_staff %}
+            <div class="flex space-x-3">
+                <a href="{% url 'evaluaciones:pregunta_update' pregunta.pk %}" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold py-2 px-4 rounded border border-indigo-200 transition-colors">
+                    Editar Pregunta
+                </a>
+                <a href="{% url 'evaluaciones:pregunta_create' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded shadow transition-colors">
+                    + Nueva
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Metadatos de la Pregunta -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 flex flex-wrap gap-6 text-sm">
+        <div>
+            <span class="block text-gray-500 font-medium mb-1">Materia</span>
+            <span class="font-bold text-indigo-700 bg-indigo-50 px-2 py-1 rounded">{{ pregunta.tema.materia.nombre|default:"Sin materia" }}</span>
+        </div>
+        <div>
+            <span class="block text-gray-500 font-medium mb-1">Tema</span>
+            <span class="font-bold text-gray-800">{{ pregunta.tema.nombre|default:"Sin tema" }}</span>
+        </div>
+        <div>
+            <span class="block text-gray-500 font-medium mb-1">Dificultad</span>
+            <span class="font-bold text-gray-800">{{ pregunta.get_dificultad_display }}</span>
+        </div>
+        <div>
+            <span class="block text-gray-500 font-medium mb-1">Creado por</span>
+            <span class="font-bold text-gray-800">{{ pregunta.creador.get_full_name|default:pregunta.creador.username }}</span>
+        </div>
+        <div>
+            <span class="block text-gray-500 font-medium mb-1">Fecha</span>
+            <span class="font-bold text-gray-800">{{ pregunta.fecha_creacion|date:"d M Y" }}</span>
+        </div>
+    </div>
+
+    <!-- Vista Previa de la Pregunta -->
+    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Vista Previa</h2>
+    
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
+            <span class="text-sm font-bold text-gray-500 uppercase tracking-wider">Pregunta #{{ pregunta.id }}</span>
+        </div>
+        
+        <div class="p-6 md:p-8 flex flex-col lg:flex-row gap-8">
+            {% if pregunta.bloque_contexto %}
+            <div class="lg:w-1/2">
+                <div class="bg-gray-50 border border-gray-200 p-6 rounded-lg text-sm text-gray-700 leading-relaxed prose max-w-none">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Bloque de Contexto Vinculado</h3>
+                    {{ pregunta.bloque_contexto.texto|safe }}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="{% if pregunta.bloque_contexto %}lg:w-1/2{% else %}w-full{% endif %}">
+                <!-- Enunciado -->
+                <div class="prose max-w-none text-gray-800 font-medium text-lg leading-relaxed mb-6">
+                    {{ pregunta.enunciado|safe }}
+                </div>
+                
+                <!-- Imágenes -->
+                {% if pregunta.imagenes.all %}
+                <div class="grid grid-cols-1 gap-4 mb-6">
+                    {% for img in pregunta.imagenes.all %}
+                    <div class="text-center bg-gray-50 p-3 rounded border border-gray-200">
+                        <img src="{{ img.imagen.url }}" alt="Imagen pregunta" class="max-w-full h-auto mx-auto rounded shadow-sm">
+                        {% if img.descripcion %}<p class="text-xs text-gray-500 mt-2 italic">{{ img.descripcion }}</p>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <hr class="border-gray-100 my-6">
+
+                <!-- Opciones -->
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Opciones de Respuesta</h3>
+                <div class="space-y-3">
+                    {% for opcion in pregunta.opciones.all %}
+                    <div class="relative flex rounded-lg border {% if opcion.es_correcta %}border-green-500 bg-green-50{% else %}border-gray-200 bg-white{% endif %} p-4 shadow-sm">
+                        <div class="flex items-start w-full">
+                            <div class="flex-shrink-0 mt-0.5 mr-3">
+                                {% if opcion.es_correcta %}
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                {% else %}
+                                <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                                    <span class="text-xs text-gray-400">{{ forloop.counter }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1 text-gray-800">
+                                {% if opcion.texto %}
+                                <div class="font-medium {% if opcion.es_correcta %}text-green-800{% endif %}">
+                                    {{ opcion.texto|safe }}
+                                </div>
+                                {% endif %}
+                                {% if opcion.imagen %}
+                                <div class="mt-2 text-center bg-white rounded p-1 border border-gray-100 inline-block shadow-sm">
+                                    <img src="{{ opcion.imagen.url }}" alt="Imagen de opción" class="max-w-xs h-auto rounded">
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if opcion.es_correcta %}
+                        <div class="absolute top-2 right-2">
+                            <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded border border-green-200">Correcta</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="bg-yellow-50 text-yellow-800 p-4 rounded-lg border border-yellow-200 text-sm">
+                        Esta pregunta no tiene opciones de respuesta registradas.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

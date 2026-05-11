@@ -84,7 +84,7 @@ class VentanaSimulacroCreateView(LoginRequiredMixin, StaffRequiredMixin, CreateV
 
 # --- Listado y Detalle (Visualización) ---
 
-class SimulacroListView(LoginRequiredMixin, ListView):
+class SimulacroListView(LoginRequiredMixin, SimulacroAccessMixin, ListView):
     model = Simulacro
     template_name = 'evaluaciones/simulacro_list.html'
     context_object_name = 'simulacros'
@@ -124,7 +124,7 @@ class SimulacroListView(LoginRequiredMixin, ListView):
         return context
 
 
-class SimulacroDetailView(LoginRequiredMixin, DetailView):
+class SimulacroDetailView(LoginRequiredMixin, SimulacroAccessMixin, DetailView):
     model = Simulacro
     template_name = 'evaluaciones/simulacro_detail.html'
     context_object_name = 'simulacro'
@@ -354,7 +354,7 @@ class SimulacroEnviarView(LoginRequiredMixin, SimulacroAccessMixin, View):
         intento.save()
 
 
-class SimulacroResultadoView(LoginRequiredMixin, DetailView):
+class SimulacroResultadoView(LoginRequiredMixin, SimulacroAccessMixin, DetailView):
     model = IntentoSimulacro
     template_name = 'evaluaciones/simulacro_resultado.html'
     context_object_name = 'intento'
