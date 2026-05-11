@@ -1,6 +1,9 @@
 from django.urls import path
 from .views.talleres import TallerCreateView, TallerUpdateView, TallerDetailView, TallerPreguntaManageView, TallerResolverView, TallerIntentoDetailView, TallerSolucionView, TallerLecturaView, TallerListView
-from .views.simulacros import SimulacroCreateView, SimulacroUpdateView, SimulacroDetailView, SimulacroListView
+from .views.simulacros import (
+    SimulacroCreateView, SimulacroUpdateView, SimulacroDetailView, SimulacroListView,
+    VentanaSimulacroCreateView, SimulacroResolverView, SimulacroEnviarView, SimulacroResultadoView
+)
 from .views.banco import PreguntaCreateView, PreguntaListView, PreguntaUpdateView, BloqueContextoListView, BloqueContextoCreateView, BloqueContextoUpdateView, BloqueContextoDeleteView
 from .views.calificaciones import MisCalificacionesView, ReporteEstudiantePDFView, ReporteRendimientoView
 
@@ -34,6 +37,10 @@ urlpatterns = [
     path('simulacros/crear/', SimulacroCreateView.as_view(), name='simulacro_create'),
     path('simulacros/<int:pk>/', SimulacroDetailView.as_view(), name='simulacro_detail'),
     path('simulacros/<int:pk>/editar/', SimulacroUpdateView.as_view(), name='simulacro_update'),
+    path('simulacros/<int:pk>/ventana/crear/', VentanaSimulacroCreateView.as_view(), name='ventana_simulacro_create'),
+    path('simulacros/<int:pk>/resolver/', SimulacroResolverView.as_view(), name='simulacro_resolver'),
+    path('simulacros/<int:pk>/enviar/', SimulacroEnviarView.as_view(), name='simulacro_enviar'),
+    path('simulacros/intentos/<int:pk>/', SimulacroResultadoView.as_view(), name='simulacro_resultado'),
     
     # Calificaciones / Reportes
     path('mis-calificaciones/', MisCalificacionesView.as_view(), name='mis_calificaciones'),

@@ -1,6 +1,6 @@
-from .banco import Pregunta, Opcion
+from .banco import Pregunta, Opcion, Tema, ImagenPregunta, BloqueContexto, ImagenContexto
 from .talleres import Taller, PreguntaTaller, IntentoTaller, RespuestaTaller
 from .simulacros import (
-    Simulacro, SesionSimulacro, ComponenteSesion, PreguntaSimulacro,
-    IntentoSimulacro, IntentoSesion, RespuestaSimulacro
+    Simulacro, VentanaSimulacro, SesionSimulacro, Componente, ComponenteSesion, PreguntaSimulacro,
+    IntentoSimulacro, IntentoSesion, RespuestaSimulacro, calcular_puntaje_global
 )

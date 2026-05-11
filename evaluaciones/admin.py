@@ -1,7 +1,11 @@
 from django.contrib import admin
 from .models.banco import Pregunta, Opcion, ImagenPregunta
 from .models.talleres import Taller, PreguntaTaller
-from .models.simulacros import Simulacro, SesionSimulacro, ComponenteSesion
+from .models.simulacros import (
+    Simulacro, VentanaSimulacro, SesionSimulacro, Componente, 
+    ComponenteSesion, PreguntaSimulacro, IntentoSimulacro, 
+    IntentoSesion, RespuestaSimulacro
+)
 
 # --- BANCO DE PREGUNTAS ---
 
@@ -50,7 +54,61 @@ class SesionSimulacroInline(admin.TabularInline):
 
 @admin.register(Simulacro)
 class SimulacroAdmin(admin.ModelAdmin):
-    list_display = ('titulo', 'modulo', 'fecha_apertura', 'fecha_cierre', 'duracion_minutos')
-    list_filter = ('modulo', )
+    list_display = ('titulo', 'modulo', 'estado', 'duracion_minutos')
+    list_filter = ('modulo', 'estado')
     search_fields = ('titulo', )
     inlines = [SesionSimulacroInline]
+
+@admin.register(VentanaSimulacro)
+class VentanaSimulacroAdmin(admin.ModelAdmin):
+    list_display = ('simulacro', 'fecha_apertura', 'fecha_cierre', 'is_active')
+    list_filter = ('simulacro', 'fecha_apertura')
+
+@admin.register(Componente)
+class ComponenteAdmin(admin.ModelAdmin):
+    list_display = ('nombre',)
+    search_fields = ('nombre',)
+
+class ComponenteSesionInline(admin.TabularInline):
+    model = ComponenteSesion
+    extra = 1
+
+@admin.register(SesionSimulacro)
+class SesionSimulacroAdmin(admin.ModelAdmin):
+    list_display = ('simulacro', 'nombre', 'orden')
+    list_filter = ('simulacro',)
+    inlines = [ComponenteSesionInline]
+
+class PreguntaSimulacroInline(admin.TabularInline):
+    model = PreguntaSimulacro
+    extra = 3
+    autocomplete_fields = ['pregunta']
+
+@admin.register(ComponenteSesion)
+class ComponenteSesionAdmin(admin.ModelAdmin):
+    list_display = ('sesion', 'componente', 'orden')
+    list_filter = ('sesion__simulacro', 'componente')
+    search_fields = ('componente__nombre',)
+    inlines = [PreguntaSimulacroInline]
+
+# --- INTENTOS DE SIMULACRO ---
+
+class IntentoSesionInline(admin.TabularInline):
+    model = IntentoSesion
+    extra = 0
+    readonly_fields = ('fecha_inicio', 'fecha_fin', 'get_tiempo_empleado_minutos')
+
+@admin.register(IntentoSimulacro)
+class IntentoSimulacroAdmin(admin.ModelAdmin):
+    list_display = ('simulacro', 'usuario', 'fecha_inicio', 'fecha_fin', 'puntaje_global')
+    list_filter = ('simulacro',)
+    search_fields = ('usuario__username', 'usuario__email', 'simulacro__titulo')
+    inlines = [IntentoSesionInline]
+    readonly_fields = ('fecha_inicio', 'fecha_fin', 'tiempo_empleado_minutos', 'puntaje_global', 'resultados_detallados')
+
+@admin.register(RespuestaSimulacro)
+class RespuestaSimulacroAdmin(admin.ModelAdmin):
+    list_display = ('intento_sesion', 'pregunta', 'opcion_seleccionada', 'es_correcta')
+    list_filter = ('es_correcta',)
+    search_fields = ('intento_sesion__intento_simulacro__usuario__username',)
+    readonly_fields = ('intento_sesion', 'pregunta', 'opcion_seleccionada', 'es_correcta')

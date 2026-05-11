@@ -20,11 +20,10 @@
             <div class="flex flex-wrap items-center gap-3 opacity-90 text-sm font-medium mt-4">
                 <span class="flex items-center bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Duración: {{ simulacro.duracion_minutos }} min
+                    Duración por sesión: {{ simulacro.duracion_minutos }} min
                 </span>
-                <span class="flex items-center bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    Cierre: {{ simulacro.fecha_cierre|date:"d M, Y H:i" }}
+                <span class="flex items-center {% if simulacro.estado == 'publicado' %}bg-green-500/30 text-white{% else %}bg-gray-500/30 text-white{% endif %} px-3 py-1.5 rounded-full backdrop-blur-sm">
+                    {{ simulacro.get_estado_display }}
                 </span>
             </div>
         </div>
@@ -33,26 +32,56 @@
     <!-- Cuerpo del Simulacro -->
     <div class="px-8 py-10">
         
-        <!-- Alertas de Fecha (Abierto/Cerrado) -->
+        <!-- Alertas de Fecha (Ventana Activa) -->
         <div class="mb-8">
+            {% if ventana_activa %}
             <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded text-blue-700 shadow-sm flex items-start">
                 <svg class="w-6 h-6 mr-3 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <div>
-                    <h4 class="font-bold text-lg mb-1">Información de Disponibilidad</h4>
-                    <p><strong>Apertura:</strong> {{ simulacro.fecha_apertura|date:"l, d de F Y \a \l\a\s H:i" }}</p>
-                    <p><strong>Cierre:</strong> {{ simulacro.fecha_cierre|date:"l, d de F Y \a \l\a\s H:i" }}</p>
+                    <h4 class="font-bold text-lg mb-1">¡Simulacro Disponible!</h4>
+                    <p><strong>Apertura:</strong> {{ ventana_activa.fecha_apertura|date:"l, d de F Y \a \l\a\s H:i" }}</p>
+                    <p><strong>Cierre:</strong> {{ ventana_activa.fecha_cierre|date:"l, d de F Y \a \l\a\s H:i" }}</p>
                 </div>
             </div>
+            {% else %}
+            <div class="bg-gray-100 border-l-4 border-gray-400 p-4 rounded text-gray-700 shadow-sm flex items-start">
+                <svg class="w-6 h-6 mr-3 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div>
+                    <h4 class="font-bold text-lg mb-1">Simulacro No Disponible</h4>
+                    <p>Actualmente no hay ninguna ventana abierta para realizar este simulacro.</p>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
-        <!-- Estado de intentos de Simulacro (Lugar de Trabajo Futuro) -->
+        <!-- Estado de intentos de Simulacro -->
         <div class="bg-gray-50 border border-gray-200 rounded-xl p-8 mb-10 flex flex-col items-center justify-center text-center shadow-inner">
-            <h4 class="font-bold text-gray-800 text-xl mb-2">Comienza la Prueba</h4>
-            <p class="text-gray-600 max-w-lg mb-6 text-sm">Asegúrate de tener un entorno tranquilo. El simulacro tiene tiempo límite. Una vez iniciado, el cronómetro no se detendrá.</p>
-            
-            <a href="#" class="inline-flex justify-center items-center px-8 py-3.5 border border-transparent text-lg font-bold rounded-lg shadow-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all hover:scale-105">
-                Iniciar Simulacro Oficial
-            </a>
+            {% if intento_usuario %}
+                {% if intento_usuario.fecha_fin %}
+                    <h4 class="font-bold text-gray-800 text-xl mb-2">Simulacro Finalizado</h4>
+                    <p class="text-gray-600 mb-6">Ya has completado este simulacro y se ha calculado tu puntaje.</p>
+                    <a href="{% url 'evaluaciones:simulacro_resultado' intento_usuario.pk %}" class="inline-flex justify-center items-center px-6 py-2.5 border border-transparent text-lg font-bold rounded-lg shadow text-white bg-indigo-600 hover:bg-indigo-700 transition-all">
+                        Ver Resultados
+                    </a>
+                {% else %}
+                    <h4 class="font-bold text-gray-800 text-xl mb-2">Simulacro en Progreso</h4>
+                    <p class="text-gray-600 mb-6">Tienes un intento sin terminar. Retómalo ahora mismo.</p>
+                    <a href="{% url 'evaluaciones:simulacro_resolver' simulacro.pk %}" class="inline-flex justify-center items-center px-6 py-2.5 border border-transparent text-lg font-bold rounded-lg shadow text-white bg-yellow-500 hover:bg-yellow-600 transition-all">
+                        Continuar Simulacro
+                    </a>
+                {% endif %}
+            {% else %}
+                {% if ventana_activa and simulacro.estado == 'publicado' %}
+                    <h4 class="font-bold text-gray-800 text-xl mb-2">Comienza la Prueba</h4>
+                    <p class="text-gray-600 max-w-lg mb-6 text-sm">Asegúrate de tener un entorno tranquilo. El simulacro tiene tiempo límite. Una vez iniciada una sesión, el cronómetro no se detendrá.</p>
+                    <a href="{% url 'evaluaciones:simulacro_resolver' simulacro.pk %}" class="inline-flex justify-center items-center px-8 py-3.5 border border-transparent text-lg font-bold rounded-lg shadow-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none transition-all hover:scale-105">
+                        Iniciar Simulacro Oficial
+                    </a>
+                {% else %}
+                    <h4 class="font-bold text-gray-800 text-xl mb-2">Espera la Apertura</h4>
+                    <p class="text-gray-600 max-w-lg text-sm">Debes esperar a que los coordinadores publiquen y abran una ventana para este simulacro.</p>
+                {% endif %}
+            {% endif %}
         </div>
 
         {% if request.user.is_staff %}
@@ -103,12 +132,12 @@
         
         {% if request.user.is_staff %}
         <div class="flex space-x-3 w-full sm:w-auto">
+            <a href="{% url 'evaluaciones:ventana_simulacro_create' simulacro.pk %}" class="w-full sm:w-auto text-center bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-medium py-2 px-4 rounded-lg shadow-sm text-sm transition-all">
+                + Abrir Ventana
+            </a>
             <a href="{% url 'evaluaciones:simulacro_update' simulacro.pk %}" class="w-full sm:w-auto text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-sm text-sm transition-all">
                 Editar Propiedades
             </a>
-            <button class="w-full sm:w-auto text-center bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 font-medium py-2 px-4 rounded-lg shadow-sm text-sm transition-all">
-                + Gestionar Sesiones
-            </button>
         </div>
         {% endif %}
     </div>

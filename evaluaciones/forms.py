@@ -1,6 +1,6 @@
 from django import forms
 from .models.talleres import Taller
-from .models.simulacros import Simulacro
+from .models.simulacros import Simulacro, VentanaSimulacro
 
 class TallerForm(forms.ModelForm):
     class Meta:
@@ -17,17 +17,41 @@ class TallerForm(forms.ModelForm):
             'intentos_permitidos': forms.NumberInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
         }
 
+
 class SimulacroForm(forms.ModelForm):
     class Meta:
         model = Simulacro
-        fields = ['modulo', 'titulo', 'fecha_apertura', 'fecha_cierre', 'duracion_minutos', 'orden']
+        fields = ['modulo', 'titulo', 'estado', 'duracion_minutos', 'orden']
         widgets = {
             'titulo': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
             'modulo': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
-            'fecha_apertura': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
-            'fecha_cierre': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
+            'estado': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'duracion_minutos': forms.NumberInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
+            'orden': forms.NumberInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
         }
+
+
+class VentanaSimulacroForm(forms.ModelForm):
+    class Meta:
+        model = VentanaSimulacro
+        fields = ['fecha_apertura', 'fecha_cierre']
+        widgets = {
+            'fecha_apertura': forms.DateTimeInput(
+                attrs={'type': 'datetime-local', 'class': 'w-full p-2 border border-gray-300 rounded outline-none'}
+            ),
+            'fecha_cierre': forms.DateTimeInput(
+                attrs={'type': 'datetime-local', 'class': 'w-full p-2 border border-gray-300 rounded outline-none'}
+            ),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        apertura = cleaned.get('fecha_apertura')
+        cierre = cleaned.get('fecha_cierre')
+        if apertura and cierre and cierre <= apertura:
+            raise forms.ValidationError('La fecha de cierre debe ser posterior a la fecha de apertura.')
+        return cleaned
+
 
 from .models.banco import Pregunta, Opcion, ImagenPregunta, BloqueContexto, ImagenContexto
 from django.forms import inlineformset_factory

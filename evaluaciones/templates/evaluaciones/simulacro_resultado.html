@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Resultados: {{ intento.simulacro.titulo }} | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto my-10">
+    <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
+        
+        <!-- Encabezado de Resultados -->
+        <div class="bg-gradient-to-br from-indigo-600 to-purple-700 p-8 text-white text-center relative">
+            <h2 class="text-3xl font-bold mb-2">Reporte de Simulacro</h2>
+            <p class="text-indigo-100 mb-6 text-lg">{{ intento.simulacro.titulo }}</p>
+            
+            <div class="bg-white/20 backdrop-blur-sm rounded-xl inline-block p-6 border border-white/30 shadow-lg">
+                <p class="text-sm font-bold uppercase tracking-widest text-indigo-100 mb-1">Puntaje Global ICFES</p>
+                <p class="text-6xl font-black">{{ intento.puntaje_global|default:"0" }} <span class="text-xl font-normal text-indigo-200">/ 500</span></p>
+            </div>
+            
+            <div class="mt-6 flex justify-center gap-6 text-sm text-indigo-100 font-medium">
+                <span class="flex items-center">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Tiempo total: {{ intento.tiempo_empleado_minutos|default:"--" }} min
+                </span>
+                <span class="flex items-center">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Fecha: {{ intento.fecha_fin|date:"d M, Y" }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Desglose por componentes -->
+        <div class="p-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Desempeño por Materia</h3>
+            
+            <div class="space-y-6">
+                {% for comp in intento.resultados_detallados %}
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <span class="font-bold text-gray-700">{{ comp.materia_nombre }}</span>
+                        <span class="font-bold {% if comp.porcentaje >= 60 %}text-green-600{% elif comp.porcentaje >= 40 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                            {{ comp.porcentaje|floatformat:"1" }}%
+                        </span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div class="h-3 rounded-full {% if comp.porcentaje >= 60 %}bg-green-500{% elif comp.porcentaje >= 40 %}bg-yellow-500{% else %}bg-red-500{% endif %}" style="width: {{ comp.porcentaje }}%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1 text-right">{{ comp.correctas }} / {{ comp.total }} aciertos</p>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 italic text-center py-4">No hay datos de componentes disponibles.</p>
+                {% endfor %}
+            </div>
+            
+            <div class="mt-10 text-center">
+                <a href="{% url 'evaluaciones:simulacro_list' %}" class="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-colors">
+                    Volver a Simulacros
+                </a>
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
