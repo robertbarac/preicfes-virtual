@@ -8,6 +8,7 @@ urlpatterns = [
     path('admin/registrar-usuario/', views.RegistroUsuarioView.as_view(), name='registro_interno'),
     path('admin/ventanas-registro/', views.VentanaRegistroListView.as_view(), name='ventanas_list'),
     path('admin/ventanas-registro/crear/', views.VentanaRegistroCreateView.as_view(), name='ventanas_crear'),
+    path('admin/vigilar-actividad/', views.VigilarActividadView.as_view(), name='vigilar_actividad'),
     path('registro/', views.RegistroPublicoView.as_view(), name='registro_publico'),
     path('reset/whatsapp/request/', views.WhatsAppResetRequestView.as_view(), name='whatsapp_reset_request'),
     path('reset/whatsapp/verify/', views.WhatsAppResetVerifyView.as_view(), name='whatsapp_reset_verify'),

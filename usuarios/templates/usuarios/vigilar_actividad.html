@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% block title %}Vigilar Actividad de Usuarios | PreICFES Virtual{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Seguimiento y Actividad de Alumnos</h1>
+    <p class="text-gray-500 mt-2">
+        Busca alumnos por nombre, número de documento o teléfono para vigilar su progreso, asistencias y calificaciones.
+    </p>
+</div>
+
+<!-- Grid Principal: Buscador y Dashboard -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    
+    <!-- Columna Izquierda: Búsqueda y Resultados (Ocupa 4 columnas de 12) -->
+    <div class="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
+        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Buscador de Alumnos
+        </h2>
+        
+        <form method="GET" action="{% url 'usuarios:vigilar_actividad' %}" class="space-y-3">
+            <div class="relative">
+                <input type="text" name="q" value="{{ q }}" placeholder="Nombre, ID (Cédula/TI) o Teléfono..." 
+                       class="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition text-sm">
+                {% if q %}
+                <a href="{% url 'usuarios:vigilar_actividad' %}" class="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </a>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="w-full py-3 px-4 text-white font-semibold rounded-xl bg-gradient-to-r {% if TEMA_MENU == 'gold' %}from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400{% elif TEMA_MENU == 'christmas' %}from-red-600 to-green-600 hover:from-red-500 hover:to-green-500{% elif TEMA_MENU == 'colombia' %}from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500{% else %}from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400{% endif %} shadow-md hover:shadow-lg transition-all text-sm flex items-center justify-center gap-2">
+                Buscar Alumno
+            </button>
+        </form>
+
+        <hr class="border-gray-100">
+
+        <!-- Lista de Resultados -->
+        <div class="space-y-3">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Resultados ({{ estudiantes|length }})</h3>
+            
+            <div class="overflow-y-auto max-h-[400px] space-y-2 pr-1">
+                {% for est in estudiantes %}
+                <a href="{% url 'usuarios:vigilar_actividad' %}?q={{ q }}&user_id={{ est.id }}" 
+                   class="block p-3.5 rounded-xl border transition-all {% if selected_user and selected_user.id == est.id %}bg-teal-50/50 border-teal-500/30 ring-1 ring-teal-500/20{% else %}bg-gray-50/40 border-gray-100 hover:bg-gray-50 hover:border-gray-200{% endif %}">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-bold text-gray-800 text-sm truncate max-w-[170px]">{{ est.first_name }} {{ est.last_name }}</span>
+                        <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full {% if est.role == 'virtual_student' %}bg-purple-100 text-purple-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ est.get_role_display }}
+                        </span>
+                    </div>
+                    <div class="text-xs text-gray-500 space-y-0.5">
+                        <p class="flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm5 3a3 3 0 01-3 3H9a3 3 0 01-3-3v-1h5v1z" /></svg>
+                            Documento: {{ est.numero_documento }}
+                        </p>
+                        <p class="flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                            Teléfono: {{ est.telefono }}
+                        </p>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="text-center py-8 text-gray-400 text-sm">
+                    {% if q %}
+                    No se encontraron estudiantes.
+                    {% else %}
+                    Escribe en el buscador para ver alumnos.
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Columna Derecha: Información de Actividad (Ocupa 8 columnas de 12) -->
+    <div class="lg:col-span-8 space-y-6">
+        {% if selected_user %}
+            <!-- Card Perfil del Estudiante Seleccionado -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <h2 class="text-2xl font-black text-gray-900">{{ selected_user.first_name }} {{ selected_user.last_name }}</h2>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider {% if selected_user.role == 'virtual_student' %}bg-purple-100 text-purple-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ selected_user.get_role_display }}
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">Usuario: <span class="font-semibold text-gray-700">{{ selected_user.username }}</span> | Correo: <span class="font-semibold text-gray-700">{{ selected_user.email }}</span></p>
+                    <div class="flex gap-4 text-xs text-gray-500 mt-3 flex-wrap">
+                        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span> Teléfono: <strong>{{ selected_user.telefono }}</strong></span>
+                        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span> Doc: <strong>{{ selected_user.tipo_documento }} {{ selected_user.numero_documento }}</strong></span>
+                        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span> Registro: <strong>{{ selected_user.date_joined|date:"d M Y" }}</strong></span>
+                    </div>
+                </div>
+                <!-- Botón de Descarga Reporte PDF -->
+                <a href="{% url 'evaluaciones:reporte_estudiante_pdf' selected_user.id %}" target="_blank"
+                   class="px-5 py-3 rounded-xl border border-red-200 text-red-600 bg-red-50/50 hover:bg-red-50 hover:text-red-700 transition font-bold flex items-center justify-center gap-2 self-start md:self-auto text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Descargar PDF
+                </a>
+            </div>
+
+            <!-- Grid de Estadísticas en Porcentaje -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Asistencias -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Asistencia</span>
+                        <h3 class="text-3xl font-black mt-2 text-teal-600">{{ porcentaje_asistencia }}%</h3>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-500 flex items-center justify-between">
+                        <span>Presente en:</span>
+                        <span class="font-bold text-gray-800">{{ presentes }} / {{ total_asistencias }} clases</span>
+                    </div>
+                </div>
+
+                <!-- Talleres Realizados -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Talleres Realizados</span>
+                        <h3 class="text-3xl font-black mt-2 text-purple-600">{{ porcentaje_talleres }}%</h3>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-500 flex items-center justify-between">
+                        <span>Hechos:</span>
+                        <span class="font-bold text-gray-800">{{ talleres_hechos }} / {{ total_talleres }} talleres</span>
+                    </div>
+                </div>
+
+                <!-- Promedio Talleres -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Nota Promedio</span>
+                        <h3 class="text-3xl font-black mt-2 text-amber-500">{{ promedio_talleres }}%</h3>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-500 flex items-center justify-between">
+                        <span>Puntaje talleres</span>
+                        <span class="font-semibold text-gray-700">Mejor intento</span>
+                    </div>
+                </div>
+
+                <!-- Simulacros -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Simulacros (ICFES)</span>
+                        <h3 class="text-3xl font-black mt-2 text-indigo-600">{{ promedio_simulacros|default:"—" }}<span class="text-xs text-gray-400 font-semibold">/500</span></h3>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-500 flex items-center justify-between">
+                        <span>Completados:</span>
+                        <span class="font-bold text-gray-800">{{ total_simulacros }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Detalles Pestañas (Alpine.js) -->
+            <div x-data="{ tab: 'talleres' }" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <!-- Encabezado de Pestañas -->
+                <div class="flex border-b border-gray-100 bg-gray-50/50">
+                    <button @click="tab = 'talleres'" :class="{'border-teal-500 text-teal-600 bg-white font-bold': tab === 'talleres', 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50/30': tab !== 'talleres'}"
+                            class="flex-1 py-4 px-6 text-center border-b-2 text-sm font-semibold transition-all">
+                        Talleres de Refuerzo
+                    </button>
+                    <button @click="tab = 'asistencias'" :class="{'border-teal-500 text-teal-600 bg-white font-bold': tab === 'asistencias', 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50/30': tab !== 'asistencias'}"
+                            class="flex-1 py-4 px-6 text-center border-b-2 text-sm font-semibold transition-all">
+                        Control de Asistencia
+                    </button>
+                </div>
+
+                <!-- Contenido Pestañas -->
+                <div class="p-6">
+                    <!-- Pestaña 1: Talleres -->
+                    <div x-show="tab === 'talleres'" class="space-y-4">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-gray-600">
+                                <thead class="bg-gray-50 text-gray-700 border-b border-gray-100">
+                                    <tr>
+                                        <th class="px-4 py-3 font-bold">Taller</th>
+                                        <th class="px-4 py-3 font-bold">Módulo/Tema</th>
+                                        <th class="px-4 py-3 font-bold text-center">Intentos</th>
+                                        <th class="px-4 py-3 font-bold text-center">Mejor Puntaje</th>
+                                        <th class="px-4 py-3 font-bold text-center">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    {% for info in talleres_info %}
+                                    <tr class="hover:bg-gray-50/50 transition">
+                                        <td class="px-4 py-3.5 font-semibold text-gray-900">{{ info.taller.titulo }}</td>
+                                        <td class="px-4 py-3.5 text-xs text-gray-500">
+                                            <span class="block text-gray-700 font-medium">{{ info.taller.modulo.nombre }}</span>
+                                            <span class="block text-[10px] text-gray-400 mt-0.5">{{ info.taller.tema.nombre|default:"Sin tema asignado" }}</span>
+                                        </td>
+                                        <td class="px-4 py-3.5 text-center text-gray-700 font-semibold">{{ info.intentos_count }}</td>
+                                        <td class="px-4 py-3.5 text-center">
+                                            {% if info.mejor_puntaje is not None %}
+                                            <span class="font-extrabold text-sm {% if info.mejor_puntaje >= 70 %}text-green-600{% elif info.mejor_puntaje >= 50 %}text-amber-500{% else %}text-red-500{% endif %}">
+                                                {{ info.mejor_puntaje }}%
+                                            </span>
+                                            {% else %}
+                                            <span class="text-gray-400">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="px-4 py-3.5 text-center">
+                                            {% if info.completado %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                                                Hecho
+                                            </span>
+                                            {% else %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-500 border border-gray-200">
+                                                Pendiente
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-8 text-center text-gray-400">No hay talleres publicados en la plataforma.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Pestaña 2: Asistencias -->
+                    <div x-show="tab === 'asistencias'" class="space-y-4">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-gray-600">
+                                <thead class="bg-gray-50 text-gray-700 border-b border-gray-100">
+                                    <tr>
+                                        <th class="px-4 py-3 font-bold">Clase Virtual</th>
+                                        <th class="px-4 py-3 font-bold">Módulo</th>
+                                        <th class="px-4 py-3 font-bold text-center">Fecha</th>
+                                        <th class="px-4 py-3 font-bold text-center">Estado Asistencia</th>
+                                        <th class="px-4 py-3 font-bold text-center">Registrado en</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    {% for asist in asistencias %}
+                                    <tr class="hover:bg-gray-50/50 transition">
+                                        <td class="px-4 py-3.5 font-semibold text-gray-900">{{ asist.clase.titulo }}</td>
+                                        <td class="px-4 py-3.5 text-xs text-gray-500">{{ asist.clase.modulo.nombre }}</td>
+                                        <td class="px-4 py-3.5 text-center text-xs text-gray-700">{{ asist.clase.fecha|date:"d M Y"|default:"—" }}</td>
+                                        <td class="px-4 py-3.5 text-center">
+                                            {% if asist.asistio %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                                                Presente
+                                            </span>
+                                            {% else %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-50 text-red-600 border border-red-200">
+                                                Ausente
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="px-4 py-3.5 text-center text-xs text-gray-400">{{ asist.fecha_registro|date:"d M Y H:i" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-8 text-center text-gray-400">No se han registrado asistencias para este alumno.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Intentos de Simulacro Realizados -->
+            {% if intentos_simulacro %}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
+                <h3 class="text-lg font-bold text-gray-800">Historial de Simulacros (ICFES)</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="bg-gray-50 text-gray-700 border-b border-gray-100">
+                            <tr>
+                                <th class="px-4 py-3 font-bold">Simulacro</th>
+                                <th class="px-4 py-3 font-bold text-center">Fecha de Finalización</th>
+                                <th class="px-4 py-3 font-bold text-center">Tiempo Empleado</th>
+                                <th class="px-4 py-3 font-bold text-center">Puntaje Global</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {% for intento in intentos_simulacro %}
+                            <tr class="hover:bg-gray-50/50 transition">
+                                <td class="px-4 py-3.5 font-semibold text-gray-900">{{ intento.simulacro.titulo }}</td>
+                                <td class="px-4 py-3.5 text-center text-xs text-gray-500">{{ intento.fecha_fin|date:"d M Y H:i" }}</td>
+                                <td class="px-4 py-3.5 text-center text-xs text-gray-700">{{ intento.tiempo_empleado_minutos|default:"—" }} mins</td>
+                                <td class="px-4 py-3.5 text-center">
+                                    <span class="font-extrabold text-base {% if intento.puntaje_global >= 350 %}text-green-600{% elif intento.puntaje_global >= 250 %}text-amber-500{% else %}text-red-500{% endif %}">
+                                        {{ intento.puntaje_global }} / 500
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+        {% else %}
+            <!-- Vista Vacía: Invitación a Buscar -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center text-center space-y-4 min-h-[400px]">
+                <div class="p-4 bg-teal-50 rounded-full text-teal-600">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-black text-gray-800">Ningún Alumno Seleccionado</h3>
+                <p class="text-gray-500 max-w-sm text-sm">
+                    Utiliza el buscador en la columna de la izquierda para encontrar a un alumno por su nombre, ID o número de teléfono. 
+                </p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

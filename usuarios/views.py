@@ -323,3 +323,120 @@ class WhatsAppResetPasswordView(FormView):
         else:
             messages.error(self.request, "Usuario no válido.")
             return self.form_invalid(form)
+
+
+from django.views.generic import TemplateView
+from django.db.models import Q, Max, Avg
+from curriculo.models.core import Asistencia
+from evaluaciones.models import Taller, IntentoTaller, IntentoSimulacro
+
+class VigilarActividadView(UserPassesTestMixin, TemplateView):
+    template_name = 'usuarios/vigilar_actividad.html'
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        q = self.request.GET.get('q', '').strip()
+        user_id = self.request.GET.get('user_id', '').strip()
+        
+        # Filtrar solo usuarios que sean estudiantes o estudiantes virtuales
+        students_qs = User.objects.filter(role__in=['student', 'virtual_student'], is_active=True)
+        
+        if q:
+            students_qs = students_qs.filter(
+                Q(username__icontains=q) |
+                Q(first_name__icontains=q) |
+                Q(last_name__icontains=q) |
+                Q(numero_documento__icontains=q) |
+                Q(telefono__icontains=q)
+            )
+            
+        context['q'] = q
+        context['estudiantes'] = students_qs[:50]  # Limitar para evitar lentitud
+        
+        selected_user = None
+        if user_id:
+            try:
+                selected_user = User.objects.get(id=user_id, role__in=['student', 'virtual_student'])
+            except User.DoesNotExist:
+                pass
+        elif students_qs.count() == 1 and q:
+            # Si hay exactamente un resultado y el usuario buscó activamente, lo seleccionamos
+            selected_user = students_qs.first()
+            
+        if selected_user:
+            context['selected_user'] = selected_user
+            
+            # 1. Asistencias
+            asistencias = Asistencia.objects.filter(alumno=selected_user).select_related('clase', 'clase__modulo').order_by('-clase__fecha')
+            total_asistencias = asistencias.count()
+            presentes = asistencias.filter(asistio=True).count()
+            porcentaje_asistencia = (presentes / total_asistencias * 100) if total_asistencias > 0 else 0.0
+            
+            context['asistencias'] = asistencias
+            context['total_asistencias'] = total_asistencias
+            context['presentes'] = presentes
+            context['porcentaje_asistencia'] = round(porcentaje_asistencia, 1)
+            
+            # 2. Talleres Hechos (Completados)
+            talleres_publicados = Taller.objects.filter(estado='publicado').select_related('modulo', 'tema__materia')
+            total_talleres = talleres_publicados.count()
+            
+            # Intentos completados
+            intentos_taller = IntentoTaller.objects.filter(
+                usuario=selected_user,
+                fecha_fin__isnull=False
+            )
+            
+            # Agrupar por taller para obtener el mejor puntaje de cada uno
+            mejores_intentos = intentos_taller.values('taller_id').annotate(
+                mejor_puntaje=Max('puntaje_porcentaje')
+            )
+            puntajes_talleres = {item['taller_id']: item['mejor_puntaje'] for item in mejores_intentos}
+            
+            talleres_hechos = len(puntajes_talleres)
+            porcentaje_talleres = (talleres_hechos / total_talleres * 100) if total_talleres > 0 else 0.0
+            
+            if puntajes_talleres:
+                promedio_talleres = sum(puntajes_talleres.values()) / len(puntajes_talleres)
+            else:
+                promedio_talleres = 0.0
+                
+            # Construir lista detallada de talleres
+            talleres_info = []
+            for taller in talleres_publicados:
+                mejor_p = puntajes_talleres.get(taller.id, None)
+                intentos_count = intentos_taller.filter(taller=taller).count()
+                talleres_info.append({
+                    'taller': taller,
+                    'completado': mejor_p is not None,
+                    'mejor_puntaje': mejor_p,
+                    'intentos_count': intentos_count,
+                })
+                
+            context['talleres_info'] = talleres_info
+            context['total_talleres'] = total_talleres
+            context['talleres_hechos'] = talleres_hechos
+            context['porcentaje_talleres'] = round(porcentaje_talleres, 1)
+            context['promedio_talleres'] = round(promedio_talleres, 1)
+            
+            # 3. Simulacros
+            intentos_simulacro = IntentoSimulacro.objects.filter(
+                usuario=selected_user,
+                fecha_fin__isnull=False
+            ).select_related('simulacro').order_by('-fecha_inicio')
+            
+            context['intentos_simulacro'] = intentos_simulacro
+            total_simulacros = intentos_simulacro.count()
+            if total_simulacros > 0:
+                promedio_simulacros = intentos_simulacro.aggregate(Avg('puntaje_global'))['puntaje_global__avg'] or 0.0
+            else:
+                promedio_simulacros = 0.0
+                
+            context['total_simulacros'] = total_simulacros
+            context['promedio_simulacros'] = round(promedio_simulacros, 1)
+            
+        return context
+
