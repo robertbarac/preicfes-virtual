@@ -41,20 +41,26 @@
         body {
             font-family: 'Inter', system-ui, sans-serif;
         }
+        [x-cloak] { display: none !important; }
     </style>
 </head>
 
 <body class="bg-gray-50 text-gray-800 antialiased h-screen flex overflow-hidden">
 
     <!-- SIDEBAR -->
-    <div x-data="{ sidebarOpen: false }" class="flex h-full w-full">
+    <div x-data="{ sidebarOpen: false, desktopSidebarOpen: {% if 'lectura' in request.path or 'resolver' in request.path %}false{% else %}true{% endif %} }" class="flex h-full w-full relative">
         <!-- Sidebar para móviles (Overlay oscuro) -->
         <div :class="{'block': sidebarOpen, 'hidden': !sidebarOpen}" @click="sidebarOpen = false"
             class="fixed inset-0 z-20 transition-opacity bg-gray-900 bg-opacity-50 lg:hidden hidden"></div>
 
         <!-- Panel Lateral -->
-        <div :class="{'translate-x-0 ease-out': sidebarOpen, '-translate-x-full ease-in': !sidebarOpen}"
-            class="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition duration-300 transform {% if TEMA_MENU == 'gold' %}bg-gradient-to-b from-black via-gray-900 to-yellow-900{% elif TEMA_MENU == 'christmas' %}bg-gradient-to-b from-red-900 via-green-900 to-red-950{% elif TEMA_MENU != 'colombia' %}bg-gradient-to-b from-gray-900 via-slate-800 to-teal-900{% endif %} lg:translate-x-0 lg:static lg:inset-0 shadow-2xl flex flex-col pt-5 pb-4"
+        <div :class="{
+                'translate-x-0 ease-out': sidebarOpen, 
+                '-translate-x-full ease-in': !sidebarOpen,
+                'lg:translate-x-0 lg:static lg:inset-0': desktopSidebarOpen,
+                'lg:-translate-x-full lg:absolute lg:hidden': !desktopSidebarOpen
+            }"
+            class="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition duration-300 transform {% if TEMA_MENU == 'gold' %}bg-gradient-to-b from-black via-gray-900 to-yellow-900{% elif TEMA_MENU == 'christmas' %}bg-gradient-to-b from-red-900 via-green-900 to-red-950{% elif TEMA_MENU != 'colombia' %}bg-gradient-to-b from-gray-900 via-slate-800 to-teal-900{% endif %} shadow-2xl flex flex-col pt-5 pb-4"
             {% if TEMA_MENU == 'colombia' %}style="background: linear-gradient(to bottom, #92400e 0%, #d97706 25%, #1e40af 50%, #1e3a8a 62.5%, #b91c1c 75%, #7f1d1d 100%)"{% endif %}>
 
             <!-- Logo y Marca -->
@@ -65,11 +71,15 @@
                     <span
                         class="bg-gradient-to-r {% if TEMA_MENU == 'gold' %}from-yellow-400 to-yellow-600{% elif TEMA_MENU == 'christmas' %}from-red-400 to-green-400{% elif TEMA_MENU == 'colombia' %}from-yellow-300 to-red-400{% else %}from-teal-400 to-cyan-400{% endif %} bg-clip-text text-transparent">PREICFES</span>V.V.
                 </a>
-                <button @click="sidebarOpen = false"
-                    class="lg:hidden absolute right-4 text-gray-400 hover:text-white focus:outline-none">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
+                <button @click="sidebarOpen = false; desktopSidebarOpen = false"
+                    class="absolute right-4 text-gray-400 hover:text-white focus:outline-none transition-colors group" title="Ocultar menú lateral">
+                    <!-- Icono para móvil (X) -->
+                    <svg class="h-6 w-6 lg:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <!-- Icono para desktop (Colapsar) -->
+                    <svg class="h-6 w-6 hidden lg:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                     </svg>
                 </button>
             </div>
@@ -288,8 +298,17 @@
             </div>
         </div>
 
+        <!-- Botón flotante para desplegar el menú en Desktop cuando está oculto -->
+        <button x-show="!desktopSidebarOpen" x-cloak @click="desktopSidebarOpen = true"
+            class="hidden lg:flex fixed top-4 left-4 z-40 bg-white p-2.5 rounded-xl shadow-lg border border-gray-200 text-gray-600 hover:text-teal-600 hover:bg-gray-50 focus:outline-none transition-all transform hover:scale-105"
+            title="Mostrar menú lateral">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+
         <!-- MAIN CONTENT AREA -->
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 flex flex-col min-h-screen">
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 flex flex-col min-h-screen relative">
             <!-- Barra superior móvil (solo aparece en md e inferior) -->
             <header class="bg-white shadow-sm lg:hidden border-b border-gray-200">
                 <div class="flex items-center justify-between px-4 py-3">
