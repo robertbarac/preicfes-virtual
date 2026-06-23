@@ -89,6 +89,7 @@ class ConfiguracionPlataforma(models.Model):
         ('gold', 'Proyecto 500 (Negro-Dorado)'),
         ('christmas', 'Navidad (Rojo-Verde)'),
         ('colombia', 'Bandera de Colombia (Amarillo-Azul-Rojo)'),
+        ('congolombia', 'CongoColombia (Colombia + Congo Belga)'),
     )
     tema_menu = models.CharField(
         max_length=20, 
