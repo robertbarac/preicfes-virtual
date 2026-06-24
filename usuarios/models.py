@@ -90,6 +90,7 @@ class ConfiguracionPlataforma(models.Model):
         ('christmas', 'Navidad (Rojo-Verde)'),
         ('colombia', 'Bandera de Colombia (Amarillo-Azul-Rojo)'),
         ('congolombia', 'CongoColombia (Colombia + Congo Belga)'),
+        ('escociabrasil', 'Escocia + Brasil (Azul marino/Blanco + Verde/Amarillo/Azul)'),
     )
     tema_menu = models.CharField(
         max_length=20, 

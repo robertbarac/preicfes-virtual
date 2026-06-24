@@ -60,7 +60,8 @@
                 'lg:translate-x-0 lg:static lg:inset-0': desktopSidebarOpen,
                 'lg:-translate-x-full lg:absolute lg:hidden': !desktopSidebarOpen
             }"
-            class="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition duration-300 transform {% if TEMA_MENU == 'gold' %}bg-gradient-to-b from-black via-gray-900 to-yellow-900{% elif TEMA_MENU == 'christmas' %}bg-gradient-to-b from-red-900 via-green-900 to-red-950{% elif TEMA_MENU == 'colombia' or TEMA_MENU == 'congolombia' %}{% else %}bg-gradient-to-b from-gray-900 via-slate-800 to-teal-900{% endif %} shadow-2xl flex flex-col pt-5 pb-4"
+            class="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition duration-300 transform {% if TEMA_MENU == 'gold' %}bg-gradient-to-b from-black via-gray-900 to-yellow-900{% elif TEMA_MENU == 'christmas' %}bg-gradient-to-b from-red-900 via-green-900 to-red-950{% elif TEMA_MENU == 'colombia' or TEMA_MENU == 'congolombia' or TEMA_MENU == 'escociabrasil' %}{% else %}bg-gradient-to-b from-gray-900 via-slate-800 to-teal-900{% endif %} shadow-2xl flex flex-col pt-5 pb-4"
+            {% if TEMA_MENU == 'escociabrasil' %}id="sidebar-flag-panel"{% endif %}
             {% if TEMA_MENU == 'colombia' %}style="background: linear-gradient(to bottom, #92400e 0%, #d97706 25%, #1e40af 50%, #1e3a8a 62.5%, #b91c1c 75%, #7f1d1d 100%)"
             {% elif TEMA_MENU == 'congolombia' %}style="background: linear-gradient(to bottom,
               #FCD116 0%,   #FCD116 23%,
@@ -71,6 +72,16 @@
               #CE1126 68%,  #CE1126 82%,
               #F7D618 83%,  #F7D618 85.5%,
               #007FFF 87%,  #007FFF 100%)"
+            {% elif TEMA_MENU == 'escociabrasil' %}style="background: linear-gradient(to bottom,
+              #00247D 0%,   #00247D 22%,
+              #FFFFFF 24%,  #FFFFFF 26%,
+              #00247D 28%,  #00247D 47%,
+              #FFFFFF 48%,  #FFFFFF 50%,
+              #009C3B 50%,  #009C3B 62%,
+              #FEDD00 64%,  #FEDD00 69%,
+              #002776 70%,  #002776 81%,
+              #FEDD00 82%,  #FEDD00 87%,
+              #009C3B 89%,  #009C3B 100%)"
             {% endif %}>
 
             <!-- Logo y Marca -->
@@ -79,7 +90,7 @@
                 <img class="h-10 w-auto" src="{% static 'images/logo.png' %}" alt="PreICFES Victor Valdez Logo">
                 <a href="/" class="text-white font-black text-xl tracking-tight flex items-center gap-1">
                     <span
-                        class="bg-gradient-to-r {% if TEMA_MENU == 'gold' %}from-yellow-400 to-yellow-600{% elif TEMA_MENU == 'christmas' %}from-red-400 to-green-400{% elif TEMA_MENU == 'colombia' %}from-yellow-300 to-red-400{% elif TEMA_MENU == 'congolombia' %}from-yellow-300 via-sky-400 to-red-400{% else %}from-teal-400 to-cyan-400{% endif %} bg-clip-text text-transparent">PREICFES</span>V.V.
+                        class="bg-gradient-to-r {% if TEMA_MENU == 'gold' %}from-yellow-400 to-yellow-600{% elif TEMA_MENU == 'christmas' %}from-red-400 to-green-400{% elif TEMA_MENU == 'colombia' %}from-yellow-300 to-red-400{% elif TEMA_MENU == 'congolombia' %}from-yellow-300 via-sky-400 to-red-400{% elif TEMA_MENU == 'escociabrasil' %}from-white via-yellow-300 to-green-400{% else %}from-teal-400 to-cyan-400{% endif %} bg-clip-text text-transparent">PREICFES</span>V.V.
                 </a>
                 <button @click="sidebarOpen = false; desktopSidebarOpen = false"
                     class="absolute right-4 text-gray-400 hover:text-white focus:outline-none transition-colors group" title="Ocultar menú lateral">
@@ -296,7 +307,7 @@
                 </form>
                 {% else %}
                 <a href="{% url 'login' %}"
-                    class="w-full flex justify-center items-center {% if TEMA_MENU == 'gold' %}bg-yellow-600 hover:bg-yellow-500 border-yellow-400{% elif TEMA_MENU == 'christmas' %}bg-red-600 hover:bg-red-500 border-red-400{% elif TEMA_MENU == 'colombia' %}bg-blue-700 hover:bg-blue-600 border-yellow-400{% elif TEMA_MENU == 'congolombia' %}bg-sky-700 hover:bg-sky-600 border-yellow-300{% else %}bg-teal-600 hover:bg-teal-500 border-teal-400{% endif %} text-white px-4 py-3 rounded-lg font-bold shadow-lg transition-colors border">
+                    class="w-full flex justify-center items-center {% if TEMA_MENU == 'gold' %}bg-yellow-600 hover:bg-yellow-500 border-yellow-400{% elif TEMA_MENU == 'christmas' %}bg-red-600 hover:bg-red-500 border-red-400{% elif TEMA_MENU == 'colombia' %}bg-blue-700 hover:bg-blue-600 border-yellow-400{% elif TEMA_MENU == 'congolombia' %}bg-sky-700 hover:bg-sky-600 border-yellow-300{% elif TEMA_MENU == 'escociabrasil' %}bg-green-700 hover:bg-green-600 border-yellow-300{% else %}bg-teal-600 hover:bg-teal-500 border-teal-400{% endif %} text-white px-4 py-3 rounded-lg font-bold shadow-lg transition-colors border">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1">
@@ -357,6 +368,85 @@
             </footer>
         </main>
     </div>
+
+
+{% if TEMA_MENU == 'escociabrasil' %}
+<script>
+(function () {
+    function drawEscociaBrasil() {
+        var sidebar = document.getElementById('sidebar-flag-panel');
+        if (!sidebar) return;
+
+        var canvas = document.createElement('canvas');
+        var w = sidebar.offsetWidth || 256;
+        var h = Math.max(sidebar.offsetHeight, window.innerHeight);
+        canvas.width  = w;
+        canvas.height = h;
+        var ctx  = canvas.getContext('2d');
+        var half = h / 2;
+
+        /* ---- ESCOCIA (mitad superior) ---- */
+        /* Fondo azul marino */
+        ctx.fillStyle = '#00247D';
+        ctx.fillRect(0, 0, w, half);
+
+        /* Saltire: X blanca diagonal */
+        ctx.save();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth   = Math.round(w * 0.19);
+        ctx.lineCap     = 'square';
+        /* diagonal \ */
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(w, half);
+        ctx.stroke();
+        /* diagonal / */
+        ctx.beginPath();
+        ctx.moveTo(w, 0);
+        ctx.lineTo(0, half);
+        ctx.stroke();
+        ctx.restore();
+
+        /* ---- BRASIL (mitad inferior) ---- */
+        /* Fondo verde */
+        ctx.fillStyle = '#009C3B';
+        ctx.fillRect(0, half, w, half);
+
+        /* Rombo amarillo */
+        var cx = w * 0.5;
+        var cy = half + half * 0.5;
+        var rx = w  * 0.43;   /* radio horizontal del rombo */
+        var ry = half * 0.42; /* radio vertical del rombo */
+        ctx.fillStyle = '#FEDD00';
+        ctx.beginPath();
+        ctx.moveTo(cx,      cy - ry);  /* vértice superior */
+        ctx.lineTo(cx + rx, cy);        /* vértice derecho   */
+        ctx.lineTo(cx,      cy + ry);  /* vértice inferior  */
+        ctx.lineTo(cx - rx, cy);        /* vértice izquierdo */
+        ctx.closePath();
+        ctx.fill();
+
+        /* Círculo azul central */
+        ctx.fillStyle = '#002776';
+        ctx.beginPath();
+        ctx.arc(cx, cy, half * 0.28, 0, Math.PI * 2);
+        ctx.fill();
+
+        /* Aplicar como background del sidebar */
+        sidebar.style.backgroundImage = 'url(' + canvas.toDataURL() + ')';
+        sidebar.style.backgroundSize  = '100% 100%';
+        sidebar.style.backgroundRepeat = 'no-repeat';
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', drawEscociaBrasil);
+    } else {
+        drawEscociaBrasil();
+    }
+    window.addEventListener('resize', drawEscociaBrasil);
+})();
+</script>
+{% endif %}
 
 </body>
 
