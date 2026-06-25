@@ -42,7 +42,13 @@
         </div>
         <div>
             <span class="block text-gray-500 font-medium mb-1">Creado por</span>
-            <span class="font-bold text-gray-800">{{ pregunta.creador.get_full_name|default:pregunta.creador.username }}</span>
+            <span class="font-bold text-gray-800">
+                {% if pregunta.creador %}
+                    {{ pregunta.creador.get_full_name|default:pregunta.creador.username }}
+                {% else %}
+                    Sin autor
+                {% endif %}
+            </span>
         </div>
         <div>
             <span class="block text-gray-500 font-medium mb-1">Fecha</span>

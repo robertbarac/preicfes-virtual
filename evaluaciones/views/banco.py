@@ -2,6 +2,7 @@ from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import CreateView, UpdateView
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from ..models.banco import Pregunta, Opcion, ImagenPregunta
 from django.db import models
 from ..forms import PreguntaForm, OpcionFormSet, ImagenPreguntaFormSet
@@ -144,7 +145,7 @@ class PreguntaListView(ListView):
         context['tema_val'] = self.request.GET.get('tema', '')
         return context
 
-class PreguntaDetailView(DetailView):
+class PreguntaDetailView(LoginRequiredMixin, DetailView):
     model = Pregunta
     template_name = 'evaluaciones/pregunta_detail.html'
     context_object_name = 'pregunta'
