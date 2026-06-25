@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% block title %}{% if form.instance.pk %}Editar Simulacro: {{ form.instance.titulo }}{% else %}Crear Simulacro{% endif %} | PreICFES Virtual{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md border border-gray-100">
