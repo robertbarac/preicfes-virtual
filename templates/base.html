@@ -60,10 +60,9 @@
                 'lg:translate-x-0 lg:static lg:inset-0': desktopSidebarOpen,
                 'lg:-translate-x-full lg:absolute lg:hidden': !desktopSidebarOpen
             }"
-            class="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition duration-300 transform {% if TEMA_MENU == 'gold' %}bg-gradient-to-b from-black via-gray-900 to-yellow-900{% elif TEMA_MENU == 'christmas' %}bg-gradient-to-b from-red-900 via-green-900 to-red-950{% elif TEMA_MENU == 'colombia' or TEMA_MENU == 'colombiaportu' or TEMA_MENU == 'escociabrasil' or TEMA_MENU == 'ecualemania' or TEMA_MENU == 'japonsuecia' or TEMA_MENU == 'uruguayespana' %}{% else %}bg-gradient-to-b from-gray-900 via-slate-800 to-teal-900{% endif %} shadow-2xl flex flex-col pt-5 pb-4"
-            {% if TEMA_MENU == 'colombiaportu' or TEMA_MENU == 'escociabrasil' or TEMA_MENU == 'ecualemania' or TEMA_MENU == 'japonsuecia' or TEMA_MENU == 'uruguayespana' %}id="sidebar-flag-panel"{% endif %}
-            {% if TEMA_MENU == 'colombia' %}style="background: linear-gradient(to bottom, #92400e 0%, #d97706 25%, #1e40af 50%, #1e3a8a 62.5%, #b91c1c 75%, #7f1d1d 100%)"
-            {% endif %}>
+            class="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition duration-300 transform {% if TEMA_MENU == 'gold' %}bg-gradient-to-b from-black via-gray-900 to-yellow-900{% elif TEMA_MENU == 'christmas' %}bg-gradient-to-b from-red-900 via-green-900 to-red-950{% elif TEMA_MENU == 'brasiljap' or TEMA_MENU == 'colombiaghana' or TEMA_MENU == 'franciasuecia' or TEMA_MENU == 'portucroacia' or TEMA_MENU == 'argcaboverde' or TEMA_MENU == 'inglatcongo' or TEMA_MENU == 'espanaustria' %}{% else %}bg-gradient-to-b from-gray-900 via-slate-800 to-teal-900{% endif %} shadow-2xl flex flex-col pt-5 pb-4"
+            {% if TEMA_MENU == 'brasiljap' or TEMA_MENU == 'colombiaghana' or TEMA_MENU == 'franciasuecia' or TEMA_MENU == 'portucroacia' or TEMA_MENU == 'argcaboverde' or TEMA_MENU == 'inglatcongo' or TEMA_MENU == 'espanaustria' %}id="sidebar-flag-panel"{% endif %}
+            >
 
             <!-- Logo y Marca -->
             <div class="flex items-center justify-center flex-shrink-0 px-4 mb-6 relative">
@@ -71,7 +70,7 @@
                 <img class="h-10 w-auto" src="{% static 'images/logo.png' %}" alt="PreICFES Victor Valdez Logo">
                 <a href="/" class="text-white font-black text-xl tracking-tight flex items-center gap-1">
                     <span
-                        class="bg-gradient-to-r {% if TEMA_MENU == 'gold' %}from-yellow-400 to-yellow-600{% elif TEMA_MENU == 'christmas' %}from-red-400 to-green-400{% elif TEMA_MENU == 'colombia' %}from-yellow-300 to-red-400{% elif TEMA_MENU == 'colombiaportu' %}from-yellow-300 via-blue-300 to-red-500{% elif TEMA_MENU == 'escociabrasil' %}from-white via-yellow-300 to-green-400{% elif TEMA_MENU == 'ecualemania' %}from-yellow-300 via-blue-400 to-gray-900{% elif TEMA_MENU == 'japonsuecia' %}from-red-500 via-white to-yellow-300{% elif TEMA_MENU == 'uruguayespana' %}from-blue-300 via-white to-red-500{% else %}from-teal-400 to-cyan-400{% endif %} bg-clip-text text-transparent">PREICFES</span>V.V.
+                        class="bg-gradient-to-r {% if TEMA_MENU == 'gold' %}from-yellow-400 to-yellow-600{% elif TEMA_MENU == 'christmas' %}from-red-400 to-green-400{% elif TEMA_MENU == 'brasiljap' %}from-green-400 to-red-500{% elif TEMA_MENU == 'colombiaghana' %}from-yellow-300 via-green-500 to-red-500{% elif TEMA_MENU == 'franciasuecia' %}from-blue-500 via-white to-yellow-300{% elif TEMA_MENU == 'portucroacia' %}from-green-500 via-red-500 to-blue-700{% elif TEMA_MENU == 'argcaboverde' %}from-sky-400 via-white to-yellow-300{% elif TEMA_MENU == 'inglatcongo' %}from-red-600 via-white to-yellow-400{% elif TEMA_MENU == 'espanaustria' %}from-yellow-400 to-red-600{% else %}from-teal-400 to-cyan-400{% endif %} bg-clip-text text-transparent">PREICFES</span>V.V.
                 </a>
                 <button @click="sidebarOpen = false; desktopSidebarOpen = false"
                     class="absolute right-4 text-gray-400 hover:text-white focus:outline-none transition-colors group" title="Ocultar menú lateral">
@@ -288,7 +287,7 @@
                 </form>
                 {% else %}
                 <a href="{% url 'login' %}"
-                    class="w-full flex justify-center items-center {% if TEMA_MENU == 'gold' %}bg-yellow-600 hover:bg-yellow-500 border-yellow-400{% elif TEMA_MENU == 'christmas' %}bg-red-600 hover:bg-red-500 border-red-400{% elif TEMA_MENU == 'colombia' %}bg-blue-700 hover:bg-blue-600 border-yellow-400{% elif TEMA_MENU == 'colombiaportu' %}bg-green-700 hover:bg-green-600 border-red-400{% elif TEMA_MENU == 'escociabrasil' %}bg-green-700 hover:bg-green-600 border-yellow-300{% elif TEMA_MENU == 'ecualemania' %}bg-yellow-600 hover:bg-yellow-500 border-gray-800{% elif TEMA_MENU == 'japonsuecia' %}bg-red-700 hover:bg-red-600 border-white{% elif TEMA_MENU == 'uruguayespana' %}bg-blue-600 hover:bg-blue-500 border-yellow-300{% else %}bg-teal-600 hover:bg-teal-500 border-teal-400{% endif %} text-white px-4 py-3 rounded-lg font-bold shadow-lg transition-colors border">
+                    class="w-full flex justify-center items-center {% if TEMA_MENU == 'gold' %}bg-yellow-600 hover:bg-yellow-500 border-yellow-400{% elif TEMA_MENU == 'christmas' %}bg-red-600 hover:bg-red-500 border-red-400{% elif TEMA_MENU == 'brasiljap' %}bg-green-700 hover:bg-green-600 border-yellow-300{% elif TEMA_MENU == 'colombiaghana' %}bg-yellow-600 hover:bg-yellow-500 border-green-800{% elif TEMA_MENU == 'franciasuecia' %}bg-blue-700 hover:bg-blue-600 border-white{% elif TEMA_MENU == 'portucroacia' %}bg-green-700 hover:bg-green-600 border-red-400{% elif TEMA_MENU == 'argcaboverde' %}bg-sky-600 hover:bg-sky-500 border-white{% elif TEMA_MENU == 'inglatcongo' %}bg-red-700 hover:bg-red-600 border-white{% elif TEMA_MENU == 'espanaustria' %}bg-red-700 hover:bg-red-600 border-yellow-300{% else %}bg-teal-600 hover:bg-teal-500 border-teal-400{% endif %} text-white px-4 py-3 rounded-lg font-bold shadow-lg transition-colors border">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1">
@@ -351,125 +350,192 @@
     </div>
 
 
-{% if TEMA_MENU == 'colombiaportu' or TEMA_MENU == 'escociabrasil' or TEMA_MENU == 'ecualemania' or TEMA_MENU == 'japonsuecia' or TEMA_MENU == 'uruguayespana' %}
+{% if TEMA_MENU == 'brasiljap' or TEMA_MENU == 'colombiaghana' or TEMA_MENU == 'franciasuecia' or TEMA_MENU == 'portucroacia' or TEMA_MENU == 'argcaboverde' or TEMA_MENU == 'inglatcongo' or TEMA_MENU == 'espanaustria' %}
 <script>
 /* ============================================================
-   Motor de banderas canvas — añadir un nuevo tema = añadir
-   una entrada al objeto `drawers` y listo.
+   Motor de banderas canvas.
+   Para agregar un tema nuevo: añadir entrada en drawers{}.
    ============================================================ */
 (function () {
     var TEMA = '{{ TEMA_MENU }}';
 
+    /* Dibuja una estrella de N puntas rellena */
+    function star(ctx, cx, cy, outerR, points) {
+        var innerR = outerR * 0.38;
+        ctx.beginPath();
+        for (var i = 0; i < points * 2; i++) {
+            var a = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
+            var r = (i % 2 === 0) ? outerR : innerR;
+            if (i === 0) ctx.moveTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r);
+            else         ctx.lineTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r);
+        }
+        ctx.closePath(); ctx.fill();
+    }
+
     var drawers = {
 
-        /* ---- ESCOCIA + BRASIL ---- */
-        'escociabrasil': function (ctx, w, h) {
+        /* ---- BRASIL (arr) + JAPÓN (abj) ---- */
+        'brasiljap': function (ctx, w, h) {
             var half = h / 2;
-            /* Escocia: azul marino + Saltire (X blanca) */
-            ctx.fillStyle = '#00247D';
-            ctx.fillRect(0, 0, w, half);
-            ctx.save();
-            ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = Math.round(w * 0.19);
-            ctx.lineCap = 'square';
-            ctx.beginPath(); ctx.moveTo(0, 0);    ctx.lineTo(w, half); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(w, 0);    ctx.lineTo(0, half); ctx.stroke();
-            ctx.restore();
             /* Brasil: verde + rombo amarillo + círculo azul */
-            ctx.fillStyle = '#009C3B'; ctx.fillRect(0, half, w, half);
-            var cx = w * 0.5, cy = half + half * 0.5;
+            ctx.fillStyle = '#009C3B'; ctx.fillRect(0, 0, w, half);
+            var cx = w*0.5, cy = half*0.5;
             ctx.fillStyle = '#FEDD00';
             ctx.beginPath();
             ctx.moveTo(cx, cy - half*0.42); ctx.lineTo(cx + w*0.43, cy);
             ctx.lineTo(cx, cy + half*0.42); ctx.lineTo(cx - w*0.43, cy);
             ctx.closePath(); ctx.fill();
             ctx.fillStyle = '#002776';
-            ctx.beginPath(); ctx.arc(cx, cy, half * 0.28, 0, Math.PI * 2); ctx.fill();
-        },
-
-        /* ---- COLOMBIA + PORTUGAL ---- */
-        'colombiaportu': function (ctx, w, h) {
-            var half = h / 2;
-            /* Colombia: amarillo (2 partes) + azul + rojo */
-            var cU = half / 4;
-            ctx.fillStyle = '#FCD116'; ctx.fillRect(0, 0,       w, cU * 2);
-            ctx.fillStyle = '#003087'; ctx.fillRect(0, cU * 2,  w, cU);
-            ctx.fillStyle = '#CE1126'; ctx.fillRect(0, cU * 3,  w, cU);
-            /* Portugal: split vertical verde (40%) | rojo (60%) */
-            var pGreen = Math.round(w * 0.40);
-            ctx.fillStyle = '#006600'; ctx.fillRect(0,       half, pGreen,     half);
-            ctx.fillStyle = '#C8102E'; ctx.fillRect(pGreen,  half, w - pGreen, half);
-            /* Escudo simplificado: círculo dorado en la unión */
-            var ex = pGreen, ey = half + half * 0.5;
-            var er = Math.min(w, half) * 0.10;
-            ctx.fillStyle = '#FFD700';
-            ctx.beginPath(); ctx.arc(ex, ey, er, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = '#8B6914'; ctx.lineWidth = Math.max(1, er * 0.15);
-            ctx.beginPath(); ctx.arc(ex, ey, er, 0, Math.PI * 2); ctx.stroke();
-        },
-
-        /* ---- ECUADOR + ALEMANIA ---- */
-        'ecualemania': function (ctx, w, h) {
-            var half = h / 2;
-            /* Ecuador: amarillo (2 partes) + azul + rojo */
-            var eU = half / 4;
-            ctx.fillStyle = '#FFD100'; ctx.fillRect(0, 0,       w, eU * 2);
-            ctx.fillStyle = '#003DA5'; ctx.fillRect(0, eU * 2,  w, eU);
-            ctx.fillStyle = '#EF3340'; ctx.fillRect(0, eU * 3,  w, eU);
-            /* Alemania: negro + rojo + dorado (tercios iguales) */
-            var gU = half / 3;
-            ctx.fillStyle = '#000000'; ctx.fillRect(0, half,          w, gU);
-            ctx.fillStyle = '#DD0000'; ctx.fillRect(0, half + gU,     w, gU);
-            ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, half + gU * 2, w, gU);
-        },
-
-        /* ---- JAPÓN + SUECIA ---- */
-        'japonsuecia': function (ctx, w, h) {
-            var half = h / 2;
-            /* Japón: blanco + círculo rojo (Hinomaru) */
-            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, half);
+            ctx.beginPath(); ctx.arc(cx, cy, half*0.28, 0, Math.PI*2); ctx.fill();
+            /* Japón: blanco + Hinomaru */
+            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, half, w, half);
             ctx.fillStyle = '#BC002D';
-            var r = Math.min(w, half) * 0.30;
-            ctx.beginPath(); ctx.arc(w / 2, half / 2, r, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(w/2, half + half/2, Math.min(w,half)*0.30, 0, Math.PI*2); ctx.fill();
+        },
+
+        /* ---- COLOMBIA (arr) + GHANA (abj) ---- */
+        'colombiaghana': function (ctx, w, h) {
+            var half = h / 2;
+            /* Colombia: amarillo (2p) + azul + rojo */
+            var cU = half / 4;
+            ctx.fillStyle = '#FCD116'; ctx.fillRect(0, 0,      w, cU*2);
+            ctx.fillStyle = '#003087'; ctx.fillRect(0, cU*2,   w, cU);
+            ctx.fillStyle = '#CE1126'; ctx.fillRect(0, cU*3,   w, cU);
+            /* Ghana: rojo + dorado + verde (tercios) + estrella negra */
+            var gU = half / 3;
+            ctx.fillStyle = '#EF3340'; ctx.fillRect(0, half,       w, gU);
+            ctx.fillStyle = '#FCD116'; ctx.fillRect(0, half+gU,    w, gU);
+            ctx.fillStyle = '#006B3F'; ctx.fillRect(0, half+gU*2,  w, gU);
+            ctx.fillStyle = '#000000';
+            star(ctx, w/2, half + gU + gU/2, gU*0.36, 5);
+        },
+
+        /* ---- FRANCIA (arr) + SUECIA (abj) ---- */
+        'franciasuecia': function (ctx, w, h) {
+            var half = h / 2;
+            /* Francia: azul | blanco | rojo (tercios verticales) */
+            var fW = w / 3;
+            ctx.fillStyle = '#002395'; ctx.fillRect(0,    0, fW, half);
+            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(fW,   0, fW, half);
+            ctx.fillStyle = '#ED2939'; ctx.fillRect(fW*2, 0, fW, half);
             /* Suecia: azul + cruz nórdica amarilla */
             ctx.fillStyle = '#006AA7'; ctx.fillRect(0, half, w, half);
-            var barW  = w    * 0.14;
-            var barH  = half * 0.14;
-            var crossX = w    * 0.36;          /* posición vertical de la cruz */
-            var crossY = half + half * 0.5;    /* posición horizontal de la cruz */
+            var bW = w*0.14, bH = half*0.14;
+            var cX = w*0.36, cY = half + half*0.5;
             ctx.fillStyle = '#FECC02';
-            ctx.fillRect(0,               crossY - barH / 2, w,    barH); /* barra horizontal */
-            ctx.fillRect(crossX - barW/2, half,              barW, half); /* barra vertical */
+            ctx.fillRect(0,        cY - bH/2, w,  bH);  /* horizontal */
+            ctx.fillRect(cX-bW/2,  half,      bW, half); /* vertical */
         },
 
-        /* ---- URUGUAY + ESPAÑA ---- */
-        'uruguayespana': function (ctx, w, h) {
+        /* ---- PORTUGAL (arr) + CROACIA (abj) ---- */
+        'portucroacia': function (ctx, w, h) {
             var half = h / 2;
-            /* Uruguay: 9 franjas alternas blanco/azul */
-            var sH = half / 9;
-            for (var i = 0; i < 9; i++) {
-                ctx.fillStyle = (i % 2 === 0) ? '#FFFFFF' : '#74ACDF';
-                ctx.fillRect(0, i * sH, w, sH);
+            /* Portugal: verde (40%) | rojo (60%) + escudo dorado */
+            var pG = Math.round(w*0.40);
+            ctx.fillStyle = '#006600'; ctx.fillRect(0,  0, pG,    half);
+            ctx.fillStyle = '#C8102E'; ctx.fillRect(pG, 0, w-pG,  half);
+            var er = Math.min(w,half)*0.10, ey = half*0.5;
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath(); ctx.arc(pG, ey, er, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#8B6914'; ctx.lineWidth = Math.max(1, er*0.15);
+            ctx.beginPath(); ctx.arc(pG, ey, er, 0, Math.PI*2); ctx.stroke();
+            /* Croacia: rojo + blanco + azul (tercios) + escudo ajedrezado */
+            var cU = half / 3;
+            ctx.fillStyle = '#FF0000'; ctx.fillRect(0, half,       w, cU);
+            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, half+cU,    w, cU);
+            ctx.fillStyle = '#003DA5'; ctx.fillRect(0, half+cU*2,  w, cU);
+            /* Ajedrezado 5×5 centrado en la franja blanca */
+            var sW = w*0.26, sH = cU*0.88;
+            var sX = (w-sW)/2, sY = half + cU + (cU-sH)/2;
+            var cols = 5, rows = 5;
+            for (var r = 0; r < rows; r++) {
+                for (var c = 0; c < cols; c++) {
+                    ctx.fillStyle = ((r+c)%2===0) ? '#FF0000' : '#FFFFFF';
+                    ctx.fillRect(sX+c*(sW/cols), sY+r*(sH/rows), sW/cols, sH/rows);
+                }
             }
-            /* Sol de Mayo (simplificado): círculo + rayos */
-            var sx = w * 0.20, sy = half * 0.24, sr = Math.min(w, half) * 0.09;
-            ctx.strokeStyle = '#F6B40E'; ctx.lineWidth = Math.max(1, w * 0.015);
-            for (var r2 = 0; r2 < 16; r2++) {
-                var angle = (r2 / 16) * Math.PI * 2;
+        },
+
+        /* ---- ARGENTINA (arr) + CABO VERDE (abj) ---- */
+        'argcaboverde': function (ctx, w, h) {
+            var half = h / 2;
+            /* Argentina: celeste-blanco-celeste (tercios) + Sol de Mayo */
+            var aU = half / 3;
+            ctx.fillStyle = '#74ACDF'; ctx.fillRect(0, 0,     w, aU);
+            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, aU,    w, aU);
+            ctx.fillStyle = '#74ACDF'; ctx.fillRect(0, aU*2,  w, aU);
+            var sx = w/2, sy = aU + aU/2, sr = aU*0.36;
+            ctx.strokeStyle = '#F6B40E'; ctx.lineWidth = Math.max(1, w*0.012);
+            for (var i = 0; i < 32; i++) {
+                var ang = (i/32)*Math.PI*2;
+                var r1 = (i%2===0) ? sr*1.1  : sr*1.0;
+                var r2 = (i%2===0) ? sr*1.75 : sr*1.5;
                 ctx.beginPath();
-                ctx.moveTo(sx + Math.cos(angle) * sr * 1.1,
-                           sy + Math.sin(angle) * sr * 1.1);
-                ctx.lineTo(sx + Math.cos(angle) * sr * 1.85,
-                           sy + Math.sin(angle) * sr * 1.85);
+                ctx.moveTo(sx+Math.cos(ang)*r1, sy+Math.sin(ang)*r1);
+                ctx.lineTo(sx+Math.cos(ang)*r2, sy+Math.sin(ang)*r2);
                 ctx.stroke();
             }
             ctx.fillStyle = '#F6B40E';
-            ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
-            /* España: rojo (1/4) + amarillo/dorado (2/4) + rojo (1/4) */
+            ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI*2); ctx.fill();
+            /* Cabo Verde: 3 azul + blanco + rojo + blanco + 3 azul (proporciones 3:1:1:1:3) */
+            var cvU = half / 9; /* unidad = 1/9 de la mitad */
+            ctx.fillStyle = '#003893'; ctx.fillRect(0, half,           w, cvU*3);
+            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, half+cvU*3,     w, cvU);
+            ctx.fillStyle = '#CF2027'; ctx.fillRect(0, half+cvU*4,     w, cvU);
+            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, half+cvU*5,     w, cvU);
+            ctx.fillStyle = '#003893'; ctx.fillRect(0, half+cvU*6,     w, cvU*3);
+            /* Círculo de 10 estrellas amarillas */
+            var scx = w*0.28, scy = half + half*0.5, scR = half*0.27;
+            ctx.fillStyle = '#F7D116';
+            for (var s = 0; s < 10; s++) {
+                var sa = (s/10)*Math.PI*2 - Math.PI/2;
+                star(ctx, scx + Math.cos(sa)*scR, scy + Math.sin(sa)*scR, half*0.044, 5);
+            }
+        },
+
+        /* ---- INGLATERRA (arr) + CONGO RDC/ZAIRE (abj) ---- */
+        'inglatcongo': function (ctx, w, h) {
+            var half = h / 2;
+            /* Inglaterra: blanco + cruz roja de San Jorge */
+            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, half);
+            var bW = w*0.18, bH = half*0.18;
+            ctx.fillStyle = '#CF142B';
+            ctx.fillRect(0,        half/2 - bH/2, w,  bH); /* horizontal */
+            ctx.fillRect(w/2-bW/2, 0,             bW, half); /* vertical */
+            /* Congo RDC (ex-Zaire): fondo azul cielo */
+            ctx.fillStyle = '#007FFF'; ctx.fillRect(0, half, w, half);
+            /* Banda diagonal roja (de esquina inf-izq a esquina sup-der)
+               bordeada con líneas amarillas */
+            var diagW = half * 0.22; /* ancho de la banda roja */
+            ctx.save();
+            ctx.lineCap = 'square';
+            /* Borde amarillo (más ancho, detrás) */
+            ctx.strokeStyle = '#F7D618';
+            ctx.lineWidth = diagW + diagW * 0.45;
+            ctx.beginPath(); ctx.moveTo(0, h); ctx.lineTo(w, half); ctx.stroke();
+            /* Banda roja central */
+            ctx.strokeStyle = '#CE1126';
+            ctx.lineWidth = diagW;
+            ctx.beginPath(); ctx.moveTo(0, h); ctx.lineTo(w, half); ctx.stroke();
+            ctx.restore();
+            /* Estrella amarilla en el cantón superior-izquierdo de la RDC */
+            ctx.fillStyle = '#F7D618';
+            star(ctx, w*0.12, half + half*0.18, Math.min(w, half)*0.10, 5);
+        },
+
+        /* ---- ESPAÑA (arr) + AUSTRIA (abj) ---- */
+        'espanaustria': function (ctx, w, h) {
+            var half = h / 2;
+            /* España: rojo (1/4) + dorado (2/4) + rojo (1/4) */
             var spU = half / 4;
-            ctx.fillStyle = '#C60B1E'; ctx.fillRect(0, half,          w, spU);
-            ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, half + spU,    w, spU * 2);
-            ctx.fillStyle = '#C60B1E'; ctx.fillRect(0, half + spU*3,  w, spU);
+            ctx.fillStyle = '#C60B1E'; ctx.fillRect(0, 0,      w, spU);
+            ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, spU,    w, spU*2);
+            ctx.fillStyle = '#C60B1E'; ctx.fillRect(0, spU*3,  w, spU);
+            /* Austria: rojo (1/3) + blanco (1/3) + rojo (1/3) */
+            var auU = half / 3;
+            ctx.fillStyle = '#ED2939'; ctx.fillRect(0, half,        w, auU);
+            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, half+auU,    w, auU);
+            ctx.fillStyle = '#ED2939'; ctx.fillRect(0, half+auU*2,  w, auU);
         }
     };
 

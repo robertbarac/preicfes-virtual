@@ -85,15 +85,16 @@ class WhatsAppResetCode(models.Model):
 
 class ConfiguracionPlataforma(models.Model):
     THEME_CHOICES = (
-        ('teal',           'Original (Oscuro-Teal)'),
-        ('gold',           'Proyecto 500 (Negro-Dorado)'),
-        ('christmas',      'Navidad (Rojo-Verde)'),
-        ('colombia',       'Bandera de Colombia'),
-        ('colombiaportu',  'Colombia + Portugal'),
-        ('escociabrasil',  'Escocia + Brasil'),
-        ('ecualemania',    'Ecuador + Alemania'),
-        ('japonsuecia',    'Japón + Suecia'),
-        ('uruguayespana',  'Uruguay + España'),
+        ('teal',          'Original (Oscuro-Teal)'),
+        ('gold',          'Proyecto 500 (Negro-Dorado)'),
+        ('christmas',     'Navidad (Rojo-Verde)'),
+        ('brasiljap',     'Brasil vs Japón'),
+        ('colombiaghana', 'Colombia vs Ghana'),
+        ('franciasuecia', 'Francia vs Suecia'),
+        ('portucroacia',  'Portugal vs Croacia'),
+        ('argcaboverde',  'Argentina vs Cabo Verde'),
+        ('inglatcongo',   'Inglaterra vs Congo'),
+        ('espanaustria',  'España vs Austria'),
     )
     tema_menu = models.CharField(
         max_length=20, 
