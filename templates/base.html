@@ -61,7 +61,7 @@
                 'lg:-translate-x-full lg:absolute lg:hidden': !desktopSidebarOpen
             }"
             class="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition duration-300 transform {% if TEMA_MENU == 'gold' %}bg-gradient-to-b from-black via-gray-900 to-yellow-900{% elif TEMA_MENU == 'christmas' %}bg-gradient-to-b from-red-900 via-green-900 to-red-950{% elif TEMA_MENU == 'brasiljap' or TEMA_MENU == 'colombiaghana' or TEMA_MENU == 'franciasuecia' or TEMA_MENU == 'portucroacia' or TEMA_MENU == 'argcaboverde' or TEMA_MENU == 'inglatcongo' or TEMA_MENU == 'espanaustria' %}{% else %}bg-gradient-to-b from-gray-900 via-slate-800 to-teal-900{% endif %} shadow-2xl flex flex-col pt-5 pb-4"
-            {% if TEMA_MENU == 'brasiljap' or TEMA_MENU == 'colombiaghana' or TEMA_MENU == 'franciasuecia' or TEMA_MENU == 'portucroacia' or TEMA_MENU == 'argcaboverde' or TEMA_MENU == 'inglatcongo' or TEMA_MENU == 'espanaustria' %}id="sidebar-flag-panel"{% endif %}
+            {% if TEMA_MENU == 'brasiljap' or TEMA_MENU == 'colombiaghana' or TEMA_MENU == 'franciasuecia' or TEMA_MENU == 'portucroacia' or TEMA_MENU == 'argcaboverde' or TEMA_MENU == 'inglatcongo' or TEMA_MENU == 'espanaustria' or TEMA_MENU == 'holandamarr' %}id="sidebar-flag-panel"{% endif %}
             >
 
             <!-- Logo y Marca -->
@@ -350,7 +350,7 @@
     </div>
 
 
-{% if TEMA_MENU == 'brasiljap' or TEMA_MENU == 'colombiaghana' or TEMA_MENU == 'franciasuecia' or TEMA_MENU == 'portucroacia' or TEMA_MENU == 'argcaboverde' or TEMA_MENU == 'inglatcongo' or TEMA_MENU == 'espanaustria' %}
+{% if TEMA_MENU == 'brasiljap' or TEMA_MENU == 'colombiaghana' or TEMA_MENU == 'franciasuecia' or TEMA_MENU == 'portucroacia' or TEMA_MENU == 'argcaboverde' or TEMA_MENU == 'inglatcongo' or TEMA_MENU == 'espanaustria' or TEMA_MENU == 'holandamarr' %}
 <script>
 /* ============================================================
    Motor de banderas canvas.
@@ -536,6 +536,39 @@
             ctx.fillStyle = '#ED2939'; ctx.fillRect(0, half,        w, auU);
             ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, half+auU,    w, auU);
             ctx.fillStyle = '#ED2939'; ctx.fillRect(0, half+auU*2,  w, auU);
+        },
+
+        /* ---- HOLANDA (arr) + MARRUECOS (abj) ---- */
+        'holandamarr': function (ctx, w, h) {
+            var half = h / 2;
+            /* Holanda: rojo (#AE1C28) + blanco (#FFFFFF) + azul (#21468B) en tercios */
+            var hU = half / 3;
+            ctx.fillStyle = '#AE1C28'; ctx.fillRect(0, 0,      w, hU);
+            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, hU,     w, hU);
+            ctx.fillStyle = '#21468B'; ctx.fillRect(0, hU*2,   w, hU);
+            
+            /* Marruecos: fondo rojo (#C1272D) + estrella verde de 5 puntas centrado */
+            ctx.fillStyle = '#C1272D'; ctx.fillRect(0, half, w, half);
+            
+            var mcx = w/2, mcy = half + half/2, mr = half*0.18;
+            ctx.strokeStyle = '#006233';
+            ctx.lineWidth = Math.max(2, mr * 0.12);
+            ctx.fillStyle = '#006233';
+            
+            // Dibujar la estrella pentagonal cruzada clásica de Marruecos
+            var pts = [];
+            for (var i = 0; i < 5; i++) {
+                var a = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                pts.push({ x: mcx + Math.cos(a)*mr, y: mcy + Math.sin(a)*mr });
+            }
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x, pts[0].y);
+            ctx.lineTo(pts[2].x, pts[2].y);
+            ctx.lineTo(pts[4].x, pts[4].y);
+            ctx.lineTo(pts[1].x, pts[1].y);
+            ctx.lineTo(pts[3].x, pts[3].y);
+            ctx.closePath();
+            ctx.stroke();
         }
     };
 

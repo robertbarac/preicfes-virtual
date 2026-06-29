@@ -95,6 +95,7 @@ class ConfiguracionPlataforma(models.Model):
         ('argcaboverde',  'Argentina vs Cabo Verde'),
         ('inglatcongo',   'Inglaterra vs Congo'),
         ('espanaustria',  'España vs Austria'),
+        ('holandamarr',   'Holanda vs Marruecos'),
     )
     tema_menu = models.CharField(
         max_length=20, 
