@@ -94,11 +94,46 @@ class OpcionForm(forms.ModelForm):
             'es_correcta': forms.CheckboxInput(attrs={'class': 'w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300'})
         }
 
+from django.forms.models import BaseInlineFormSet
+from django.core.exceptions import ValidationError
+
+class BaseOpcionFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        
+        # Si alguno de los formularios individuales ya tiene un error de validación de campo,
+        # no realizamos la validación del formset completo.
+        if any(self.errors):
+            return
+            
+        correctas_count = 0
+        total_forms = 0
+        
+        for form in self.forms:
+            # Si el formulario está marcado para borrado, lo ignoramos.
+            if self.can_delete and self._should_delete_form(form):
+                continue
+            
+            # Solo consideramos formularios que tengan datos (es decir, que no estén vacíos en el FormSet extra)
+            if form.cleaned_data:
+                # Verificamos si tiene texto o imagen, o si ya existe en la base de datos
+                if form.cleaned_data.get('texto') or form.cleaned_data.get('imagen') or form.instance.pk:
+                    total_forms += 1
+                    if form.cleaned_data.get('es_correcta'):
+                        correctas_count += 1
+                        
+        if total_forms > 0:
+            if correctas_count == 0:
+                raise ValidationError("Debe marcar exactamente UNA opción como correcta. Actualmente hay 0 marcadas.")
+            elif correctas_count > 1:
+                raise ValidationError(f"Debe marcar exactamente UNA opción como correcta. Actualmente hay {correctas_count} marcadas.")
+
 # Factory para vincular Opciones dinámicamente a la Pregunta
 OpcionFormSet = inlineformset_factory(
     Pregunta, 
     Opcion, 
     form=OpcionForm,
+    formset=BaseOpcionFormSet,
     extra=4, # 4 opciones por defecto (ICFES), pero el JS permite añadir más
     can_delete=True
 )

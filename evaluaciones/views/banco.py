@@ -28,35 +28,25 @@ class PreguntaCreateView(HistorialMixin, CreateView):
         opciones = context['opciones']
         imagenes_pregunta = context['imagenes_pregunta']
         
-        self.object = form.save()
-        
+        # Validamos los formsets ANTES de guardar la pregunta en base de datos
         if opciones.is_valid() and imagenes_pregunta.is_valid():
-            opciones.instance = self.object
-            opciones.save()
-            
-            imagenes_pregunta.instance = self.object
-            imagenes_pregunta.save()
-            
-            # Verificar si se indicó al menos una respuesta correcta
-            tiene_correcta = False
-            for form_opcion in opciones.forms:
-                if form_opcion.cleaned_data and not form_opcion.cleaned_data.get('DELETE', False):
-                    if form_opcion.cleaned_data.get('es_correcta', False):
-                        tiene_correcta = True
-                        break
-            
-            if not tiene_correcta:
-                messages.warning(self.request, "Atención: Guardaste la pregunta sin marcar ninguna opción como correcta.")
-            else:
-                messages.success(self.request, "Pregunta guardada correctamente.")
+            from django.db import transaction
+            with transaction.atomic():
+                self.object = form.save()
+                opciones.instance = self.object
+                opciones.save()
+                imagenes_pregunta.instance = self.object
+                imagenes_pregunta.save()
+            messages.success(self.request, "Pregunta guardada correctamente.")
         else:
+            # Si hay errores de validación, volvemos a mostrar el formulario con los errores
             return self.render_to_response(self.get_context_data(form=form))
             
         # Refill back parameter or list
         taller_id = self.request.GET.get('taller')
         if taller_id:
             return redirect('evaluaciones:taller_preguntas_manage', pk=taller_id)
-        return super().form_valid(form)
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse_lazy('evaluaciones:pregunta_list')
@@ -82,28 +72,18 @@ class PreguntaUpdateView(HistorialMixin, UpdateView):
         opciones = context['opciones']
         imagenes_pregunta = context['imagenes_pregunta']
 
-        self.object = form.save()
-
+        # Validamos los formsets ANTES de guardar la pregunta en base de datos
         if opciones.is_valid() and imagenes_pregunta.is_valid():
-            opciones.instance = self.object
-            opciones.save()
-
-            imagenes_pregunta.instance = self.object
-            imagenes_pregunta.save()
-
-            # Verificar si se indicó al menos una respuesta correcta
-            tiene_correcta = False
-            for form_opcion in opciones.forms:
-                if form_opcion.cleaned_data and not form_opcion.cleaned_data.get('DELETE', False):
-                    if form_opcion.cleaned_data.get('es_correcta', False):
-                        tiene_correcta = True
-                        break
-
-            if not tiene_correcta:
-                messages.warning(self.request, "Atención: Guardaste la pregunta sin marcar ninguna opción como correcta.")
-            else:
-                messages.success(self.request, "Pregunta actualizada correctamente.")
+            from django.db import transaction
+            with transaction.atomic():
+                self.object = form.save()
+                opciones.instance = self.object
+                opciones.save()
+                imagenes_pregunta.instance = self.object
+                imagenes_pregunta.save()
+            messages.success(self.request, "Pregunta actualizada correctamente.")
         else:
+            # Si hay errores de validación, volvemos a mostrar el formulario con los errores
             return self.render_to_response(self.get_context_data(form=form))
 
         return redirect('evaluaciones:pregunta_list')
@@ -122,10 +102,19 @@ class PreguntaListView(ListView):
     paginate_by = 20
     
     def get_queryset(self):
+        from django.db.models import Count, Q
+        
         qs = super().get_queryset().select_related('tema', 'tema__materia', 'creador').prefetch_related('opciones')
+        
+        # Anotamos el conteo de opciones correctas
+        qs = qs.annotate(
+            correctas_count=Count('opciones', filter=Q(opciones__es_correcta=True))
+        )
+        
         q = self.request.GET.get('q', '')
         materia_id = self.request.GET.get('materia')
         tema_id = self.request.GET.get('tema')
+        marcacion = self.request.GET.get('marcacion', '')
         
         if q:
             qs = qs.filter(enunciado__icontains=q)
@@ -133,6 +122,15 @@ class PreguntaListView(ListView):
             qs = qs.filter(tema__materia_id=materia_id)
         if tema_id:
             qs = qs.filter(tema_id=tema_id)
+            
+        if marcacion == 'correcta':
+            qs = qs.filter(correctas_count=1)
+        elif marcacion == 'error':
+            qs = qs.exclude(correctas_count=1)
+        elif marcacion == 'cero':
+            qs = qs.filter(correctas_count=0)
+        elif marcacion == 'multiples':
+            qs = qs.filter(correctas_count__gt=1)
             
         return qs.order_by('-fecha_creacion')
 
@@ -143,6 +141,7 @@ class PreguntaListView(ListView):
         context['q_val'] = self.request.GET.get('q', '')
         context['materia_val'] = self.request.GET.get('materia', '')
         context['tema_val'] = self.request.GET.get('tema', '')
+        context['marcacion_val'] = self.request.GET.get('marcacion', '')
         return context
 
 class PreguntaDetailView(LoginRequiredMixin, DetailView):

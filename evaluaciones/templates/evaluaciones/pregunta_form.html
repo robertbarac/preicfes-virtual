@@ -111,6 +111,12 @@
             <div class="p-6">
                 {{ opciones.management_form }}
                 
+                {% if opciones.non_form_errors %}
+                <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded text-red-700 shadow-sm text-sm">
+                    <strong>Error de Validación:</strong> {{ opciones.non_form_errors.0 }}
+                </div>
+                {% endif %}
+                
                 <div id="opciones-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {% for opcion_form in opciones %}
                         <div class="opcion-form bg-gray-50 rounded-lg p-5 border border-gray-200 relative group transition-all hover:bg-white hover:border-indigo-200 hover:shadow-md">
