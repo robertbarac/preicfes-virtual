@@ -1,5 +1,7 @@
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils.decorators import method_decorator
 from contenidos.models import Post
 from contenidos.forms import PostForm
 from curriculo.views.mixins import HistorialMixin
@@ -66,6 +68,7 @@ class PostUpdateView(HistorialMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('contenidos:post_detail', kwargs={'pk': self.object.pk})
 
+@method_decorator(staff_member_required, name='dispatch')
 class PostDeleteView(DeleteView):
     model = Post
     template_name = 'contenidos/post_confirm_delete.html'
