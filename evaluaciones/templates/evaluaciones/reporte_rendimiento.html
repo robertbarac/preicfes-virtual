@@ -73,16 +73,29 @@
   <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
       <h2 class="text-lg font-semibold text-gray-800">📋 Promedios por Estudiante</h2>
-      <!-- Filtro por materia -->
-      <form method="get" class="flex items-center gap-2">
-        <label for="filtro-materia" class="text-sm text-gray-500 whitespace-nowrap">Filtrar por materia:</label>
-        <select id="filtro-materia" name="materia" onchange="this.form.submit()"
-          class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-          <option value="">— Todas —</option>
-          {% for mat in materias %}
-            <option value="{{ mat.id }}" {% if filtro_materia_id == mat.id %}selected{% endif %}>{{ mat.nombre }}</option>
-          {% endfor %}
-        </select>
+      <!-- Filtro y buscador -->
+      <form method="get" class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2">
+          <label for="filtro-materia" class="text-xs text-gray-500 whitespace-nowrap">Materia:</label>
+          <select id="filtro-materia" name="materia" onchange="this.form.submit()"
+            class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+            <option value="">— Todas —</option>
+            {% for mat in materias %}
+              <option value="{{ mat.id }}" {% if filtro_materia_id == mat.id %}selected{% endif %}>{{ mat.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="text" name="student_search" placeholder="Buscar estudiante..." value="{{ student_search }}"
+            class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-sm transition-colors">
+            Buscar
+          </button>
+          {% if student_search or filtro_materia_id %}
+            <a href="?" class="text-xs text-gray-400 hover:text-gray-600 underline">Limpiar</a>
+          {% endif %}
+        </div>
       </form>
     </div>
 
@@ -124,6 +137,34 @@
     </div>
     {% else %}
       <p class="text-gray-400 text-sm">No hay talleres completados con materia asignada.</p>
+    {% endif %}
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+    <div class="mt-6 flex flex-col sm:flex-row justify-between items-center bg-gray-50 px-4 py-3 rounded-lg border border-gray-100 gap-2">
+      <div class="text-xs text-gray-500">
+        Mostrando estudiantes {{ page_obj.start_index }} al {{ page_obj.end_index }} de {{ page_obj.paginator.count }}
+      </div>
+      <div class="flex items-center space-x-2">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if student_search %}&student_search={{ student_search }}{% endif %}{% if filtro_materia_id %}&materia={{ filtro_materia_id }}{% endif %}" 
+             class="px-3 py-1.5 text-xs font-semibold bg-white border rounded hover:bg-gray-50 text-gray-700 transition-colors">
+            &laquo; Anterior
+          </a>
+        {% endif %}
+        
+        <span class="px-3 py-1.5 text-xs font-medium text-gray-600">
+          Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if student_search %}&student_search={{ student_search }}{% endif %}{% if filtro_materia_id %}&materia={{ filtro_materia_id }}{% endif %}" 
+             class="px-3 py-1.5 text-xs font-semibold bg-white border rounded hover:bg-gray-50 text-gray-700 transition-colors">
+            Siguiente &raquo;
+          </a>
+        {% endif %}
+      </div>
+    </div>
     {% endif %}
   </div>
 

@@ -221,15 +221,37 @@ class ReporteRendimientoView(TemplateView):
 
         # ── 2. Tabla: promedio por estudiante y materia ───────────────────────
         from curriculo.models.core import Materia
+        from django.core.paginator import Paginator
+        from django.db.models import Q
+        
         materias = list(Materia.objects.order_by('nombre'))
-        estudiantes = list(
-            User.objects.filter(is_staff=False, is_active=True)
-            .order_by('last_name', 'first_name')
-        )
+        
+        # Filtro de búsqueda por estudiante
+        student_search = self.request.GET.get('student_search', '').strip()
+        estudiantes_qs = User.objects.filter(is_staff=False, is_active=True).order_by('last_name', 'first_name')
+        
+        if student_search:
+            estudiantes_qs = estudiantes_qs.filter(
+                Q(first_name__icontains=student_search) |
+                Q(last_name__icontains=student_search) |
+                Q(username__icontains=student_search)
+            )
+            
+        paginator = Paginator(estudiantes_qs, 25)  # 25 estudiantes por página
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        estudiantes_pagina = list(page_obj.object_list)
+        estudiantes_pagina_ids = [est.id for est in estudiantes_pagina]
 
+        # Consultamos mejores intentos SOLAMENTE para los estudiantes de la página actual
         mejores = (
             IntentoTaller.objects
-            .filter(fecha_fin__isnull=False, puntaje_porcentaje__isnull=False)
+            .filter(
+                usuario_id__in=estudiantes_pagina_ids,
+                fecha_fin__isnull=False, 
+                puntaje_porcentaje__isnull=False
+            )
             .values('usuario_id', 'taller_id', 'taller__tema__materia_id',
                     'taller__tema__materia__nombre')
             .annotate(mejor=DjMax('puntaje_porcentaje'))
@@ -241,7 +263,7 @@ class ReporteRendimientoView(TemplateView):
                 datos[m['usuario_id']][m['taller__tema__materia_id']].append(m['mejor'])
 
         tabla = []
-        for est in estudiantes:
+        for est in estudiantes_pagina:
             filas_materia = []
             for mat in materias:
                 if filtro_materia_id and mat.id != filtro_materia_id:
@@ -262,6 +284,8 @@ class ReporteRendimientoView(TemplateView):
         context['tabla'] = tabla
         context['materias'] = materias
         context['filtro_materia_id'] = filtro_materia_id
+        context['page_obj'] = page_obj
+        context['student_search'] = student_search
 
         # ── 3. Top/Bottom 3 ejes temáticos ────────────────────────────────────
         from ..models.talleres import RespuestaTaller

@@ -313,11 +313,13 @@ class TallerSolucionView(LoginRequiredMixin, DetailView):
         
         for pt in preguntas_taller:
             pregunta = pt.pregunta
+            opciones = pregunta.opciones.all()
+            opcion_correcta = next((o for o in opciones if o.es_correcta), None)
             
             detalles_preguntas.append({
                 'pregunta': pregunta,
-                'opciones': pregunta.opciones.all(),
-                'opcion_correcta': pregunta.opciones.filter(es_correcta=True).first(),
+                'opciones': opciones,
+                'opcion_correcta': opcion_correcta,
             })
             
         context['detalles_preguntas'] = detalles_preguntas

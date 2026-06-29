@@ -236,6 +236,8 @@ class SimulacroResolverView(LoginRequiredMixin, SimulacroAccessMixin, DetailView
         return context
 
 
+from ..models.simulacros import PreguntaSimulacro
+
 class SimulacroEnviarView(LoginRequiredMixin, SimulacroAccessMixin, View):
     """
     Recibe el POST cuando se envía una sesión del simulacro.
@@ -258,46 +260,68 @@ class SimulacroEnviarView(LoginRequiredMixin, SimulacroAccessMixin, View):
         
         # Si ya había terminado esta sesión, ignorar y seguir a la siguiente
         if not int_ses.fecha_fin:
-            # Procesar respuestas
-            # El form enviará datos en formato `pregunta_{id}`
-            preguntas_sesion = []
-            for comp in int_ses.sesion.componentes.all():
-                for p in comp.preguntas_componente.all():
-                    preguntas_sesion.append(p.pregunta)
+            # 1. Obtener todas las preguntas de la sesión en una única query
+            preguntas_sesion = [
+                ps.pregunta for ps in PreguntaSimulacro.objects.filter(
+                    componente__sesion=int_ses.sesion
+                ).select_related('pregunta')
+            ]
 
+            # 2. Agrupar IDs de opciones enviadas para recuperarlas en una sola query
+            opcion_ids = []
             for pregunta in preguntas_sesion:
-                opcion_id = request.POST.get(f'pregunta_{pregunta.id}')
-                if opcion_id:
+                opcion_id_str = request.POST.get(f'pregunta_{pregunta.id}')
+                if opcion_id_str:
                     try:
-                        opcion_obj = Opcion.objects.get(id=opcion_id, pregunta=pregunta)
-                        RespuestaSimulacro.objects.create(
-                            intento_sesion=int_ses,
-                            pregunta=pregunta,
-                            opcion_seleccionada=opcion_obj,
-                            es_correcta=opcion_obj.es_correcta
-                        )
-                    except Opcion.DoesNotExist:
+                        opcion_ids.append(int(opcion_id_str))
+                    except (ValueError, TypeError):
                         pass
-                else:
-                    # Registramos que no la respondió, pero sin opción
-                    RespuestaSimulacro.objects.create(
+
+            opciones_seleccionadas = Opcion.objects.filter(id__in=opcion_ids).select_related('pregunta')
+            opciones_dict = {o.id: o for o in opciones_seleccionadas}
+
+            # 3. Construir lista de respuestas y hacer bulk_create
+            respuestas_a_crear = []
+            for pregunta in preguntas_sesion:
+                opcion_id_str = request.POST.get(f'pregunta_{pregunta.id}')
+                opcion_obj = None
+                es_correcta = False
+                
+                if opcion_id_str:
+                    try:
+                        op_id = int(opcion_id_str)
+                        o = opciones_dict.get(op_id)
+                        # Validamos que la opción pertenezca efectivamente a la pregunta
+                        if o and o.pregunta_id == pregunta.id:
+                            opcion_obj = o
+                            es_correcta = o.es_correcta
+                    except (ValueError, TypeError):
+                        pass
+                
+                respuestas_a_crear.append(
+                    RespuestaSimulacro(
                         intento_sesion=int_ses,
                         pregunta=pregunta,
-                        opcion_seleccionada=None,
-                        es_correcta=False
+                        opcion_seleccionada=opcion_obj,
+                        es_correcta=es_correcta
                     )
+                )
+
+            RespuestaSimulacro.objects.bulk_create(respuestas_a_crear)
 
             # Finalizar sesión
             int_ses.fecha_fin = timezone.now()
             int_ses.save()
 
-        # Comprobar si hay más sesiones pendientes
-        sesiones_pendientes = False
-        for s in simulacro.sesiones.all().order_by('orden'):
-            is_ses = IntentoSesion.objects.filter(intento_simulacro=intento, sesion=s).first()
-            if not is_ses or not is_ses.fecha_fin:
-                sesiones_pendientes = True
-                break
+        # Comprobar si hay más sesiones pendientes de forma óptima
+        sesiones_ids = list(simulacro.sesiones.values_list('id', flat=True))
+        intentos_sesion_finalizados = IntentoSesion.objects.filter(
+            intento_simulacro=intento,
+            sesion_id__in=sesiones_ids,
+            fecha_fin__isnull=False
+        ).count()
+        
+        sesiones_pendientes = intentos_sesion_finalizados < len(sesiones_ids)
 
         if sesiones_pendientes:
             messages.success(request, f"Sesión '{int_ses.sesion.nombre}' enviada. Puedes continuar con la siguiente.")
@@ -319,22 +343,31 @@ class SimulacroEnviarView(LoginRequiredMixin, SimulacroAccessMixin, View):
         )
         intento.tiempo_empleado_minutos = int(total_minutos)
         
-        # Calcular puntaje por componentes agrupados por materia
+        # Mapear cada pregunta del simulacro a su materia/componente de una sola vez
+        mapeo_preguntas = {
+            ps.pregunta_id: ps.componente.componente.nombre
+            for ps in PreguntaSimulacro.objects.filter(
+                componente__sesion__simulacro=simulacro
+            ).select_related('componente__componente')
+        }
+        
+        # Obtener todas las respuestas de este intento en una sola query
+        todas_las_respuestas = list(
+            RespuestaSimulacro.objects.filter(
+                intento_sesion__intento_simulacro=intento
+            ).only('pregunta_id', 'es_correcta')
+        )
+        
+        # Agrupar estadísticas en Python en lugar de hacer queries individuales
         materias_stats = {}
-        
-        todas_las_respuestas = RespuestaSimulacro.objects.filter(intento_sesion__intento_simulacro=intento)
-        
-        for sesion in simulacro.sesiones.all():
-            for comp in sesion.componentes.all():
-                materia_nombre = comp.componente.nombre
-                if materia_nombre not in materias_stats:
-                    materias_stats[materia_nombre] = {'correctas': 0, 'total': 0}
-                    
-                preg_ids = comp.preguntas_componente.values_list('pregunta_id', flat=True)
-                respuestas_comp = todas_las_respuestas.filter(pregunta_id__in=preg_ids)
-                
-                materias_stats[materia_nombre]['total'] += respuestas_comp.count()
-                materias_stats[materia_nombre]['correctas'] += respuestas_comp.filter(es_correcta=True).count()
+        for r in todas_las_respuestas:
+            materia_nombre = mapeo_preguntas.get(r.pregunta_id, "Desconocido")
+            if materia_nombre not in materias_stats:
+                materias_stats[materia_nombre] = {'correctas': 0, 'total': 0}
+            
+            materias_stats[materia_nombre]['total'] += 1
+            if r.es_correcta:
+                materias_stats[materia_nombre]['correctas'] += 1
 
         resultados_componentes = []
         for nombre, stats in materias_stats.items():
