@@ -176,6 +176,10 @@ class IntentoSimulacro(models.Model):
 
     class Meta:
         ordering = ["-fecha_inicio"]
+        indexes = [
+            models.Index(fields=['usuario', 'simulacro']),
+            models.Index(fields=['fecha_fin']),
+        ]
 
     def __str__(self):
         return f"Intento #{self.id} — {self.usuario} en {self.simulacro}"
@@ -206,6 +210,11 @@ class RespuestaSimulacro(models.Model):
     pregunta            = models.ForeignKey(Pregunta, on_delete=models.CASCADE)
     opcion_seleccionada = models.ForeignKey(Opcion, on_delete=models.SET_NULL, null=True, blank=True)
     es_correcta         = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['intento_sesion']),
+        ]
 
     def __str__(self):
         return f"Resp P{self.pregunta_id} en IS{self.intento_sesion_id}"

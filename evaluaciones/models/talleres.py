@@ -39,6 +39,12 @@ class IntentoTaller(models.Model):
     fecha_fin = models.DateTimeField(blank=True, null=True)
     puntaje_porcentaje = models.FloatField(blank=True, null=True, help_text="De 0 a 100")
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['usuario', 'taller']),
+            models.Index(fields=['fecha_fin']),
+        ]
+
     def __str__(self):
         return f"Intento Taller {self.id} - {self.usuario}"
 
@@ -47,6 +53,11 @@ class RespuestaTaller(models.Model):
     pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE)
     opcion_seleccionada = models.ForeignKey(Opcion, on_delete=models.SET_NULL, null=True, blank=True)
     es_correcta = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['intento']),
+        ]
 
 
 # ─── Invalidación de caché ────────────────────────────────────────────────────

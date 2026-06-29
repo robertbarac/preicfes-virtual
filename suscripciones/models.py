@@ -13,6 +13,11 @@ class Subscription(models.Model):
     def is_valid(self):
         return self.active and self.end_date >= timezone.now().date()
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', '-id']),
+        ]
+
     def __str__(self):
         status = "Valid" if self.is_valid else "Expired/Inactive"
         return f"Subscription for {self.user.username} ({status})"
