@@ -163,14 +163,23 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
 
-# Cache — Filesystem (no extra dependencies, safe for production)
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': os.path.join(BASE_DIR, '.django_cache'),
-        'TIMEOUT': 86400,  # 24 horas (plan B — los signals invalidan antes)
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000
+# Cache — Memcached in production, Filesystem in development
+if not DEBUG:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+            'LOCATION': '127.0.0.1:11211',
+            'TIMEOUT': 86400,
         }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'LOCATION': os.path.join(BASE_DIR, '.django_cache'),
+            'TIMEOUT': 86400,  # 24 horas
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000
+            }
+        }
+    }

@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib import messages
@@ -42,10 +43,16 @@ class SubscriptionCheckMiddleware:
             return self.get_response(request)
 
         # 4. Enforce subscription check for Students/VirtualStudents on protected paths
-        suscripcion = request.user.subscriptions.order_by('-id').first()
+        cache_key = f'sub_valid_{request.user.id}'
+        is_valid = cache.get(cache_key)
         
+        if is_valid is None:
+            suscripcion = request.user.subscriptions.order_by('-id').first()
+            is_valid = bool(suscripcion and suscripcion.is_valid)
+            cache.set(cache_key, is_valid, 3600)  # Cachear 1 hora (signals invalidarán al cambiar)
+
         # If the student DOES NOT have a subscription or it's INVALID
-        if not suscripcion or not suscripcion.is_valid:
+        if not is_valid:
             messages.error(request, 'Para acceder a esta sección de la plataforma necesitas una suscripción activa.')
             return redirect('suscripciones:mi_suscripcion')
 

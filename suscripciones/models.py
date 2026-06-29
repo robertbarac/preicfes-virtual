@@ -28,3 +28,14 @@ class SubscriptionConfig(models.Model):
 
     def __str__(self):
         return f"Config ({self.default_start_date} a {self.default_end_date}) - {'Activa' if self.active else 'Inactiva'}"
+
+
+# ─── Invalidación de caché ────────────────────────────────────────────────────
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
+
+@receiver([post_save, post_delete], sender=Subscription)
+def invalidar_suscripcion_cache(sender, instance, **kwargs):
+    cache_key = f'sub_valid_{instance.user_id}'
+    cache.delete(cache_key)

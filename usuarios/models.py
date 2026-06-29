@@ -109,3 +109,13 @@ class ConfiguracionPlataforma(models.Model):
 
     def __str__(self):
         return f"Configuración Activa ({self.get_tema_menu_display()})"
+
+
+# ─── Invalidación de caché ────────────────────────────────────────────────────
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
+
+@receiver([post_save, post_delete], sender=ConfiguracionPlataforma)
+def invalidar_tema_menu_cache(sender, instance, **kwargs):
+    cache.delete('tema_menu_global')

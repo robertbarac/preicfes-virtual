@@ -34,8 +34,8 @@
     <link rel="icon" type="image/x-icon" href="{% static 'images/logo.png' %}">
     <link rel="apple-touch-icon" href="{% static 'images/logo.png' %}">
     <!-- Tailwind CSS desde el CDN para desarrollo rápido -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+    <script src="{% static 'js/alpine.min.js' %}" defer></script>
     <style>
         /* Estilos base para conservar la estética premium */
         body {
