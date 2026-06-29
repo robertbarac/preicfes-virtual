@@ -75,7 +75,7 @@ class ProgramaListView(ListView):
 
         # Inyectar asistencias personales solo para estudiantes no-staff
         # Esto NO va al caché — datos personales siempre llegan fresco de DB
-        if not self.request.user.is_staff:
+        if self.request.user.is_authenticated and not self.request.user.is_staff:
             from curriculo.models.core import Asistencia
             mis_asistencias = Asistencia.objects.filter(
                 alumno=self.request.user
