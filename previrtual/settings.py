@@ -163,12 +163,12 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
 
-# Cache — Memcached in production, Filesystem in development
+# Cache — Database in production, Filesystem in development
 if not DEBUG:
     CACHES = {
         'default': {
-            'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-            'LOCATION': '127.0.0.1:11211',
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'django_cache_table',
             'TIMEOUT': 86400,
         }
     }
