@@ -32,6 +32,21 @@ class PreguntaAdmin(admin.ModelAdmin):
         return obj.tema.nombre if obj.tema else 'General'
     tema_nombre.short_description = 'Tema'
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        term = search_term.strip()
+        if term.isdigit():
+            from django.db.models import Case, When, Value, IntegerField
+            queryset = queryset.order_by(
+                Case(
+                    When(id=int(term), then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                ),
+                '-id'
+            )
+        return queryset, use_distinct
+
 # --- TALLERES ---
 
 class PreguntaTallerInline(admin.TabularInline):
