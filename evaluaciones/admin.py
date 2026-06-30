@@ -21,7 +21,7 @@ class ImagenPreguntaInline(admin.TabularInline):
 class PreguntaAdmin(admin.ModelAdmin):
     list_display = ('id', 'tema_nombre', 'enunciado_corto', 'fecha_creacion')
     list_filter = ('tema__materia', 'tema')
-    search_fields = ('enunciado', 'tema__nombre', 'id')
+    search_fields = ('enunciado', 'tema__nombre', '=id')
     inlines = [ImagenPreguntaInline, OpcionInline]
 
     def enunciado_corto(self, obj):
