@@ -401,9 +401,45 @@ class SimulacroResultadoView(LoginRequiredMixin, SimulacroAccessMixin, DetailVie
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         intento = self.object
-        
-        # Desglose de respuestas por sesión
-        # Por simplicidad, podríamos mostrar la gráfica o la tabla directamente.
-        # context['detalles'] = intento.resultados_detallados
-        
+
+        # Desglose por sesión: correctas, fallidas y lista de preguntas fallidas
+        intentos_sesion = (
+            intento.intentos_sesion
+            .select_related('sesion')
+            .prefetch_related(
+                'respuestas__pregunta',
+                'respuestas__opcion_seleccionada',
+                'respuestas__pregunta__opciones',
+            )
+            .order_by('sesion__orden')
+        )
+
+        desglose_sesiones = []
+        for int_ses in intentos_sesion:
+            todas     = list(int_ses.respuestas.all())
+            correctas = [r for r in todas if r.es_correcta]
+            fallidas  = [r for r in todas if not r.es_correcta]
+
+            preguntas_fallidas = []
+            for r in fallidas:
+                opcion_correcta = next(
+                    (o for o in r.pregunta.opciones.all() if o.es_correcta), None
+                )
+                preguntas_fallidas.append({
+                    'pregunta_id':  r.pregunta.id,
+                    'enunciado':    r.pregunta.enunciado,
+                    'seleccionada': r.opcion_seleccionada,
+                    'correcta':     opcion_correcta,
+                })
+
+            desglose_sesiones.append({
+                'sesion':             int_ses.sesion,
+                'tiempo_min':         int_ses.get_tiempo_empleado_minutos(),
+                'total':              len(todas),
+                'correctas':          len(correctas),
+                'fallidas':           len(fallidas),
+                'preguntas_fallidas': preguntas_fallidas,
+            })
+
+        context['desglose_sesiones'] = desglose_sesiones
         return context
