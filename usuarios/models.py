@@ -88,14 +88,12 @@ class ConfiguracionPlataforma(models.Model):
         ('teal',          'Original (Oscuro-Teal)'),
         ('gold',          'Proyecto 500 (Negro-Dorado)'),
         ('christmas',     'Navidad (Rojo-Verde)'),
-        ('brasiljap',     'Brasil vs Japón'),
-        ('colombiaghana', 'Colombia vs Ghana'),
-        ('franciasuecia', 'Francia vs Suecia'),
-        ('portucroacia',  'Portugal vs Croacia'),
-        ('argcaboverde',  'Argentina vs Cabo Verde'),
-        ('inglatcongo',   'Inglaterra vs Congo'),
-        ('espanaustria',  'España vs Austria'),
-        ('holandamarr',   'Holanda vs Marruecos'),
+        # ── Octavos de final Mundial 2026 ──────────────────────────
+        ('suizacolombia', 'Suiza vs Colombia'),
+        ('portespana',    'Portugal vs España'),
+        ('mexicoinglat',  'México vs Inglaterra'),
+        ('brasilnoruega', 'Brasil vs Noruega'),
+        ('argegipo',      'Argentina vs Egipto'),
     )
     tema_menu = models.CharField(
         max_length=20, 
