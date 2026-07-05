@@ -188,6 +188,21 @@
 </div>
 
 <script>
+// ── Clave única de autoguardado por sesión ────────────────────────────────
+const SESION_ID = '{{ intento_sesion_actual.id }}';
+const LS_KEY = 'sim_draft_' + SESION_ID;
+
+function lsLoad() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); }
+    catch(e) { return {}; }
+}
+function lsSave(draft) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(draft)); } catch(e) {}
+}
+function lsClear() {
+    try { localStorage.removeItem(LS_KEY); } catch(e) {}
+}
+
 // Elements
 const slides = document.querySelectorAll('.question-slide');
 const navButtons = document.querySelectorAll('.nav-bubble');
@@ -258,8 +273,7 @@ function updateAnsweredCount() {
     }
 }
 
-function handleOptionSelect(preguntaId, inputElement) {
-    // Style the option
+function applyOptionStyles(preguntaId, inputElement) {
     const labels = document.querySelectorAll('.option-label-' + preguntaId);
     labels.forEach(label => {
         label.classList.remove('bg-indigo-50', 'border-indigo-400');
@@ -267,14 +281,22 @@ function handleOptionSelect(preguntaId, inputElement) {
     });
     inputElement.closest('label').classList.remove('border-gray-100');
     inputElement.closest('label').classList.add('bg-indigo-50', 'border-indigo-400');
-    
-    // Color the nav bubble
+
     const bubble = Array.from(navButtons).find(b => b.id === 'nav-btn-' + preguntaId);
     if (bubble) {
         bubble.classList.remove('bg-gray-100', 'text-gray-600');
         bubble.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
     }
-    
+}
+
+function handleOptionSelect(preguntaId, inputElement) {
+    applyOptionStyles(preguntaId, inputElement);
+
+    // Autoguardar en localStorage
+    const draft = lsLoad();
+    draft[preguntaId] = inputElement.value;
+    lsSave(draft);
+
     updateAnsweredCount();
 }
 
@@ -302,6 +324,25 @@ function closeModal() {
 
 btnPrev.addEventListener('click', () => showSlide(currentIndex - 1));
 btnNext.addEventListener('click', () => showSlide(currentIndex + 1));
+
+// ── Restaurar borrador del localStorage al cargar ─────────────────────────
+(function restoreDraft() {
+    const draft = lsLoad();
+    Object.keys(draft).forEach(preguntaId => {
+        const opcionId = draft[preguntaId];
+        const input = document.querySelector(
+            `input[name="pregunta_${preguntaId}"][value="${opcionId}"]`
+        );
+        if (input) {
+            input.checked = true;
+            applyOptionStyles(preguntaId, input);
+        }
+    });
+    updateAnsweredCount();
+})();
+
+// Limpiar localStorage al enviar el formulario
+document.getElementById('form-simulacro').addEventListener('submit', lsClear);
 
 // Initial state
 if (total > 0) {
