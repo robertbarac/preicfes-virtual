@@ -1,1 +1,1 @@
-from .programa import ProgramaListView
+from .programa import ProgramaHubView, ProgramaDashboardView

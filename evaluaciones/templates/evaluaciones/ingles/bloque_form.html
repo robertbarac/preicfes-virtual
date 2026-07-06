@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Editar Bloque de Ejercicios | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto my-10 bg-white shadow border border-gray-200 rounded-xl p-8">
+    <h1 class="text-3xl font-black text-gray-800 mb-6">
+        Editar Bloque de Ejercicios
+    </h1>
+    
+    <form method="POST" class="space-y-6">
+        {% csrf_token %}
+        
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Tipo de Ejercicio</label>
+            {{ form.tipo }}
+            {% if form.tipo.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.tipo.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Instrucciones (Consigna)</label>
+            {{ form.consigna }}
+            {% if form.consigna.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.consigna.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Contenido / Texto</label>
+            {{ form.contenido }}
+            {% if form.contenido.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.contenido.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Distractores (Opcional)</label>
+            {{ form.distractores }}
+            {% if form.distractores.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.distractores.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Orden</label>
+            {{ form.orden }}
+            {% if form.orden.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.orden.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div class="flex justify-end gap-3 pt-6 border-t">
+            <a href="{% url 'evaluaciones:actividad_gestion_bloques' pk=object.actividad.pk %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2.5 px-5 rounded-lg text-sm transition-colors">
+                Cancelar
+            </a>
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition-colors shadow">
+                Guardar Cambios
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

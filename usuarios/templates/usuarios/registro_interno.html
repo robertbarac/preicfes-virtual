@@ -90,10 +90,14 @@
                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                 </path>
                             </svg>
-                            Plan de Suscripción (PreICFES)
+                            Programa Académico y Suscripción
                         </h3>
-                        <p class="text-sm text-indigo-600 mb-4">Define el periodo de acceso a la plataforma para este
-                            estudiante.</p>
+                        <p class="text-sm text-indigo-600 mb-4">Define el programa asignado al estudiante y su periodo de acceso a la plataforma.</p>
+                        
+                        <div class="mb-4">
+                            {{ form.programa|as_crispy_field }}
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {{ form.start_date|as_crispy_field }}
                             {{ form.end_date|as_crispy_field }}

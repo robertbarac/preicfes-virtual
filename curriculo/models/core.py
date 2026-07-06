@@ -19,8 +19,52 @@ class HistorialCambios(models.Model):
 
     def __str__(self):
         return f"{self.accion} por {self.usuario} en {self.fecha.strftime('%Y-%m-%d %H:%M')}"
+class Programa(models.Model):
+    """Representa una oferta educativa (PreICFES, Inglés, Bachillerato, …)."""
+    TIPOS = (
+        ('preicfes',     'PreICFES'),
+        ('ingles',       'Inglés'),
+        ('bachillerato', 'Bachillerato por Ciclos'),
+    )
+    nombre      = models.CharField(max_length=100)
+    tipo        = models.CharField(max_length=20, choices=TIPOS, default='preicfes')
+    slug        = models.SlugField(unique=True)
+    activo      = models.BooleanField(default=True)
+    descripcion = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = 'Programa'
+        verbose_name_plural = 'Programas'
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
+
+
+class Ciclo(models.Model):
+    """Período o nivel dentro de un Programa (ej: Ciclo 2025, Nivel A1)."""
+    programa = models.ForeignKey(Programa, on_delete=models.CASCADE,
+                                  related_name='ciclos')
+    nombre   = models.CharField(max_length=200)
+    orden    = models.PositiveIntegerField(default=0)
+    visible  = models.BooleanField(default=True,
+                  help_text="Si está visible para los estudiantes del programa")
+
+    class Meta:
+        ordering = ['orden']
+        verbose_name = 'Ciclo'
+        verbose_name_plural = 'Ciclos'
+
+    def __str__(self):
+        return f"{self.programa.nombre} — {self.nombre}"
+
+
 class Materia(models.Model):
-    nombre = models.CharField(max_length=200)
+    programas   = models.ManyToManyField(
+        Programa, related_name='materias', blank=True,
+        help_text="Programas en los que se usa esta materia"
+    )
+    nombre      = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True, null=True)
 
     def __str__(self):
@@ -38,18 +82,27 @@ class Tema(models.Model):
 
 class Modulo(models.Model):
     """
-    Representa una Semana o Módulo donde se agrupan contenidos, talleres y simulacros.
+    Semana o Módulo que agrupa contenidos, talleres, simulacros y ejercicios.
+    Pertenece a un Ciclo (que a su vez pertenece a un Programa).
     """
-    nombre = models.CharField(max_length=200, help_text="Ej: Semana 1, Módulo de Bienvenida")
-    orden = models.PositiveIntegerField(default=0)
+    ciclo       = models.ForeignKey(Ciclo, on_delete=models.CASCADE,
+                                     related_name='modulos',
+                                     null=True,   # temporal: RunPython rellenará esto
+                                     blank=True)
+    nombre      = models.CharField(max_length=200, help_text="Ej: Semana 1, Módulo de Bienvenida")
+    orden       = models.PositiveIntegerField(default=0)
     descripcion = models.TextField(blank=True, null=True)
-    activo = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['orden']
 
     def __str__(self):
         return self.nombre
+
+    @property
+    def programa(self):
+        """Acceso conveniente al programa a través del ciclo."""
+        return self.ciclo.programa if self.ciclo_id else None
 
 from django.utils import timezone
 from datetime import datetime, time
@@ -112,7 +165,15 @@ def crear_registros_asistencia(sender, instance, created, **kwargs):
     """
     if created:
         # Extraer a todos los usuarios con rol de estudiante o virtual
-        alumnos = User.objects.filter(role__in=['student', 'virtual_student'], is_active=True)
+        programa_id = instance.modulo.ciclo_id and instance.modulo.ciclo.programa_id
+        if programa_id:
+            alumnos = User.objects.filter(
+                programa_id=programa_id,
+                role__in=['student', 'virtual_student'],
+                is_active=True
+            ).distinct()
+        else:
+            alumnos = User.objects.filter(role__in=['student', 'virtual_student'], is_active=True)
         asistencias_a_crear = [
             Asistencia(clase=instance, alumno=alumno) 
             for alumno in alumnos
@@ -141,8 +202,7 @@ def invalidar_cache_por_clase_virtual(sender, instance, **kwargs):
 @receiver(post_save, sender=Modulo)
 def invalidar_cache_por_modulo(sender, instance, **kwargs):
     """
-    Borra el caché cuando se crea o edita un Módulo
-    (nombre, orden, activo pueden haber cambiado).
+    Borra el caché cuando se crea o edita un Módulo.
     """
     _invalidar_programa_cache()
 

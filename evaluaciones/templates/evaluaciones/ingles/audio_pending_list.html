@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Revisión de Audios de Inglés | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto my-10 px-4">
+    <div class="mb-8">
+        <h1 class="text-3xl font-black text-gray-900 tracking-tight">Revisión de Audios Pendientes</h1>
+        <p class="text-sm text-gray-500 mt-1">Escucha y califica las grabaciones de voz entregadas por los estudiantes de Inglés en sus Actividades Virtuales.</p>
+    </div>
+
+    {% if submissions %}
+    <div class="space-y-6">
+        {% for sub in submissions %}
+        <div class="bg-white shadow border border-gray-200 rounded-2xl p-6 transition hover:shadow-md">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 mb-4 gap-4">
+                <div>
+                    <h3 class="font-bold text-gray-800 text-lg">{{ sub.usuario.first_name }} {{ sub.usuario.last_name }}</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Usuario: <strong class="text-indigo-600">{{ sub.usuario.username }}</strong> | Fecha de envío: {{ sub.fecha|date:"d M Y, h:i A" }}</p>
+                </div>
+                <div>
+                    <span class="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full uppercase tracking-wider">
+                        {{ sub.bloque.actividad.titulo }} — Bloque {{ sub.bloque.orden }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Consigna del Bloque -->
+            <div class="mb-4 bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm">
+                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Consigna / Guía de Lectura del Bloque:</span>
+                <p class="text-gray-700 italic">"{{ sub.bloque.consigna }}"</p>
+                {% if sub.bloque.contenido %}
+                <p class="text-xs text-gray-500 mt-2 font-mono bg-white p-2.5 rounded border border-gray-200/60 leading-relaxed">{{ sub.bloque.contenido }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Controles de Audio y Formulario de Calificación -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                <!-- Audio Player -->
+                <div class="bg-indigo-50/20 border border-indigo-100 rounded-2xl p-5 flex flex-col items-center justify-center space-y-3">
+                    <span class="text-xs font-bold text-indigo-800 uppercase tracking-wide">Grabación del Alumno</span>
+                    <audio src="{{ sub.audio.url }}" controls class="w-full"></audio>
+                </div>
+
+                <!-- Formulario -->
+                <form method="POST" action="{% url 'evaluaciones:audio_submission_calificar' pk=sub.pk %}" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <div class="col-span-1">
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nota (0 - 100)</label>
+                            <input type="number" step="0.1" min="0" max="100" name="calificacion" required 
+                                   class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none text-center font-bold"
+                                   placeholder="100">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Retroalimentación / Comentario</label>
+                            <textarea name="comentario" rows="2" 
+                                      class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none text-sm"
+                                      placeholder="¡Muy buena pronunciación! Sigue así."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg text-xs transition shadow-sm">
+                            Enviar Calificación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-16 bg-white rounded-3xl border border-gray-250 shadow-sm">
+        <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <p class="font-bold text-gray-900 text-lg">¡Al día! No hay grabaciones de audio pendientes de revisión.</p>
+        <p class="text-gray-500 mt-1">Buen trabajo. Las tareas de audio subidas por tus estudiantes aparecerán aquí.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Mis Programas | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto my-12 px-4">
+    <div class="text-center mb-10 animate-fadeIn">
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">¡Hola, {{ request.user.first_name }}!</h1>
+        <p class="text-lg text-gray-500">Selecciona el programa al que deseas acceder el día de hoy.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for programa in programas_inscritos %}
+        <a href="{% url 'curriculo:programa_dashboard' slug=programa.slug %}" 
+           class="group bg-white rounded-2xl border border-gray-200 p-8 shadow-sm hover:shadow-xl hover:border-indigo-300 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between min-h-[220px]">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full 
+                        {% if programa.tipo == 'preicfes' %}bg-red-50 text-red-700{% elif programa.tipo == 'ingles' %}bg-indigo-50 text-indigo-700{% else %}bg-green-50 text-green-700{% endif %}">
+                        {{ programa.get_tipo_display }}
+                    </span>
+                    <svg class="w-5 h-5 text-gray-400 group-hover:text-indigo-600 transition-colors transform group-hover:translate-x-1 duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
+                    {{ programa.nombre }}
+                </h2>
+                {% if programa.descripcion %}
+                <p class="text-sm text-gray-500 line-clamp-3">
+                    {{ programa.descripcion }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <div class="mt-6 pt-4 border-t border-gray-100 flex items-center text-xs font-bold text-indigo-600 group-hover:text-indigo-800">
+                Entrar al programa
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+        </a>
+        {% empty %}
+        <div class="col-span-2 text-center py-12 bg-white rounded-2xl shadow border border-gray-200">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="font-medium text-gray-900 text-lg">No tienes programas asignados activos.</p>
+            <p class="text-gray-500 mt-1">Por favor, comunícate con la administración para matricularte.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -44,3 +44,25 @@ from django.core.cache import cache
 def invalidar_suscripcion_cache(sender, instance, **kwargs):
     cache_key = f'sub_valid_{instance.user_id}'
     cache.delete(cache_key)
+
+
+@receiver(post_save, sender=Subscription)
+def auto_inscribir_preicfes(sender, instance, created, **kwargs):
+    """
+    Asigna automáticamente el programa PreICFES al usuario cuando
+    se crea su primera suscripción (si no tiene programa).
+    """
+    if created:
+        user = instance.user
+        from curriculo.models import Programa
+        preicfes = Programa.objects.filter(slug='preicfes').first()
+        if preicfes:
+            if user.role in ['student', 'virtual_student'] and not user.programa_id:
+                user.programa = preicfes
+                user.save()
+            elif user.role == 'teacher':
+                # Agregar PreICFES a sus programas docente si no tiene ninguno
+                if not user.programas_docente.exists():
+                    user.programas_docente.add(preicfes)
+
+

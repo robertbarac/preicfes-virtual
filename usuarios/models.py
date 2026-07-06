@@ -12,6 +12,22 @@ class User(AbstractUser):
     # Admin role is handled by is_superuser and is_staff boolean properties inherited from AbstractUser
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
     
+    # Asignaciones de Programas (Directas)
+    programa = models.ForeignKey(
+        'curriculo.Programa',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='estudiantes_inscritos',
+        help_text="Programa asignado al estudiante (rol: student/virtual_student)"
+    )
+    programas_docente = models.ManyToManyField(
+        'curriculo.Programa',
+        blank=True,
+        related_name='profesores_inscritos',
+        help_text="Programas a los que el profesor tiene acceso (rol: teacher)"
+    )
+    
     email = models.EmailField('email address', unique=True)
     
     # Identificación para Pico y Cédula

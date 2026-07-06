@@ -1,1 +1,1 @@
-from .core import Materia, Tema, Modulo, ClaseVirtual, HistorialCambios
+from .core import Programa, Ciclo, Materia, Tema, Modulo, ClaseVirtual, HistorialCambios

@@ -4,3 +4,5 @@ from .simulacros import (
     Simulacro, VentanaSimulacro, SesionSimulacro, Componente, ComponenteSesion, PreguntaSimulacro,
     IntentoSimulacro, IntentoSesion, RespuestaSimulacro, calcular_puntaje_global
 )
+from .ingles import ActividadVirtual, BloqueActividad, IntentoActividad, IntentoAudioBloque
+

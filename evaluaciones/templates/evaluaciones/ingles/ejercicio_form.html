@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Editar{% else %}Crear{% endif %} Ejercicio de Inglés | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto my-10 bg-white shadow border border-gray-200 rounded-xl p-8">
+    <h1 class="text-3xl font-black text-gray-800 mb-6">
+        {% if object %}Editar{% else %}Nuevo{% endif %} Ejercicio de Inglés
+    </h1>
+    
+    <form method="POST" class="space-y-6">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Título</label>
+                {{ form.titulo }}
+                {% if form.titulo.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.titulo.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Tipo de Ejercicio</label>
+                {{ form.tipo }}
+                {% if form.tipo.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.tipo.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Consigna / Instrucciones</label>
+            {{ form.consigna }}
+            {% if form.consigna.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.consigna.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Contenido con huecos (Brackets)</label>
+            {{ form.paragraph }}
+            {% if form.paragraph.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.paragraph.errors.0 }}</p>
+            {% endif %}
+            <p class="text-xs text-gray-400 mt-2 leading-relaxed">
+                <strong>Instrucciones de formato:</strong><br>
+                - <strong>Drag & Drop:</strong> Pon la respuesta correcta entre corchetes, ej: "My [cat] is white."<br>
+                - <strong>Dropdown (Desplegable):</strong> Pon las opciones separadas por barra vertical, siendo la primera la correcta, ej: "He [has|have|had] a car."<br>
+                - <strong>Escribir:</strong> Pon la respuesta que deben tipear, ej: "She [runs] (run) every morning."<br>
+                - <strong>Audio:</strong> Para tareas de audio, este campo no se evalúa automáticamente, puedes dejarlo vacío o con el texto a leer.
+            </p>
+        </div>
+
+        <div id="distractors-container">
+            <label class="block text-sm font-bold text-gray-700 mb-2">Distractores Adicionales (Separados por comas)</label>
+            {{ form.distractors }}
+            {% if form.distractors.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.distractors.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Orden de aparición</label>
+            {{ form.orden }}
+            {% if form.orden.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.orden.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div class="flex justify-end gap-3 pt-6 border-t">
+            <a href="{% url 'curriculo:programa_list' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2.5 px-5 rounded-lg text-sm transition-colors">
+                Cancelar
+            </a>
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition-colors shadow">
+                Guardar Ejercicio
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const tipoSelect = document.getElementById('id_tipo');
+    const distractorsDiv = document.getElementById('distractors-container');
+
+    function toggleDistractors() {
+        if (tipoSelect.value === 'drag_drop') {
+            distractorsDiv.classList.remove('hidden');
+        } else {
+            distractorsDiv.classList.add('hidden');
+        }
+    }
+
+    tipoSelect.addEventListener('change', toggleDistractors);
+    toggleDistractors(); // Initial check
+</script>
+{% endblock %}

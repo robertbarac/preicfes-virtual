@@ -6,6 +6,7 @@ from .models.simulacros import (
     ComponenteSesion, PreguntaSimulacro, IntentoSimulacro, 
     IntentoSesion, RespuestaSimulacro
 )
+from .models.ingles import ActividadVirtual, BloqueActividad, IntentoActividad, IntentoAudioBloque
 
 # --- BANCO DE PREGUNTAS ---
 
@@ -127,3 +128,35 @@ class RespuestaSimulacroAdmin(admin.ModelAdmin):
     list_filter = ('es_correcta',)
     search_fields = ('intento_sesion__intento_simulacro__usuario__username',)
     readonly_fields = ('intento_sesion', 'pregunta', 'opcion_seleccionada', 'es_correcta')
+
+
+# --- EVALUACIONES DE INGLÉS (ACTIVIDAD VIRTUAL) ---
+
+class BloqueActividadInline(admin.TabularInline):
+    model = BloqueActividad
+    extra = 1
+    fields = ('tipo', 'consigna', 'contenido', 'distractores', 'orden')
+
+
+@admin.register(ActividadVirtual)
+class ActividadVirtualAdmin(admin.ModelAdmin):
+    list_display  = ('titulo', 'modulo', 'orden', 'fecha_creacion')
+    list_filter   = ('modulo__ciclo__programa', 'modulo')
+    search_fields = ('titulo', 'descripcion')
+    inlines       = [BloqueActividadInline]
+
+
+@admin.register(IntentoActividad)
+class IntentoActividadAdmin(admin.ModelAdmin):
+    list_display  = ('actividad', 'usuario', 'puntaje', 'fecha')
+    list_filter   = ('actividad', 'fecha')
+    search_fields = ('usuario__username', 'actividad__titulo')
+    readonly_fields = ('actividad', 'usuario', 'respuestas', 'retroalimentacion', 'puntaje', 'fecha')
+
+
+@admin.register(IntentoAudioBloque)
+class IntentoAudioBloqueAdmin(admin.ModelAdmin):
+    list_display  = ('bloque', 'usuario', 'revisado', 'calificacion', 'fecha')
+    list_filter   = ('revisado', 'fecha')
+    search_fields = ('usuario__username', 'bloque__actividad__titulo')
+

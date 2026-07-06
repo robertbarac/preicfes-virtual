@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Editar{% else %}Crear{% endif %} Ciclo | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto my-10 bg-white shadow border border-gray-200 rounded-xl p-8">
+    <h1 class="text-3xl font-black text-gray-800 mb-6">
+        {% if object %}Editar{% else %}Nuevo{% endif %} Ciclo
+    </h1>
+    
+    <form method="POST" class="space-y-6">
+        {% csrf_token %}
+        
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Nombre del Ciclo</label>
+            {{ form.nombre }}
+            {% if form.nombre.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.nombre.errors.0 }}</p>
+            {% endif %}
+        </div>
+        
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Orden de aparición</label>
+            {{ form.orden }}
+            {% if form.orden.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.orden.errors.0 }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="flex items-center gap-3">
+            {{ form.visible }}
+            <label class="text-sm font-bold text-gray-700">Ciclo visible para estudiantes</label>
+        </div>
+        
+        <div class="flex justify-end gap-3 pt-4 border-t">
+            <a href="{% url 'curriculo:programa_list' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2.5 px-5 rounded-lg text-sm transition-colors">
+                Cancelar
+            </a>
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition-colors shadow">
+                Guardar Ciclo
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

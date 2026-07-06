@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Gestionar Bloques | {{ actividad.titulo }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto my-10 px-4">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border border-gray-200 rounded-2xl p-6 mb-8 flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <a href="{% url 'curriculo:programa_dashboard' slug=actividad.modulo.ciclo.programa.slug %}" class="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 mb-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                Volver al Dashboard
+            </a>
+            <h1 class="text-2xl font-black text-gray-900 leading-tight">Gestionar Bloques de Ejercicios</h1>
+            <p class="text-sm text-gray-500 mt-0.5">Actividad: <strong class="text-gray-800">{{ actividad.titulo }}</strong></p>
+        </div>
+        
+        <a href="{% url 'evaluaciones:ejercicio_ingles_resolver' actividad.pk %}" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2.5 px-5 rounded-xl text-xs transition border border-indigo-100">
+            Vista Previa de Alumno
+        </a>
+    </div>
+
+    <!-- 2 Column Layout (Left: Blocks List, Right: Add Form) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left Column: Bloques List (2 cols on lg) -->
+        <div class="lg:col-span-2 space-y-6">
+            <h2 class="text-lg font-bold text-gray-900 border-b pb-2 mb-4">Bloques de la Actividad</h2>
+            
+            {% if bloques %}
+                <div class="space-y-4">
+                    {% for bloque in bloques %}
+                    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm relative hover:shadow-md transition">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold text-[10px] px-2 py-0.5 rounded uppercase tracking-wider">
+                                    {{ bloque.get_tipo_display }}
+                                </span>
+                                <span class="text-xs text-gray-400 font-medium ml-2">Orden: {{ bloque.orden }}</span>
+                            </div>
+                            
+                            <!-- Acciones del bloque -->
+                            <div class="flex gap-2">
+                                <a href="{% url 'evaluaciones:bloque_editar' bloque.pk %}" class="text-xs bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold py-1.5 px-3 rounded border border-gray-200 transition">
+                                    Editar
+                                </a>
+                                <form method="POST" action="{% url 'evaluaciones:bloque_eliminar' bloque.pk %}" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este bloque de ejercicios?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-xs bg-red-50 hover:bg-red-100 text-red-700 font-bold py-1.5 px-3 rounded border border-red-200 transition">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Consigna -->
+                        <div class="text-sm font-semibold text-gray-800 mb-2">
+                            {{ bloque.consigna }}
+                        </div>
+
+                        <!-- Contenido -->
+                        <div class="bg-gray-50 rounded-xl p-4 border border-gray-200/60 text-xs font-mono text-gray-600 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                            {{ bloque.contenido }}
+                        </div>
+
+                        <!-- Distractores (si existen) -->
+                        {% if bloque.distractores %}
+                        <p class="text-xs text-gray-400 mt-2">
+                            <strong>Opciones falsas (Distractores):</strong> {{ bloque.distractores }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-white rounded-3xl border border-dashed border-gray-300 py-16 text-center shadow-sm">
+                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    <p class="font-bold text-gray-900 text-lg">No hay bloques de ejercicios</p>
+                    <p class="text-gray-500 text-sm mt-1">Utiliza el formulario de la derecha para agregar tu primer bloque.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column: Add Form -->
+        <div class="lg:col-span-1">
+            <div class="bg-white shadow border border-gray-200 rounded-3xl p-6 sticky top-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Agregar Bloque</h3>
+                
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Tipo de Ejercicio</label>
+                        {{ form.tipo }}
+                        {% if form.tipo.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.tipo.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Instrucciones (Consigna)</label>
+                        {{ form.consigna }}
+                        {% if form.consigna.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.consigna.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Contenido / Texto</label>
+                        {{ form.contenido }}
+                        {% if form.contenido.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.contenido.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Distractores (Opcional)</label>
+                        {{ form.distractores }}
+                        {% if form.distractores.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.distractores.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Orden</label>
+                        {{ form.orden }}
+                        {% if form.orden.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.orden.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl text-xs transition shadow-md shadow-indigo-600/10 mt-6">
+                        Agregar Bloque a la Actividad
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

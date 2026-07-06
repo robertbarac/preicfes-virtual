@@ -43,11 +43,12 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ['role', TieneSuscripcionFilter, SuscripcionActivaFilter, 'is_staff', 'is_active']
     search_fields = ('username', 'first_name', 'last_name', 'numero_documento', 'telefono', 'email')
     fieldsets = UserAdmin.fieldsets + (
-        ('Información de PreVirtual', {'fields': ('role', 'tipo_documento', 'numero_documento', 'telefono', 'creador')}),
+        ('Información de PreVirtual', {'fields': ('role', 'tipo_documento', 'numero_documento', 'telefono', 'creador', 'programa', 'programas_docente')}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Información de PreVirtual', {'fields': ('role', 'tipo_documento', 'numero_documento', 'telefono')}),
     )
+    filter_horizontal = ('programas_docente',)
 
     def tiene_suscripcion(self, obj):
         return obj.subscriptions.exists()

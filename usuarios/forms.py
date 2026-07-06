@@ -11,7 +11,7 @@ class RegistroInternoForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['tipo_documento', 'numero_documento', 'first_name', 'last_name', 'email', 'telefono', 'username', 'role']
+        fields = ['tipo_documento', 'numero_documento', 'first_name', 'last_name', 'email', 'telefono', 'username', 'role', 'programa']
 
     def clean(self):
         cleaned_data = super().clean()

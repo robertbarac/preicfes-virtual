@@ -6,6 +6,12 @@ from .views.simulacros import (
 )
 from .views.banco import PreguntaCreateView, PreguntaListView, PreguntaUpdateView, PreguntaDetailView, BloqueContextoListView, BloqueContextoCreateView, BloqueContextoUpdateView, BloqueContextoDeleteView
 from .views.calificaciones import MisCalificacionesView, ReporteEstudiantePDFView, ReporteRendimientoView
+from .views.ingles import (
+    ActividadVirtualCreateView, ActividadVirtualUpdateView, ActividadVirtualDeleteView,
+    ActividadVirtualResolverView, BloqueActividadCheckView, ActividadVirtualSubmitView,
+    BloqueAudioUploadView, AudioSubmissionPendingListView, AudioSubmissionCalificarView,
+    ActividadVirtualGestionView, BloqueActividadUpdateView, BloqueActividadDeleteView
+)
 
 app_name = 'evaluaciones'
 
@@ -47,6 +53,26 @@ urlpatterns = [
     path('mis-calificaciones/', MisCalificacionesView.as_view(), name='mis_calificaciones'),
     path('reporte-pdf/<int:pk>/', ReporteEstudiantePDFView.as_view(), name='reporte_estudiante_pdf'),
     path('reporte-rendimiento/', ReporteRendimientoView.as_view(), name='reporte_rendimiento'),
+
+    # Actividades de Inglés (Estudiante)
+    path('ingles/actividades/<int:pk>/resolver/', ActividadVirtualResolverView.as_view(), name='ejercicio_ingles_resolver'),
+    path('ingles/bloques/<int:pk>/check/', BloqueActividadCheckView.as_view(), name='ejercicio_ingles_check'),
+    path('ingles/actividades/<int:pk>/submit/', ActividadVirtualSubmitView.as_view(), name='ejercicio_ingles_submit'),
+    path('ingles/bloques/<int:pk>/audio-upload/', BloqueAudioUploadView.as_view(), name='ejercicio_ingles_audio_upload'),
+
+    # Actividades de Inglés (Profesor / Gestión)
+    path('ingles/modulo/<int:modulo_id>/actividades/crear/', ActividadVirtualCreateView.as_view(), name='ejercicio_ingles_create'),
+    path('ingles/actividades/<int:pk>/editar/', ActividadVirtualUpdateView.as_view(), name='ejercicio_ingles_update'),
+    path('ingles/actividades/<int:pk>/eliminar/', ActividadVirtualDeleteView.as_view(), name='ejercicio_ingles_delete'),
+    
+    # Gestión de bloques de ejercicios
+    path('ingles/actividades/<int:pk>/bloques/', ActividadVirtualGestionView.as_view(), name='actividad_gestion_bloques'),
+    path('ingles/bloques/<int:pk>/editar/', BloqueActividadUpdateView.as_view(), name='bloque_editar'),
+    path('ingles/bloques/<int:pk>/eliminar/', BloqueActividadDeleteView.as_view(), name='bloque_eliminar'),
+
+    # Revisión de entregas de audio
+    path('ingles/revision/audios/', AudioSubmissionPendingListView.as_view(), name='audio_submission_pending_list'),
+    path('ingles/revision/audios/<int:pk>/calificar/', AudioSubmissionCalificarView.as_view(), name='audio_submission_calificar'),
 ]
 
 

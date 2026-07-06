@@ -77,3 +77,55 @@ class HistorialMixin:
         
         # If it's not a DeleteView, proceed normally
         return super().post(request, *args, **kwargs)
+
+
+from django.contrib.auth.mixins import UserPassesTestMixin
+
+class ProgramaVisibilidadMixin(UserPassesTestMixin):
+    """
+    Bloquea el acceso si el usuario no está inscrito en el programa
+    al que pertenece el recurso solicitado, o si el Ciclo no es visible.
+    Staff y superuser pasan siempre.
+    """
+    def test_func(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        if user.is_superuser:
+            return True
+            
+        try:
+            programa = self._resolver_programa()
+            if not programa:
+                return False
+                
+            # Verificar acceso según rol
+            if user.role == 'teacher':
+                tiene_acceso = user.programas_docente.filter(id=programa.id).exists()
+            else:
+                # Alumno: debe ser su programa asignado y tener suscripción activa
+                from suscripciones.models import Subscription
+                from django.utils import timezone
+                hoy = timezone.now().date()
+                suscripcion_activa = user.subscriptions.filter(active=True, end_date__gte=hoy).exists()
+                tiene_acceso = (suscripcion_activa and user.programa_id == programa.id)
+                
+            if not tiene_acceso:
+                return False
+                
+            ciclo = self._resolver_ciclo()
+            if ciclo and not ciclo.visible:
+                # Si el ciclo no está visible, solo profesores de ese programa pueden entrar
+                if user.role != 'teacher':
+                    return False
+                
+            return True
+        except Exception:
+            return False
+
+    def _resolver_programa(self):
+        raise NotImplementedError("Las vistas que usen ProgramaVisibilidadMixin deben implementar _resolver_programa")
+
+    def _resolver_ciclo(self):
+        return None
+
