@@ -58,7 +58,7 @@ class Simulacro(models.Model):
     orden = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ["orden"]
+        ordering = ["orden", "id"]
 
     def __str__(self):
         return self.titulo
@@ -114,7 +114,7 @@ class SesionSimulacro(models.Model):
     orden     = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ["orden"]
+        ordering = ["orden", "id"]
 
     def __str__(self):
         return f"{self.simulacro.titulo} — {self.nombre}"
@@ -133,7 +133,7 @@ class ComponenteSesion(models.Model):
     orden      = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ["orden"]
+        ordering = ["orden", "id"]
 
     def __str__(self):
         return f"{self.sesion} — {self.componente.nombre}"
@@ -146,7 +146,7 @@ class PreguntaSimulacro(models.Model):
     orden      = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ["orden"]
+        ordering = ["orden", "id"]
 
     def __str__(self):
         return f"PregSim {self.id} — {self.componente}"

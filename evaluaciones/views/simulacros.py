@@ -91,7 +91,7 @@ class SimulacroListView(LoginRequiredMixin, SimulacroAccessMixin, ListView):
     paginate_by = 12
 
     def get_queryset(self):
-        qs = super().get_queryset().select_related('modulo', 'creador').order_by('orden')
+        qs = super().get_queryset().select_related('modulo', 'creador').order_by('orden', 'id')
         
         # Filtro de búsqueda
         q = self.request.GET.get('q', '')
@@ -189,7 +189,7 @@ class SimulacroResolverView(LoginRequiredMixin, SimulacroAccessMixin, DetailView
         simulacro = self.object
         
         # Lógica de sesiones: buscamos la primera sesión no finalizada
-        sesiones_ordenadas = simulacro.sesiones.all().order_by('orden')
+        sesiones_ordenadas = simulacro.sesiones.all().order_by('orden', 'id')
         sesion_actual = None
         intento_sesion_actual = None
         
@@ -215,10 +215,10 @@ class SimulacroResolverView(LoginRequiredMixin, SimulacroAccessMixin, DetailView
         
         # Estructurar las preguntas de la sesión actual
         preguntas_por_componente = []
-        for comp in sesion_actual.componentes.all().order_by('orden'):
+        for comp in sesion_actual.componentes.all().order_by('orden', 'id'):
             preguntas = comp.preguntas_componente.select_related(
                 'pregunta', 'pregunta__bloque_contexto'
-            ).prefetch_related('pregunta__opciones').order_by('orden')
+            ).prefetch_related('pregunta__opciones').order_by('orden', 'id')
             
             if preguntas.exists():
                 preguntas_por_componente.append({
@@ -411,7 +411,7 @@ class SimulacroResultadoView(LoginRequiredMixin, SimulacroAccessMixin, DetailVie
                 'respuestas__opcion_seleccionada',
                 'respuestas__pregunta__opciones',
             )
-            .order_by('sesion__orden')
+            .order_by('sesion__orden', 'id')
         )
 
         desglose_sesiones = []
