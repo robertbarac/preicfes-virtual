@@ -82,7 +82,7 @@
                         <a href="{% url 'evaluaciones:taller_create' %}?modulo={{ modulo.id }}" class="text-[11px] font-bold bg-green-50 hover:bg-green-100 text-green-700 py-1.5 px-3 rounded border border-green-100">
                             + Taller
                         </a>
-                        {% if programa.tipo == 'preicfes' %}
+                        {% if programa.tipo == 'preicfes' and request.user.is_superuser or request.user.is_staff and request.user.role != 'teacher' %}
                         <a href="{% url 'evaluaciones:simulacro_create' %}?modulo={{ modulo.id }}" class="text-[11px] font-bold bg-red-50 hover:bg-red-100 text-red-700 py-1.5 px-3 rounded border border-red-100">
                             + Simulacro
                         </a>

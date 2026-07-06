@@ -18,7 +18,8 @@ from curriculo.views.mixins import HistorialMixin
 
 class StaffRequiredMixin(UserPassesTestMixin):
     def test_func(self):
-        return self.request.user.is_staff
+        user = self.request.user
+        return user.is_authenticated and (user.is_superuser or (user.is_staff and user.role != 'teacher'))
 
 class SimulacroAccessMixin(UserPassesTestMixin):
     def test_func(self):

@@ -32,15 +32,18 @@ def mis_programas(request):
             'mis_programas': mis_progs,
             'soy_teacher_de': mis_progs,
             'soy_student_de': [],
+            'es_profesor_ingles': True,
         }
 
     # Si es profesor (role == 'teacher')
     if user.role == 'teacher':
         mis_progs = list(user.programas_docente.filter(activo=True))
+        es_profesor_ingles = user.programas_docente.filter(tipo='ingles', activo=True).exists()
         return {
             'mis_programas': mis_progs,
             'soy_teacher_de': mis_progs,
             'soy_student_de': [],
+            'es_profesor_ingles': es_profesor_ingles,
         }
         
     # Si es estudiante (role in ['student', 'virtual_student'])
@@ -56,11 +59,13 @@ def mis_programas(request):
                 'mis_programas': [user.programa],
                 'soy_teacher_de': [],
                 'soy_student_de': [user.programa],
+                'es_profesor_ingles': False,
             }
             
     return {
         'mis_programas': [],
         'soy_teacher_de': [],
         'soy_student_de': [],
+        'es_profesor_ingles': False,
     }
 

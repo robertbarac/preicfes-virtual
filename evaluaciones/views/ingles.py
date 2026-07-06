@@ -307,7 +307,12 @@ class AudioSubmissionPendingListView(LoginRequiredMixin, UserPassesTestMixin, Li
     context_object_name = 'submissions'
 
     def test_func(self):
-        return self.request.user.is_staff or self.request.user.is_superuser
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        if user.is_superuser:
+            return True
+        return user.role == 'teacher' and user.programas_docente.filter(tipo='ingles', activo=True).exists()
 
     def get_queryset(self):
         user = self.request.user
@@ -322,7 +327,12 @@ class AudioSubmissionPendingListView(LoginRequiredMixin, UserPassesTestMixin, Li
 
 class AudioSubmissionCalificarView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
-        return self.request.user.is_staff or self.request.user.is_superuser
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        if user.is_superuser:
+            return True
+        return user.role == 'teacher' and user.programas_docente.filter(tipo='ingles', activo=True).exists()
 
     def post(self, request, pk):
         sub = get_object_or_404(IntentoAudioBloque, pk=pk)

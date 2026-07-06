@@ -146,6 +146,7 @@
                     </svg>
                     Contextos de Lectura
                 </a>
+                {% if es_profesor_ingles %}
                 <a href="{% url 'evaluaciones:audio_submission_pending_list' %}"
                     class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
                     <svg class="text-teal-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,6 +154,7 @@
                     </svg>
                     Revisión de Audios
                 </a>
+                {% endif %}
                 <a href="{% url 'contenidos:post_list' %}"
                     class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
                     <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
