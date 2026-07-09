@@ -28,11 +28,12 @@ class CicloForm(forms.ModelForm):
 class ModuloForm(forms.ModelForm):
     class Meta:
         model = Modulo
-        fields = ['nombre', 'descripcion', 'orden']
+        fields = ['nombre', 'descripcion', 'orden', 'activo']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
             'descripcion': forms.Textarea(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none', 'rows': 3}),
             'orden': forms.NumberInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
+            'activo': forms.CheckboxInput(attrs={'class': 'h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500'}),
         }
 
 
@@ -115,7 +116,12 @@ class ProgramaDashboardView(LoginRequiredMixin, ProgramaVisibilidadMixin, Detail
 
         clases_qs = ClaseVirtual.objects.all()
 
-        modulos_qs = Modulo.objects.all().prefetch_related(
+        if es_teacher or user.is_staff or user.is_superuser:
+            modulos_qs = Modulo.objects.all()
+        else:
+            modulos_qs = Modulo.objects.filter(activo=True)
+
+        modulos_qs = modulos_qs.prefetch_related(
             'posts',
             Prefetch('talleres', queryset=talleres_qs),
             'simulacros',

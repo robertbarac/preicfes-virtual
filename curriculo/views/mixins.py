@@ -118,6 +118,12 @@ class ProgramaVisibilidadMixin(UserPassesTestMixin):
                 # Si el ciclo no está visible, solo profesores de ese programa pueden entrar
                 if user.role != 'teacher':
                     return False
+
+            modulo = self._resolver_modulo()
+            if modulo and not modulo.activo:
+                # Si el módulo no está activo, solo profesores de ese programa pueden entrar
+                if user.role != 'teacher':
+                    return False
                 
             return True
         except Exception:
@@ -127,5 +133,8 @@ class ProgramaVisibilidadMixin(UserPassesTestMixin):
         raise NotImplementedError("Las vistas que usen ProgramaVisibilidadMixin deben implementar _resolver_programa")
 
     def _resolver_ciclo(self):
+        return None
+
+    def _resolver_modulo(self):
         return None
 

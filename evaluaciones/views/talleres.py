@@ -2,7 +2,8 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, DetailView
 from ..models.talleres import Taller
 from ..forms import TallerForm
-from curriculo.views.mixins import HistorialMixin
+from curriculo.views.mixins import HistorialMixin, ProgramaVisibilidadMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 # ─── Helper: agrupar preguntas por su bloque de contexto ─────────────────────
@@ -55,10 +56,20 @@ class TallerUpdateView(HistorialMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('curriculo:programa_list')
 
-class TallerDetailView(DetailView):
+class TallerDetailView(LoginRequiredMixin, ProgramaVisibilidadMixin, DetailView):
     model = Taller
     template_name = 'evaluaciones/taller_detail.html'
     context_object_name = 'taller'
+
+    def _resolver_programa(self):
+        self.taller = self.get_object()
+        return self.taller.modulo.ciclo.programa if (self.taller.modulo and self.taller.modulo.ciclo) else None
+
+    def _resolver_ciclo(self):
+        return self.taller.modulo.ciclo if (self.taller.modulo and self.taller.modulo.ciclo) else None
+
+    def _resolver_modulo(self):
+        return self.taller.modulo
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -151,8 +162,20 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from ..models.talleres import IntentoTaller, RespuestaTaller
 from ..models.banco import Opcion
 
-class TallerResolverView(LoginRequiredMixin, TemplateView):
+class TallerResolverView(LoginRequiredMixin, ProgramaVisibilidadMixin, TemplateView):
     template_name = 'evaluaciones/taller_resolver.html'
+
+    def _resolver_programa(self):
+        self.taller = get_object_or_404(Taller, pk=self.kwargs['pk'])
+        return self.taller.modulo.ciclo.programa if (self.taller.modulo and self.taller.modulo.ciclo) else None
+
+    def _resolver_ciclo(self):
+        self.taller = get_object_or_404(Taller, pk=self.kwargs['pk'])
+        return self.taller.modulo.ciclo if (self.taller.modulo and self.taller.modulo.ciclo) else None
+
+    def _resolver_modulo(self):
+        self.taller = get_object_or_404(Taller, pk=self.kwargs['pk'])
+        return self.taller.modulo
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

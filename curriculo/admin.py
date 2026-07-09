@@ -32,8 +32,8 @@ class TemaAdmin(admin.ModelAdmin):
 
 @admin.register(Modulo)
 class ModuloAdmin(admin.ModelAdmin):
-    list_display  = ('nombre', 'ciclo', 'orden')
-    list_filter   = ('ciclo__programa', 'ciclo')
+    list_display  = ('nombre', 'ciclo', 'orden', 'activo')
+    list_filter   = ('ciclo__programa', 'ciclo', 'activo')
     ordering      = ('ciclo__programa', 'ciclo__orden', 'orden')
 
 

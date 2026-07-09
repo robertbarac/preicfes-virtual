@@ -147,6 +147,9 @@ class ActividadVirtualResolverView(LoginRequiredMixin, ProgramaVisibilidadMixin,
     def _resolver_ciclo(self):
         return self.actividad.modulo.ciclo
 
+    def _resolver_modulo(self):
+        return self.actividad.modulo
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Último intento del estudiante

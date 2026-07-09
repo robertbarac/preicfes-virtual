@@ -24,10 +24,48 @@ class StaffRequiredMixin(UserPassesTestMixin):
 class SimulacroAccessMixin(UserPassesTestMixin):
     def test_func(self):
         user = self.request.user
-        return user.is_authenticated and (user.is_superuser or user.role == 'virtual_student' or user.is_staff)
+        if not user.is_authenticated:
+            return False
+        if user.is_superuser:
+            return True
+            
+        simulacro = self.get_object()
+        
+        # Profesores y Staff
+        if user.is_staff or user.role == 'teacher':
+            if user.role == 'teacher' and simulacro.modulo and simulacro.modulo.ciclo:
+                programa = simulacro.modulo.ciclo.programa
+                return user.programas_docente.filter(id=programa.id).exists()
+            return True
+            
+        # Estudiantes
+        if user.role != 'virtual_student':
+            return False
+            
+        from suscripciones.models import Subscription
+        from django.utils import timezone
+        hoy = timezone.now().date()
+        suscripcion_activa = user.subscriptions.filter(active=True, end_date__gte=hoy).exists()
+        if not suscripcion_activa:
+            return False
+            
+        if not simulacro.modulo or not simulacro.modulo.ciclo:
+            return False
+            
+        programa = simulacro.modulo.ciclo.programa
+        if user.programa_id != programa.id:
+            return False
+            
+        if not simulacro.modulo.ciclo.visible:
+            return False
+            
+        if not simulacro.modulo.activo:
+            return False
+            
+        return True
 
     def handle_no_permission(self):
-        messages.error(self.request, "No tienes permiso para acceder a esta área. Los simulacros son exclusivos para estudiantes virtuales.")
+        messages.error(self.request, "No tienes permiso para acceder a esta área. Los simulacros son exclusivos para estudiantes virtuales en módulos activos.")
         return redirect('curriculo:programa_list')
 
 

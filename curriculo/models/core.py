@@ -92,6 +92,7 @@ class Modulo(models.Model):
     nombre      = models.CharField(max_length=200, help_text="Ej: Semana 1, Módulo de Bienvenida")
     orden       = models.PositiveIntegerField(default=0)
     descripcion = models.TextField(blank=True, null=True)
+    activo      = models.BooleanField(default=True, help_text="Si está desmarcado, los estudiantes no podrán ver este módulo.")
 
     class Meta:
         ordering = ['orden']
