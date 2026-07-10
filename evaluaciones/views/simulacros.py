@@ -30,9 +30,14 @@ class SimulacroAccessMixin(UserPassesTestMixin):
             return True
             
         if hasattr(self, 'get_object'):
-            simulacro = self.get_object()
+            obj = self.get_object()
         else:
-            simulacro = get_object_or_404(Simulacro, pk=self.kwargs.get('pk'))
+            obj = get_object_or_404(Simulacro, pk=self.kwargs.get('pk'))
+            
+        if isinstance(obj, IntentoSimulacro):
+            simulacro = obj.simulacro
+        else:
+            simulacro = obj
         
         # Profesores y Staff
         if user.is_staff or user.role == 'teacher':
