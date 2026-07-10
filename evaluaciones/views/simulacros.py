@@ -29,7 +29,10 @@ class SimulacroAccessMixin(UserPassesTestMixin):
         if user.is_superuser:
             return True
             
-        simulacro = self.get_object()
+        if hasattr(self, 'get_object'):
+            simulacro = self.get_object()
+        else:
+            simulacro = get_object_or_404(Simulacro, pk=self.kwargs.get('pk'))
         
         # Profesores y Staff
         if user.is_staff or user.role == 'teacher':
