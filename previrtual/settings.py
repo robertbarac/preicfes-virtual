@@ -184,3 +184,7 @@ else:
             }
         }
     }
+
+# Incrementar el límite máximo de campos en solicitudes POST (para borrados masivos de miles de registros)
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
+

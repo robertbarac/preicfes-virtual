@@ -15,10 +15,11 @@ class TieneSuscripcionFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
+        user_ids = Subscription.objects.values_list('user_id', flat=True)
         if self.value() == 'si':
-            return queryset.filter(subscriptions__isnull=False).distinct()
+            return queryset.filter(id__in=user_ids)
         if self.value() == 'no':
-            return queryset.filter(subscriptions__isnull=True).distinct()
+            return queryset.exclude(id__in=user_ids)
 
 class SuscripcionActivaFilter(admin.SimpleListFilter):
     title = 'Suscripción Activa'
@@ -32,10 +33,11 @@ class SuscripcionActivaFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         hoy = timezone.now().date()
+        active_user_ids = Subscription.objects.filter(active=True, end_date__gte=hoy).values_list('user_id', flat=True)
         if self.value() == 'si':
-            return queryset.filter(subscriptions__active=True, subscriptions__end_date__gte=hoy).distinct()
+            return queryset.filter(id__in=active_user_ids)
         if self.value() == 'no':
-            return queryset.exclude(subscriptions__active=True, subscriptions__end_date__gte=hoy).distinct()
+            return queryset.exclude(id__in=active_user_ids)
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     model = User
