@@ -50,6 +50,10 @@ class CustomUserAdmin(UserAdmin):
     )
     filter_horizontal = ('programas_docente',)
 
+    def delete_queryset(self, request, queryset):
+        pks = list(queryset.values_list('pk', flat=True))
+        User.objects.filter(pk__in=pks).delete()
+
     def tiene_suscripcion(self, obj):
         return obj.subscriptions.exists()
     tiene_suscripcion.boolean = True
