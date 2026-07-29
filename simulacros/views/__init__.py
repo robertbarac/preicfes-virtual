@@ -1,0 +1,5 @@
+from .calificar import GrupoCalificarSimulacroView, RevisarSimulacroView
+from .calificar_diagnostico import GrupoCalificarDiagnosticoView, RevisarDiagnosticoView
+from .resultados import ResultadosSimulacroListView
+from .resultados_diagnostico import ResultadosDiagnosticoListView
+from .pdf import DescargarResultadosPDFView, DescargarInformeDirectivoPDFView, DescargarResultadosRealesPDFView, DescargarResultadoIndividualPDFView

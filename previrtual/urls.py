@@ -30,4 +30,9 @@ urlpatterns = [
     path('contenidos/', include('contenidos.urls', namespace='contenidos')),
     path('usuarios/', include('usuarios.urls', namespace='usuarios')),
     path('suscripciones/', include('suscripciones.urls', namespace='suscripciones')),
+    path('cartera/', include('cartera.urls')),
+    path('ventas/', include('ventas.urls')),
+    path('academico/', include('academico.urls')),
+    path('ubicaciones/', include('ubicaciones.urls')),
+    path('simulacros-fisicos/', include('simulacros.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

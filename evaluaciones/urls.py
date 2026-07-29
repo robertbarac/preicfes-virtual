@@ -6,6 +6,7 @@ from .views.simulacros import (
 )
 from .views.banco import PreguntaCreateView, PreguntaListView, PreguntaUpdateView, PreguntaDetailView, BloqueContextoListView, BloqueContextoCreateView, BloqueContextoUpdateView, BloqueContextoDeleteView
 from .views.calificaciones import MisCalificacionesView, ReporteEstudiantePDFView, ReporteRendimientoView
+from .views.notas_consolidadas import MisNotasView
 from .views.ingles import (
     ActividadVirtualCreateView, ActividadVirtualUpdateView, ActividadVirtualDeleteView,
     ActividadVirtualResolverView, BloqueActividadCheckView, ActividadVirtualSubmitView,
@@ -48,8 +49,8 @@ urlpatterns = [
     path('simulacros/<int:pk>/resolver/', SimulacroResolverView.as_view(), name='simulacro_resolver'),
     path('simulacros/<int:pk>/enviar/', SimulacroEnviarView.as_view(), name='simulacro_enviar'),
     path('simulacros/intentos/<int:pk>/', SimulacroResultadoView.as_view(), name='simulacro_resultado'),
-    
     # Calificaciones / Reportes
+    path('mis-notas/', MisNotasView.as_view(), name='mis_notas'),
     path('mis-calificaciones/', MisCalificacionesView.as_view(), name='mis_calificaciones'),
     path('reporte-pdf/<int:pk>/', ReporteEstudiantePDFView.as_view(), name='reporte_estudiante_pdf'),
     path('reporte-rendimiento/', ReporteRendimientoView.as_view(), name='reporte_rendimiento'),

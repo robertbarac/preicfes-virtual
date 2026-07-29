@@ -52,7 +52,7 @@ class ProgramaHubView(LoginRequiredMixin, ListView):
         user = self.request.user
         if user.is_superuser:
             return Programa.objects.filter(activo=True)
-        if user.role == 'teacher':
+        if user.es_docente:
             return user.programas_docente.filter(activo=True)
             
         # Para estudiantes, verificar suscripción activa
@@ -71,7 +71,7 @@ class ProgramaHubView(LoginRequiredMixin, ListView):
         qs = self.get_queryset()
         if qs.count() == 1:
             return redirect('curriculo:programa_dashboard', slug=qs.first().slug)
-        elif qs.count() == 0 and not request.user.is_superuser:
+        elif qs.count() == 0 and not request.user.is_superuser and not request.user.es_docente and not request.user.es_personal_gestion:
             messages.info(request, "Aún no tienes programas inscritos activos.")
             return redirect('suscripciones:mi_suscripcion')
             
@@ -97,7 +97,7 @@ class ProgramaDashboardView(LoginRequiredMixin, ProgramaVisibilidadMixin, Detail
 
         # Calcular si el usuario actual es profesor o administrador de este programa específico
         es_teacher = user.is_superuser or (
-            user.role == 'teacher' and user.programas_docente.filter(id=programa.id).exists()
+            user.es_docente and user.programas_docente.filter(id=programa.id).exists()
         )
         context['es_teacher'] = es_teacher
 

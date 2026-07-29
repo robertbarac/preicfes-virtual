@@ -1,0 +1,20 @@
+🌞 Muy buenos días, bendiciones
+Hola, reciban un cordial saludo y bendiciones, señor(a) padre/madre de familia del(a)
+estudiante {{ nombres }} {{ primer_apellido }} {{ segundo_apellido }}.
+
+📌 Desde el departamento de Cartera del Pre-ICFES Victor Valdez le recordamos de manera atenta y respetuosa que:
+
+📅 Tienes un pago pendiente de ${{ monto }} con fecha de vencimiento el {{ fecha_vencimiento }} (en {{ dias_restantes }} días).
+
+💳 Puede realizar su pago 💰 por los siguientes medios:
+🔹 Nequi: 310-452-6623
+🔹 Bancolombia: 504-776-16576
+🔹 Datáfono
+🔹 Efectivo
+
+🙏 Su cumplimiento oportuno es muy valioso y garantiza la continuidad y calidad en la formación académica de su hijo(a).
+
+Atentamente,
+✍ Departamento de Cartera
+
+✨ “La educación es el mejor compromiso que podemos cumplir.”

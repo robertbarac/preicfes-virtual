@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load cartera_tags %}
+{% load cartera_tags humanize %}
+
+{% block title %}Gráficas y estadísticas{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Reporte Financiero</h1>
+
+    <!-- Filtros Unificados -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <form method="get" id="filtros-form" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end">
+            
+            <!-- Columna 1: Año y Mes -->
+            <div>
+                <label for="año_cumplimiento" class="block text-sm font-medium text-gray-700">Año</label>
+                <select name="año_cumplimiento" id="año_cumplimiento" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    {% for anio in años_cumplimiento %}
+                        <option value="{{ anio }}" {% if anio == año_cumplimiento %}selected{% endif %}>{{ anio }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="mes_cumplimiento" class="block text-sm font-medium text-gray-700">Mes</label>
+                <select name="mes_cumplimiento" id="mes_cumplimiento" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    {% for num, nombre in meses %}
+                        <option value="{{ num }}" {% if num == mes_cumplimiento %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Columna 2: Filtros de Ubicación -->
+            {% if user.is_superuser %}
+            <div>
+                <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento</label>
+                <select name="departamento" id="departamento" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos</option>
+                    {% for depto in departamentos %}
+                        <option value="{{ depto.id }}" {% if depto.id == departamento_seleccionado %}selected{% endif %}>{{ depto.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            {% if user.is_superuser or is_coordinador_or_auxiliar %}
+            <div>
+                <label for="municipio" class="block text-sm font-medium text-gray-700">Municipio</label>
+                <select name="municipio" id="municipio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos</option>
+                    {% for mun in municipios %}
+                        <option value="{{ mun.id }}" {% if mun.id == municipio_seleccionado %}selected{% endif %}>{{ mun.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <!-- Columna 3: Tipo de Programa y Botón -->
+            <div>
+                <label for="tipo_programa" class="block text-sm font-medium text-gray-700">Tipo de Programa</label>
+                <select name="tipo_programa" id="tipo_programa" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos</option>
+                    {% for key, value in tipos_programa.items %}
+                        <option value="{{ key }}" {% if key == tipo_programa_seleccionado %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Botón de Aplicar -->
+            <div class="self-end">
+                <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Aplicar Filtros
+                </button>
+            </div>
+            
+            <!-- Campos ocultos para mantener el estado del año de la gráfica -->
+            <input type="hidden" name="año" value="{{ año_cumplimiento }}">
+        </form>
+    </div>
+
+    <!-- Gráfica anual -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-xl font-semibold mb-4">Ingresos {{ año_cumplimiento }}</h2>
+        <img src="{% url 'cartera:grafica' %}?año={{ año_cumplimiento }}&grafica=1{% if departamento_seleccionado %}&departamento={{ departamento_seleccionado }}{% endif %}{% if municipio_seleccionado %}&municipio={{ municipio_seleccionado }}{% endif %}{% if tipo_programa_seleccionado %}&tipo_programa={{ tipo_programa_seleccionado }}{% endif %}" 
+             alt="Gráfica de Ingresos" 
+             class="w-full h-auto border rounded">
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('filtros-form');
+            const departamentoSelect = document.getElementById('departamento');
+            const municipioSelect = document.getElementById('municipio');
+
+            // Enviar formulario si cambia cualquier filtro para mantener todo sincronizado
+            form.addEventListener('change', function(event) {
+                // Si el cambio fue en departamento, reseteamos el municipio
+                if (event.target.id === 'departamento' && municipioSelect) {
+                    municipioSelect.value = '';
+                }
+                form.submit();
+            });
+        });
+    </script>
+
+    <!-- Sección de Cumplimiento (actualiza las variables) -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-semibold mb-4">Cumplimiento de Meta - {{ nombre_mes }} {{ año_seleccionado }}</h2>
+        
+        <!-- Cambia todas las variables de "meta_mensual" a "meta_mensual", "ingresos_mes", etc. -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-sm font-medium text-gray-500">Meta Programada</h3>
+                <p class="text-2xl font-semibold">${{ meta_mensual|floatformat:0|intcomma }}</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-sm font-medium text-gray-500">Recaudado en el mes</h3>
+                <p class="text-2xl font-semibold">${{ ingresos_mes|floatformat:0|intcomma }}</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-sm font-medium text-gray-500">Cumplimiento</h3>
+                <p class="text-2xl font-semibold {% if porcentaje_cumplimiento >= 100 %}text-green-600{% elif porcentaje_cumplimiento >= 80 %}text-yellow-500{% else %}text-red-600{% endif %}">
+                    {{ porcentaje_cumplimiento|floatformat:1 }}%
+                </p>
+            </div>
+        </div>
+
+        <!-- Barra de progreso con <meter> -->
+        <div class="mb-4">
+            <div class="flex justify-between text-sm text-gray-600 mb-1">
+                <span>$0</span>
+                <span>Meta: ${{ meta_mensual|floatformat:0|intcomma }}</span>
+            </div>
+            <meter class="w-full h-6"
+                   style="--meter-color: {% if porcentaje_cumplimiento >= 100 %}#22c55e{% elif porcentaje_cumplimiento >= 80 %}#eab308{% else %}#ef4444{% endif %};"
+                   min="0" 
+                   max="{{ meta_mensual }}" 
+                   value="{{ ingresos_mes }}"
+                   low="{{ meter_low }}"
+                   high="{{ meter_high }}"
+                   optimum="{{ meta_mensual }}">
+            </meter>
+            <style>
+                meter {
+                    /* Resetea la apariencia por defecto del navegador */
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    appearance: none;
+                    
+                    border: 1px solid #e5e7eb; /* gray-200 */
+                    border-radius: 9999px; /* rounded-full */
+                    background-color: #e5e7eb; /* gray-200 */
+                }
+
+                /* Para Chrome, Safari, Edge */
+                meter::-webkit-meter-bar {
+                    background: none; /* El fondo lo da el elemento meter */
+                    border: none;
+                    border-radius: 9999px;
+                }
+                
+                meter::-webkit-meter-optimum-value {
+                    border-radius: 9999px;
+                    background-color: var(--meter-color);
+                }
+
+                /* Para Firefox */
+                meter::-moz-progress-bar {
+                    border-radius: 9999px;
+                    background-color: var(--meter-color);
+                }
+            </style>
+        </div>
+
+        <!-- Balance -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="text-sm font-medium text-blue-800">Pendiente por recaudar</h3>
+                <p class="text-xl font-semibold text-blue-900">
+                    ${{ meta_mensual|subtract:ingresos_mes|floatformat:0|intcomma }}
+                </p>
+            </div>
+            <div class="{% if superavit_deficit >= 0 %}bg-green-50{% else %}bg-red-50{% endif %} p-4 rounded-lg">
+                <h3 class="text-sm font-medium {% if superavit_deficit >= 0 %}text-green-800{% else %}text-red-800{% endif %}">
+                    {% if superavit_deficit >= 0 %}Superávit{% else %}Déficit{% endif %}
+                </h3>
+                <p class="text-xl font-semibold {% if superavit_deficit >= 0 %}text-green-900{% else %}text-red-900{% endif %}">
+                    ${{ superavit_deficit|absolute|floatformat:0|intcomma }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'base.html' %} 
+{% load static %} 
+
+{% block title %}Saldos de Alumnos{% endblock %} 
+
+{% block content %}
+<div class="mb-4 sm:flex sm:items-center sm:justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Saldos de Alumnos</h1>
+    <p class="mt-2 text-sm text-gray-700">Listado de todos los alumnos con sus respectivas deudas y saldos pendientes.</p>
+  </div>
+</div>
+
+<!-- Filtros -->
+<div class="bg-white p-4 rounded-lg shadow mb-6">
+  <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4" id="filter-form">
+    
+    <div>
+      <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento</label>
+      <select name="departamento" id="departamento" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+        <option value="">Todos</option>
+        {% for depto in departamentos %}
+        <option value="{{ depto.id }}" {% if current_departamento == depto.id|stringformat:'s' %}selected{% endif %}>{{ depto.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="municipio" class="block text-sm font-medium text-gray-700">Municipio</label>
+      <select name="municipio" id="municipio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+        <option value="">Todos</option>
+        {% for mun in municipios %}
+        <option value="{{ mun.id }}" {% if current_municipio == mun.id|stringformat:'s' %}selected{% endif %}>{{ mun.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="sede" class="block text-sm font-medium text-gray-700">Sede</label>
+      <select name="sede" id="sede" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+        <option value="">Todas</option>
+        {% for sede in sedes %}
+        <option value="{{ sede.id }}" {% if current_sede == sede.id|stringformat:'s' %}selected{% endif %}>{{ sede.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="grupo" class="block text-sm font-medium text-gray-700">Grupo</label>
+      <select name="grupo" id="grupo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+        <option value="">Todos</option>
+        {% for grupo in grupos %}
+        <option value="{{ grupo.id }}" {% if current_grupo == grupo.id|stringformat:'s' %}selected{% endif %}>{{ grupo.codigo }} - {{ grupo.salon.sede.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-span-1 md:col-span-4 flex justify-end space-x-2">
+      <a href="{% url 'cartera:saldos_list' %}" class="inline-flex justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+        Limpiar Filtros
+      </a>
+      <button type="submit" class="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+        Filtrar
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<!-- Tabla -->
+<div class="mt-8 flex flex-col">
+  <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+    <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+      <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+        <table class="min-w-full divide-y divide-gray-300">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Alumno</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Depto/Municipio</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Sede/Grupo</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Fecha Fin</th>
+              <th scope="col" class="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Valor Curso</th>
+              <th scope="col" class="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Saldo Pendiente</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Estado Deuda</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white">
+            {% for alumno in alumnos %}
+            <tr>
+              <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                {{ alumno.nombres }} {{ alumno.primer_apellido }} {{ alumno.segundo_apellido|default_if_none:"" }}
+                <div class="text-gray-500 text-xs">{{ alumno.identificacion }}</div>
+              </td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                {{ alumno.municipio.departamento.nombre }} <br>
+                <span class="text-xs text-gray-400">{{ alumno.municipio.nombre }}</span>
+              </td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                {{ alumno.grupo_actual.salon.sede.nombre }} <br>
+                <span class="text-xs font-medium text-gray-600">{{ alumno.grupo_actual.codigo }}</span>
+              </td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                {{ alumno.fecha_culminacion|date:"d/m/Y"|default:"-" }}
+              </td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-right text-gray-900 font-medium">
+                ${{ alumno.deuda.valor_total|floatformat:0 }}
+              </td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-right font-bold {% if alumno.deuda.saldo_pendiente > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                ${{ alumno.deuda.saldo_pendiente|floatformat:0 }}
+              </td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                {% if alumno.deuda.estado == 'pagada' %}
+                  <span class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">Pagada</span>
+                {% else %}
+                  <span class="inline-flex rounded-full bg-yellow-100 px-2 text-xs font-semibold leading-5 text-yellow-800">Pendiente</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="whitespace-nowrap px-3 py-4 text-sm text-center text-gray-500">
+                No se encontraron alumnos con los filtros seleccionados o sin deuda.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

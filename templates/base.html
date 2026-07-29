@@ -85,11 +85,263 @@
                 </button>
             </div>
 
+            <!-- SWITCHER DE PORTALES (Exclusivo para Superusuarios y Docentes / Teachers) -->
+            {% if user.is_superuser or user.es_docente %}
+            <div class="px-2 mb-4">
+                <div class="bg-slate-900/90 p-1 rounded-xl border border-slate-700/80 flex items-center gap-1 shadow-lg">
+                    <a href="{% url 'curriculo:programa_list' %}"
+                        class="flex-1 py-2 px-1 text-center text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 {% if 'academico' not in request.path and 'cartera' not in request.path and 'ventas' not in request.path and 'ubicaciones' not in request.path and 'simulacros' not in request.path %}bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-md ring-1 ring-teal-400/50{% else %}text-slate-400 hover:text-white hover:bg-slate-800/80{% endif %}">
+                        <span>🎓</span> Aula Virtual
+                    </a>
+                    <a href="{% if user.es_docente and not user.is_superuser %}{% url 'profesor_clases' user.id %}{% else %}{% url 'alumnos_list' %}{% endif %}"
+                        class="flex-1 py-2 px-1 text-center text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 {% if 'academico' in request.path or 'cartera' in request.path and 'ventas' in request.path or 'ubicaciones' in request.path or 'simulacros' in request.path %}bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md ring-1 ring-indigo-400/50{% else %}text-slate-400 hover:text-white hover:bg-slate-800/80{% endif %}">
+                        <span>💼</span> Cartera & Gestión
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Menú de Navegación -->
-            <nav class="mt-5 flex-1 px-2 space-y-2">
+            <nav class="mt-2 flex-1 px-2 space-y-2">
                 {% if user.is_authenticated %}
 
-                <!-- Inicio / Selector -->
+                {% if user.es_personal_gestion or user.is_observador or user.is_staff and not user.es_estudiante and not user.es_docente %}
+                <!-- PORTAL 2: GESTIÓN ACADÉMICA Y CARTERA -->
+
+                <!-- GESTIÓN ACADÉMICA — solo staff, observador y docentes -->
+                {% if user.is_staff or user.is_observador or user.es_docente %}
+                <div x-data="{ open: true }" class="space-y-1">
+                    <button @click="open = !open" type="button" class="w-full flex items-center justify-between px-3 pt-3 pb-1 text-[10px] font-extrabold tracking-wider text-indigo-400 uppercase hover:text-indigo-200 transition-colors">
+                        <span class="flex items-center gap-1.5">🏫 Gestión Académica</span>
+                        <svg :class="{'rotate-180': open}" class="w-3.5 h-3.5 transform transition-transform text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-transition class="space-y-1 pl-1">
+                        {% if user.is_superuser or user.is_staff and not user.es_docente or user.is_observador and not user.es_docente %}
+                        <a href="{% url 'alumnos_list' %}"
+                            class="{% if request.path == '/academico/alumnos/' %}bg-indigo-600/30 text-white font-bold border-l-4 border-indigo-400{% else %}text-gray-300 hover:bg-white/10 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-indigo-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                            Alumnos
+                        </a>
+                        {% endif %}
+
+                        {% if user.is_superuser or user.is_staff and not user.es_docente and not user.is_observador %}
+                        <a href="{% url 'alumnos-retirados-list' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-rose-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6"/>
+                            </svg>
+                            Alumnos Retirados
+                        </a>
+                        <a href="{% url 'salon_list' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-indigo-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            Salones
+                        </a>
+                        <a href="{% url 'grupo_list' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-indigo-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            Grupos
+                        </a>
+                        <a href="{% url 'clase_list' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-indigo-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Clases
+                        </a>
+                        <a href="{% url 'profesor_list' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-indigo-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            Profesores
+                        </a>
+                        <a href="{% url 'cronograma' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-indigo-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Cronograma
+                        </a>
+                        <a href="{% url 'simulacros:resultados_simulacros' %}"
+                            class="text-blue-400 font-bold hover:bg-white/10 hover:text-blue-300 group flex items-center px-3 py-2 text-sm rounded-md transition-colors">
+                            <svg class="text-blue-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            Resultados Simulacros Presenciales
+                        </a>
+                        <a href="{% url 'cartera:becados_list' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-amber-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                            </svg>
+                            Becados
+                        </a>
+                        {% endif %}
+
+                        {% if user.es_docente %}
+                        <a href="{% url 'profesor_clases' user.id %}"
+                            class="text-cyan-300 font-semibold hover:bg-white/10 hover:text-cyan-200 group flex items-center px-3 py-2 text-sm rounded-md transition-colors">
+                            <svg class="text-cyan-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            Mis Clases (Docente)
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}{# /Gestión Académica — is_staff or is_observador or es_docente #}
+
+                <!-- CARTERA Y FACTURACIÓN (DESPLEGABLE) -->
+                {% if perms.cartera.view_cuota or user.is_observador %}
+                <div x-data="{ open: true }" class="space-y-1 pt-2">
+                    <button @click="open = !open" type="button" class="w-full flex items-center justify-between px-3 pt-3 pb-1 text-[10px] font-extrabold tracking-wider text-emerald-400 uppercase hover:text-emerald-200 transition-colors">
+                        <span class="flex items-center gap-1.5">💳 Cartera y Facturación</span>
+                        <svg :class="{'rotate-180': open}" class="w-3.5 h-3.5 transform transition-transform text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-transition class="space-y-1 pl-1">
+                        {% if not user.is_observador %}
+                        <a href="{% url 'cartera:mantenimiento' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-emerald-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Actualizar Estados
+                        </a>
+                        {% endif %}
+                        {% if not user.is_observador %}
+                        <a href="{% url 'cartera:cuotas_vencidas' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-rose-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Cuotas Vencidas
+                        </a>
+                        <a href="{% url 'cartera:proximos_pagos' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-emerald-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Próximos Pagos
+                        </a>
+                        <a href="{% url 'cartera:acuerdo_pago_list' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-indigo-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Acuerdos de Pago
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'cartera:grafica' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-emerald-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                            </svg>
+                            Gráficas de Ingresos
+                        </a>
+                        {% if not user.is_observador %}
+                        <a href="{% url 'cartera:grafica_egresos' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-rose-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
+                            </svg>
+                            Gráficas de Egresos
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'cartera:informe_diario' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-emerald-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Informe del día
+                        </a>
+                        {% if not user.is_observador %}
+                        <a href="{% url 'cartera:paz_salvo' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-teal-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Certificado Paz y Salvo
+                        </a>
+                        <a href="{% url 'cartera:alumnos_retirados_list' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-rose-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6"/>
+                            </svg>
+                            Alumnos Retirados
+                        </a>
+                        {% endif %}
+                        {% if request.user.is_superuser %}
+                        <a href="{% url 'cartera:saldos_list' %}"
+                            class="text-green-400 font-bold hover:bg-white/10 hover:text-green-300 group flex items-center px-3 py-2 text-sm rounded-md transition-colors">
+                            <svg class="text-green-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Saldos (Admin)
+                        </a>
+                        {% endif %}
+                        {% if request.user.is_superuser or request.user.username == 'vvgomez' or request.user.username == 'claudia2019' %}
+                        <a href="{% url 'cartera:limbo_list' %}"
+                            class="text-slate-400 font-bold hover:bg-white/10 hover:text-slate-300 group flex items-center px-3 py-2 text-sm rounded-md transition-colors">
+                            <svg class="text-slate-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            🔒 Limbo
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- COMERCIAL / VENTAS (solo personal administrativo) -->
+                {% if not user.is_observador and not user.es_docente and not user.es_estudiante %}
+                <div x-data="{ open: true }" class="space-y-1 pt-2">
+                    <button @click="open = !open" type="button" class="w-full flex items-center justify-between px-3 pt-3 pb-1 text-[10px] font-extrabold tracking-wider text-purple-400 uppercase hover:text-purple-200 transition-colors">
+                        <span class="flex items-center gap-1.5">💼 Comercial y Ventas</span>
+                        <svg :class="{'rotate-180': open}" class="w-3.5 h-3.5 transform transition-transform text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-transition class="space-y-1 pl-1">
+                        <a href="{% url 'ventas:preventa_list' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-purple-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                            </svg>
+                            Bitácora de Preventas
+                        </a>
+                        <a href="{% url 'ventas:preventa_agregar' %}"
+                            class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                            <svg class="text-purple-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Registrar Preventa
+                        </a>
+                    </div>
+                </div>
+                {% endif %}{# /not is_observador — Ventas #}
+
+                {% else %}
+                <!-- PORTAL 1: AULA VIRTUAL -->
+                {% if user.es_docente %}
+                <a href="{% url 'profesor_clases' user.id %}"
+                    class="text-cyan-300 font-semibold hover:bg-white/10 hover:text-cyan-200 group flex items-center px-2 py-3 text-sm rounded-md transition-colors">
+                    <svg class="text-cyan-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    Mis Clases (Docente)
+                </a>
+                {% endif %}
                 <a href="{% url 'curriculo:programa_list' %}"
                     class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
                     <svg class="text-teal-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,165 +365,112 @@
                 {% endfor %}
                 {% endif %}
 
-                <!-- Staff/Profesores/Admin -->
-                {% if user.is_staff %}
+                {% if user.is_staff or user.is_superuser or user.es_docente %}
                 <div class="pt-4 pb-2">
-                    <p class="px-3 text-xs font-bold tracking-wider text-gray-500 uppercase">Administración</p>
+                    <p class="px-3 text-xs font-bold tracking-wider text-teal-400 uppercase">Gestión de Contenidos & Herramientas</p>
                 </div>
-                <a href="{% url 'usuarios:vigilar_actividad' %}"
-                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                    <svg class="text-teal-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    Vigilar Actividad
-                </a>
                 <a href="{% url 'evaluaciones:pregunta_list' %}"
-                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                        </path>
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                     </svg>
                     Banco de Preguntas
                 </a>
                 <a href="{% url 'evaluaciones:bloque_contexto_list' %}"
-                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z">
-                        </path>
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                     </svg>
                     Contextos de Lectura
                 </a>
-                {% if es_profesor_ingles %}
-                <a href="{% url 'evaluaciones:audio_submission_pending_list' %}"
-                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                    <svg class="text-teal-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                    </svg>
-                    Revisión de Audios
-                </a>
-                {% endif %}
                 <a href="{% url 'contenidos:post_list' %}"
-                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                        </path>
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     Contenidos
                 </a>
                 <a href="{% url 'evaluaciones:simulacro_list' %}"
-                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
-                        </path>
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
-                    Simulacros
+                    Simulacros Virtuales
                 </a>
                 <a href="{% url 'evaluaciones:taller_list' %}"
-                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                        </path>
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                     </svg>
-                    Talleres
+                    Talleres Virtuales
                 </a>
-                {% if user.role != 'teacher' %}
-                <a href="{% url 'suscripciones:lista' %}"
-                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                    <svg class="text-gray-400 group-hover:text-gray-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                        </path>
+                <a href="{% url 'evaluaciones:audio_submission_pending_list' %}"
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-teal-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
                     </svg>
-                    Suscripciones
+                    Revisión de Audios
                 </a>
-                <a href="{% url 'usuarios:registro_interno' %}"
-                    class="text-indigo-300 hover:bg-white/10 hover:text-indigo-100 group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors mt-2 border border-indigo-900/50 bg-indigo-900/10">
-                    <svg class="text-indigo-400 group-hover:text-indigo-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
-                        </path>
+                <a href="{% url 'evaluaciones:reporte_rendimiento' %}"
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-indigo-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
-                    Registrar Usuario
+                    Reporte de Rendimiento
                 </a>
-                {% endif %}
-
                 {% if user.is_superuser %}
+                <a href="{% url 'usuarios:vigilar_actividad' %}"
+                    class="text-amber-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-amber-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    Vigilar Actividad
+                </a>
                 <a href="{% url 'usuarios:ventanas_list' %}"
-                    class="text-indigo-300 hover:bg-white/10 hover:text-indigo-100 group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors mt-2 border border-indigo-900/50 bg-indigo-900/10">
-                    <svg class="text-indigo-400 group-hover:text-indigo-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                        </path>
+                    class="text-purple-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-purple-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                     Ventanas de Registro
                 </a>
+                <a href="{% url 'usuarios:registro_interno' %}"
+                    class="text-emerald-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-emerald-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                    Crear Usuario Interno
+                </a>
                 {% endif %}
-                <a href="{% url 'evaluaciones:reporte_rendimiento' %}"
-                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                    <svg class="text-yellow-400 group-hover:text-yellow-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                        </path>
-                    </svg>
-                    Reporte Rendimiento
-                </a>
-                <a href="{% url 'admin:index' %}"
-                    class="text-red-300 hover:bg-white/10 hover:text-red-100 group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors mt-2 border border-red-900/50 bg-red-900/10">
-                    <svg class="text-red-400 group-hover:text-red-300 mr-3 flex-shrink-0 h-5 w-5" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                        </path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    Admin (Django)
-                </a>
                 {% endif %}
 
-                <!-- Estudiantes y Superusers -->
-                {% if user.role == 'student' or user.role == 'virtual_student' or user.is_superuser %}
+                <!-- Estudiantes -->
                 <div class="pt-4 pb-2">
                     <p class="px-3 text-xs font-bold tracking-wider text-gray-500 uppercase">Mi Progreso</p>
                 </div>
+                <a href="{% url 'mis_clases_presenciales' %}"
+                    class="text-indigo-300 font-bold hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm rounded-md transition-colors">
+                    <svg class="text-indigo-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Mis Clases Presenciales del Día
+                </a>
+                <a href="{% url 'evaluaciones:mis_notas' %}"
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-teal-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Boletín de Notas
+                </a>
                 <a href="{% url 'evaluaciones:mis_calificaciones' %}"
-                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors">
-                    <svg class="text-yellow-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    class="text-gray-300 hover:bg-white/10 hover:text-white group flex items-center px-2 py-2.5 text-sm font-medium rounded-md transition-colors">
+                    <svg class="text-yellow-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                     </svg>
-                    Calificaciones
+                    Calificaciones Virtuales
                 </a>
-                {% endif %}
 
-                {% if user.role == 'student' or user.role == 'virtual_student' %}
-                <a href="{% url 'suscripciones:mi_suscripcion' %}"
-                    class="flex items-center text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 px-3 py-2 rounded-lg transition-colors">
-                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z">
-                        </path>
-                    </svg>
-                    Mi suscripción
-                </a>
                 {% endif %}
-
                 {% endif %}
             </nav>
 
@@ -331,6 +530,140 @@
 
         <!-- MAIN CONTENT AREA -->
         <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 flex flex-col min-h-screen relative">
+            <!-- Barra superior Desktop con Botón Django Admin a la derecha -->
+            <header class="bg-slate-900 border-b border-slate-800 px-6 py-3 hidden lg:flex items-center justify-between shadow-md sticky top-0 z-30">
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-extrabold uppercase tracking-widest text-slate-400">
+                        {% if user.es_personal_gestion or 'academico' in request.path or 'cartera' in request.path or 'ventas' in request.path or 'ubicaciones' in request.path or 'simulacros' in request.path %}
+                        <span class="text-indigo-400">💼 Portal de Cartera & Gestión Académica</span>
+                        {% else %}
+                        <span class="text-teal-400">🎓 Portal Aula Virtual PreICFES</span>
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <!-- NOTIFICACIONES DE CARTERA (solo para usuarios con permiso de editar cuotas) -->
+                    {% if perms.cartera.change_cuota %}
+                    <div class="relative" x-data="{ open: false }">
+                        <button
+                          @click="open = !open"
+                          type="button"
+                          class="relative rounded-full bg-slate-800 p-1.5 text-slate-300 hover:text-white focus:outline-none border border-slate-700 hover:border-slate-500 transition"
+                          title="Notificaciones y Alertas de Cartera"
+                        >
+                          <span class="sr-only">Ver notificaciones</span>
+                          <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                          </svg>
+
+                          {% if es_superuser_cartera and alumnos_sin_cartera_count > 0 %}
+                            <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white shadow">
+                              {{ alumnos_sin_cartera_count }}
+                            </span>
+                          {% elif es_staff_cartera and mis_alumnos_pendientes_count > 0 %}
+                            <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-white shadow">
+                              {{ mis_alumnos_pendientes_count }}
+                            </span>
+                          {% endif %}
+                        </button>
+
+                        <!-- Desplegable Notificaciones -->
+                        <div
+                          x-show="open"
+                          @click.away="open = false"
+                          class="absolute right-0 mt-2 w-80 rounded-xl bg-slate-900 border border-slate-700 py-2 shadow-2xl z-50 text-slate-200"
+                          x-transition
+                          x-cloak
+                        >
+                          <div class="px-4 py-2 border-b border-slate-800 flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase tracking-wider text-amber-400">🔔 Notificaciones Cartera</span>
+                            {% if es_superuser_cartera %}
+                              <span class="text-[10px] bg-red-900/50 text-red-300 border border-red-700/50 px-2 py-0.5 rounded-full font-semibold">{{ alumnos_sin_cartera_count }} sin cartera</span>
+                            {% elif es_staff_cartera %}
+                              <span class="text-[10px] bg-amber-900/50 text-amber-300 border border-amber-700/50 px-2 py-0.5 rounded-full font-semibold">{{ mis_alumnos_pendientes_count }} pendientes</span>
+                            {% endif %}
+                          </div>
+
+                          <div class="max-h-64 overflow-y-auto divide-y divide-slate-800">
+                            {% if es_superuser_cartera %}
+                              {% for alm in alumnos_sin_cartera_muestra %}
+                                <div class="p-3 hover:bg-slate-800/60 text-xs transition">
+                                  <p class="font-bold text-white">{{ alm.get_full_name }}</p>
+                                  <p class="text-slate-400 text-[11px]">ID: {{ alm.identificacion }} | {{ alm.grupo_actual.codigo|default:"Sin Grupo" }}</p>
+                                  <div class="mt-1 flex items-center gap-2">
+                                    {% if not alm.deuda %}
+                                      <a href="{% url 'cartera:deuda_agregar' alm.id %}" class="text-red-400 font-bold hover:underline">➕ Crear Deuda</a>
+                                    {% else %}
+                                      <a href="{% url 'cartera:generar_cuotas' alm.id %}" class="text-amber-400 font-bold hover:underline">📋 Generar Cuotas</a>
+                                    {% endif %}
+                                  </div>
+                                </div>
+                              {% empty %}
+                                <div class="p-4 text-center text-xs text-slate-400">
+                                  ✅ Sin alumnos pendientes de cartera.
+                                </div>
+                              {% endfor %}
+                            {% elif es_staff_cartera %}
+                              {% for alm in mis_alumnos_pendientes_muestra %}
+                                <div class="p-3 hover:bg-amber-950/30 text-xs transition">
+                                  <p class="font-bold text-white">{{ alm.get_full_name }}</p>
+                                  <p class="text-amber-400 text-[11px]">⚠️ Alumno sin cartera creada.</p>
+                                  <div class="mt-1 flex items-center gap-2">
+                                    {% if not alm.deuda %}
+                                      <a href="{% url 'cartera:deuda_agregar' alm.id %}" class="text-red-400 font-bold hover:underline">➕ Crear Deuda</a>
+                                    {% else %}
+                                      <a href="{% url 'cartera:generar_cuotas' alm.id %}" class="text-amber-400 font-bold hover:underline">📋 Generar Cuotas</a>
+                                    {% endif %}
+                                  </div>
+                                </div>
+                              {% empty %}
+                                <div class="p-4 text-center text-xs text-slate-400">
+                                  ✅ Todos tus alumnos registrados tienen su cartera en regla.
+                                </div>
+                              {% endfor %}
+                            {% else %}
+                              <div class="p-4 text-center text-xs text-slate-400">
+                                Sin notificaciones pendientes.
+                              </div>
+                            {% endif %}
+                          </div>
+
+                          {% if es_superuser_cartera or es_staff_cartera %}
+                          <div class="border-t border-slate-800 p-2 text-center bg-slate-950/50">
+                            <a href="{% url 'cartera:alumnos_sin_cartera' %}" class="text-xs font-bold text-teal-400 hover:text-teal-300">
+                              Ver informe completo de Alertas Tempranas →
+                            </a>
+                          </div>
+                          {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}{# /perms.cartera.change_cuota #}
+
+                    {% if user.is_staff or user.is_superuser %}
+                    <a href="{% url 'admin:index' %}" 
+                       target="_blank"
+                       class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-gradient-to-r from-indigo-600 to-teal-600 hover:from-indigo-500 hover:to-teal-500 text-white text-xs font-extrabold rounded-lg shadow-sm transition-all transform hover:scale-105 border border-indigo-400/30"
+                       title="Abrir Panel Administrativo Principal de Django">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>Django Admin ⚙️</span>
+                    </a>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                    <div class="flex items-center gap-2 border-l border-slate-700 pl-4">
+                        <span class="text-xs font-bold text-slate-200">{{ user.get_full_name|default:user.username }}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-teal-300 border border-slate-700">
+                            {{ user.get_role_display }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </header>
+
             <!-- Barra superior móvil (solo aparece en md e inferior) -->
             <header class="bg-white shadow-sm lg:hidden border-b border-gray-200">
                 <div class="flex items-center justify-between px-4 py-3">

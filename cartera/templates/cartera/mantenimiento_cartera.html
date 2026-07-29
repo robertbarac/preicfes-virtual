@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Actualizar Estados de Cuotas{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <div class="bg-white shadow rounded-lg p-6">
+        <h1 class="text-2xl font-semibold mb-6">Actualización de Estados de Cuotas</h1>
+        
+        {% if cuotas_por_actualizar > 0 %}
+            <div class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <!-- Heroicon name: mini/exclamation-circle -->
+                        <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            Hay {{ cuotas_por_actualizar }} cuota{{ cuotas_por_actualizar|pluralize }} que necesita{{ cuotas_por_actualizar|pluralize:"n" }} actualización a estado "Vencida"
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" class="flex justify-center">
+                {% csrf_token %}
+                <button type="submit" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Actualizar Estados
+                </button>
+            </form>
+        {% else %}
+            <div class="bg-green-50 border-l-4 border-green-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <!-- Heroicon name: mini/check-circle -->
+                        <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-green-700">
+                            No hay cuotas que necesiten actualización en este momento.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if cuotas_actualizadas %}
+            <div class="mt-6 bg-green-50 border-l-4 border-green-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-green-700">
+                            Se actualizaron {{ cuotas_actualizadas }} cuota{{ cuotas_actualizadas|pluralize }} al estado "Vencida"
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-center">
+                <a href="{% url 'cartera:cuotas_vencidas' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Ver Cuotas Vencidas
+                    <svg class="ml-2 -mr-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

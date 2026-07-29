@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}Informe Diario{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Informe Diario - {{ fecha_actual }}</h1>
+    
+    <!-- Filtros -->
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <form method="get" class="flex flex-wrap items-center gap-4">
+            {% if request.user.is_superuser %}
+            <div>
+                <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento:</label>
+                <select name="departamento" id="departamento" class="mt-1 block w-full sm:w-48 rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos los departamentos</option>
+                    {% for departamento in departamentos %}
+                        <option value="{{ departamento.id }}" {% if departamento.id == departamento_seleccionado %}selected{% endif %}>{{ departamento.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            
+            {% if request.user.is_superuser or is_coordinador_or_auxiliar %}
+            <div>
+                <label for="municipio" class="block text-sm font-medium text-gray-700">Municipio:</label>
+                <select name="municipio" id="municipio" class="mt-1 block w-full sm:w-48 rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos los municipios</option>
+                    {% for municipio in municipios %}
+                        <option value="{{ municipio.id }}" {% if municipio.id == municipio_seleccionado %}selected{% endif %}>{{ municipio.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            {% if not request.user.is_observador %}
+            <!-- Filtro de Sede -->
+            <div>
+                <label for="sede" class="block text-sm font-medium text-gray-700">Sede:</label>
+                <select name="sede" id="sede" class="mt-1 block w-full sm:w-48 rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todas las sedes</option>
+                    {% for sede in sedes %}
+                        <option value="{{ sede.id }}" {% if sede.id == sede_seleccionada %}selected{% endif %}>{{ sede.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            
+            <div>
+                <label for="tipo_programa" class="block text-sm font-medium text-gray-700">Tipo de Programa:</label>
+                <select name="tipo_programa" id="tipo_programa" class="mt-1 block w-full sm:w-48 rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos los programas</option>
+                    {% for valor, nombre in tipos_programa.items %}
+                        <option value="{{ valor }}" {% if valor == tipo_programa_seleccionado %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="mes_culminacion_inicio" class="block text-sm font-medium text-gray-700">Culminación desde (mes):</label>
+                <select name="mes_culminacion_inicio" id="mes_culminacion_inicio" class="mt-1 block w-full sm:w-48 rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos los meses</option>
+                    {% for valor, nombre in meses_anio %}
+                        <option value="{{ valor }}" {% if valor == mes_culminacion_inicio_seleccionado %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="ano_culminacion_inicio" class="block text-sm font-medium text-gray-700">Culminación desde (año):</label>
+                <select name="ano_culminacion_inicio" id="ano_culminacion_inicio" class="mt-1 block w-full sm:w-48 rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos los años</option>
+                    {% for y in years_culminacion %}
+                        <option value="{{ y }}" {% if y == ano_culminacion_inicio_seleccionado %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="mes_culminacion_fin" class="block text-sm font-medium text-gray-700">Culminación hasta (mes):</label>
+                <select name="mes_culminacion_fin" id="mes_culminacion_fin" class="mt-1 block w-full sm:w-48 rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos los meses</option>
+                    {% for valor, nombre in meses_anio %}
+                        <option value="{{ valor }}" {% if valor == mes_culminacion_fin_seleccionado %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="ano_culminacion_fin" class="block text-sm font-medium text-gray-700">Culminación hasta (año):</label>
+                <select name="ano_culminacion_fin" id="ano_culminacion_fin" class="mt-1 block w-full sm:w-48 rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos los años</option>
+                    {% for y in years_culminacion %}
+                        <option value="{{ y }}" {% if y == ano_culminacion_fin_seleccionado %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha:</label>
+                <input type="date" name="fecha" id="fecha" value="{{ fecha_seleccionada }}" class="mt-1 block w-full sm:w-48 rounded-md border-gray-300 shadow-sm">
+            </div>
+            
+            <button type="submit" class="mt-4 sm:mt-6 inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Filtrar
+            </button>
+        </form>
+    </div>
+    
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Recaudación del Día</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+                <p class="font-medium">Efectivo: <span class="font-normal">${{ recaudo_efectivo|floatformat:0|intcomma }}</span></p>
+                <p class="font-medium">Transferencia: <span class="font-normal">${{ recaudo_transferencia|floatformat:0|intcomma }}</span></p>
+                <p class="font-medium">Datáfono: <span class="font-normal">${{ recaudo_datáfono|floatformat:0|intcomma }}</span></p>
+                <p class="font-medium">No especificado: <span class="font-normal">${{ recaudo_no_especificado|floatformat:0|intcomma }}</span></p>
+                <p class="font-medium">Total Recaudado: <span class="font-normal">${{ total_recaudado|floatformat:0|intcomma }}</span></p>
+            </div>
+            
+            {% if not request.user.is_observador %}
+            <div>
+                <form method="post" action="{% url 'cartera:generar_informe_pdf' %}" id="pdfForm" target="_blank">
+                    {% csrf_token %}
+                    <input type="hidden" name="recaudo_efectivo" value="{{ recaudo_efectivo }}">
+                    <input type="hidden" name="recaudo_transferencia" value="{{ recaudo_transferencia }}">
+                    <input type="hidden" name="recaudo_datáfono" value="{{ recaudo_datáfono }}">
+                    <input type="hidden" name="recaudo_no_especificado" value="{{ recaudo_no_especificado }}">
+                    <input type="hidden" name="total_recaudado" value="{{ total_recaudado }}">
+                    <input type="hidden" name="objetivo_mes" value="{{ objetivo_mes }}">
+                    <input type="hidden" name="porcentaje_cumplimiento" value="{{ porcentaje_cumplimiento|floatformat:2 }}">
+                    <input type="hidden" name="valor_cartera" value="{{ valor_cartera }}">
+                    <input type="hidden" name="cobrado" value="{{ cobrado }}">
+                    <input type="hidden" name="falta_cobrar" value="{{ falta_cobrar }}">
+                    <input type="hidden" name="recaudado_mes" value="{{ recaudado_mes }}">
+                    
+                    <div class="mb-4">
+                        <label for="efectivo_sedes" class="block font-medium">Efectivo en sedes:</label>
+                        <input type="number" id="efectivo_sedes" name="efectivo_sedes" class="w-full px-3 py-2 border rounded-md" required>
+                    </div>
+                    
+                    <a href="javascript:void(0);" onclick="document.getElementById('pdfForm').submit()"
+                        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 inline-block text-center">
+                        Generar PDF
+                    </a>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Objetivos del Mes</h2>
+        <p class="font-medium">Objetivo: <span class="font-normal">${{ objetivo_mes|floatformat:0|intcomma }}</span></p>
+        <p class="font-medium">Recaudado: <span class="font-normal">${{ recaudado_mes|floatformat:0|intcomma }}</span></p>
+        <p class="font-medium">% Cumplimiento: <span class="font-normal">{{ porcentaje_cumplimiento|floatformat:2 }}%</span></p>
+    </div>
+    
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">Reporte de Cartera</h2>
+        <p class="font-medium">Valor Cartera: <span class="font-normal">${{ valor_cartera|floatformat:0|intcomma }}</span></p>
+        <p class="font-medium">Cobrado: <span class="font-normal">${{ cobrado|floatformat:0|intcomma }}</span></p>
+        <p class="font-medium">Falta por Cobrar: <span class="font-normal">${{ falta_cobrar|floatformat:0|intcomma }}</span></p>
+    </div>
+</div>
+{% endblock %}

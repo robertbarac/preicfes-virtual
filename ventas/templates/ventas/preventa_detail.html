@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Preventa: {{ preventa.nombre_estudiante }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8" x-data="{ openModal: false, imgUrl: '' }">
+    <!-- Back Link & Actions -->
+    <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <a href="{% url 'ventas:preventa_list' %}" class="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800">
+            <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Volver a la Lista
+        </a>
+        
+        {% if request.user.is_superuser %}
+        <div class="flex gap-2.5">
+            <a href="{% url 'ventas:preventa_editar' preventa.pk %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="mr-2 h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Editar Datos
+            </a>
+            <a href="{% url 'ventas:preventa_eliminar' preventa.pk %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                <svg class="mr-2 h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Eliminar Registro
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Sidebar - Contact Info -->
+        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 p-6 self-start">
+            <h2 class="text-xl font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">Información del Contacto</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Estudiante</span>
+                    <span class="text-base font-bold text-gray-900">{{ preventa.nombre_estudiante }}</span>
+                </div>
+                <div>
+                    <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Padre / Madre / Acudiente</span>
+                    <span class="text-sm font-medium text-gray-800">{{ preventa.nombre_padre_madre }}</span>
+                </div>
+                <div>
+                    <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Teléfono de Contacto</span>
+                    <a href="tel:{{ preventa.telefono }}" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold text-sm mt-0.5">
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                        </svg>
+                        {{ preventa.telefono }}
+                    </a>
+                </div>
+                <div>
+                    <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Registrado por</span>
+                    <span class="text-sm text-gray-700 font-medium">{{ preventa.user.get_full_name|default:preventa.user.username }}</span>
+                </div>
+                <div>
+                    <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Fecha de Creación</span>
+                    <span class="text-xs text-gray-500">{{ preventa.fecha_creacion|date:"d/m/Y h:i A" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Column - Incidents Timeline -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-100">
+                    <h2 class="text-xl font-bold text-gray-900">Historial de Incidencias</h2>
+                    <a href="{% url 'ventas:incidencia_agregar' preventa.pk %}" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Registrar Incidencia
+                    </a>
+                </div>
+
+                {% if incidencias %}
+                <!-- Timeline Component -->
+                <div class="flow-root">
+                    <ul role="list" class="-mb-8">
+                        {% for incidencia in incidencias %}
+                        <li>
+                            <div class="relative pb-8">
+                                {% if not forloop.last %}
+                                <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                {% endif %}
+                                <div class="relative flex space-x-3">
+                                    <div>
+                                        <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white
+                                            {% if incidencia.etapa == 'contacto_inicial' %} bg-blue-100 text-blue-600
+                                            {% elif incidencia.etapa == 'presentacion' %} bg-purple-100 text-purple-600
+                                            {% elif incidencia.etapa == 'seguimiento' %} bg-yellow-100 text-yellow-600
+                                            {% elif incidencia.etapa == 'cierre_exitoso' %} bg-green-100 text-green-600
+                                            {% elif incidencia.etapa == 'descartado' %} bg-red-100 text-red-600
+                                            {% endif %}">
+                                            {% if incidencia.etapa == 'cierre_exitoso' %}
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            {% elif incidencia.etapa == 'descartado' %}
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            {% else %}
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="bg-gray-50 rounded-xl p-4 border border-gray-150">
+                                            <!-- Meta info -->
+                                            <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+                                                <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                    <span class="text-sm font-semibold text-gray-900">
+                                                        {{ incidencia.get_etapa_display }}
+                                                    </span>
+                                                    <span class="text-xs text-gray-400 font-medium">
+                                                        por {{ incidencia.user.get_full_name|default:incidencia.user.username }}
+                                                    </span>
+                                                    <span class="text-xs text-gray-500">
+                                                        &bull; {{ incidencia.fecha|date:"d/m/Y h:i A" }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <!-- Restricciones de edición: superuser o propia y de hoy -->
+                                                {% if request.user.is_superuser %}
+                                                <div class="flex gap-2">
+                                                    <a href="{% url 'ventas:incidencia_editar' incidencia.pk %}" class="text-xs text-blue-600 hover:text-blue-800 font-medium">Editar</a>
+                                                    <a href="{% url 'ventas:incidencia_eliminar' incidencia.pk %}" class="text-xs text-red-600 hover:text-red-800 font-medium">Eliminar</a>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Description text -->
+                                            <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ incidencia.texto }}</p>
+                                            
+                                            <!-- Evidence Images -->
+                                            {% if incidencia.imagenes.all %}
+                                            <div class="mt-3">
+                                                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Evidencias:</span>
+                                                <div class="flex flex-wrap gap-2">
+                                                    {% for img_obj in incidencia.imagenes.all %}
+                                                    <img src="{{ img_obj.imagen.url }}" 
+                                                         @click="imgUrl = '{{ img_obj.imagen.url }}'; openModal = true" 
+                                                         class="cursor-pointer h-20 w-28 object-cover rounded-lg border border-gray-200 shadow-sm hover:opacity-90 hover:scale-[1.02] transition-all" 
+                                                         alt="Evidencia">
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <div class="text-center py-12 text-gray-500">
+                    <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p class="text-base font-semibold">No hay incidencias registradas para esta preventa.</p>
+                    <p class="text-sm text-gray-400 mt-1">Registra los contactos y seguimientos que vayas realizando.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal Backdrop -->
+    <div x-show="openModal" 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75 transition-opacity" 
+         style="display: none;"
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @keydown.escape.window="openModal = false">
+         
+        <div class="relative max-w-4xl max-h-full flex flex-col justify-center" @click.away="openModal = false">
+            <button class="absolute -top-10 right-0 text-white bg-gray-800 hover:bg-gray-700 bg-opacity-50 hover:bg-opacity-70 rounded-full p-2 transition-colors focus:outline-none" 
+                    @click="openModal = false"
+                    title="Cerrar (Esc)">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <img :src="imgUrl" class="max-w-full max-h-[80vh] rounded-lg shadow-2xl border border-gray-800 object-contain">
+        </div>
+    </div>
+</div>
+{% endblock %}

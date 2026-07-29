@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% block title %}Alumnos Retirados{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Alumnos Retirados</h1>
+    <!-- Filtros -->
+    <div class="bg-white shadow-md rounded-lg p-4 mb-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            {% if user.is_superuser or is_coordinador_or_auxiliar %}
+            <div>
+                <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento</label>
+                <select name="departamento" id="departamento" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    {% for depto in departamentos %}
+                    <option value="{{ depto.id }}" {% if departamento_seleccionado == depto.id|stringformat:'s' %}selected{% endif %}>{{ depto.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            
+            {% if user.is_superuser or is_coordinador_or_auxiliar %}
+            <div>
+                <label for="municipio" class="block text-sm font-medium text-gray-700">Municipio</label>
+                <select name="municipio" id="municipio" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    {% for municipio in municipios %}
+                    <option value="{{ municipio.id }}" {% if municipio_seleccionado == municipio.id|stringformat:'i' %}selected{% endif %}>{{ municipio.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div>
+                <label for="mes" class="block text-sm font-medium text-gray-700">Mes</label>
+                <select name="mes" id="mes" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    <option value="1" {% if mes == '1' %}selected{% endif %}>Enero</option>
+                    <option value="2" {% if mes == '2' %}selected{% endif %}>Febrero</option>
+                    <option value="3" {% if mes == '3' %}selected{% endif %}>Marzo</option>
+                    <option value="4" {% if mes == '4' %}selected{% endif %}>Abril</option>
+                    <option value="5" {% if mes == '5' %}selected{% endif %}>Mayo</option>
+                    <option value="6" {% if mes == '6' %}selected{% endif %}>Junio</option>
+                    <option value="7" {% if mes == '7' %}selected{% endif %}>Julio</option>
+                    <option value="8" {% if mes == '8' %}selected{% endif %}>Agosto</option>
+                    <option value="9" {% if mes == '9' %}selected{% endif %}>Septiembre</option>
+                    <option value="10" {% if mes == '10' %}selected{% endif %}>Octubre</option>
+                    <option value="11" {% if mes == '11' %}selected{% endif %}>Noviembre</option>
+                    <option value="12" {% if mes == '12' %}selected{% endif %}>Diciembre</option>
+                </select>
+            </div>
+            <div>
+                <label for="anio" class="block text-sm font-medium text-gray-700">Año</label>
+                <select name="anio" id="anio" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    {% for year in anios %}
+                        <option value="{{ year }}" {% if anio == year|stringformat:'s' %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="tipo_programa" class="block text-sm font-medium text-gray-700">Tipo de Programa</label>
+                <select name="tipo_programa" id="tipo_programa" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    {% for key, value in tipos_programa.items %}
+                        <option value="{{ key }}" {% if tipo_programa_seleccionado == key %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button type="submit" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Filtrar</button>
+                <a href="{% url 'alumnos-retirados-list' %}" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Limpiar</a>
+            </div>
+        </form>
+    </div>
+    <!-- Estadísticas -->
+    <div class="mb-6">
+        <span class="font-semibold">Total retirados:</span> {{ total_retirados }}
+    </div>
+    <!-- Tabla -->
+    <div class="bg-white shadow rounded-lg overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-4 py-2">Nombre</th>
+                    <th class="px-4 py-2">Municipio</th>
+                    <th class="px-4 py-2">Fecha Retiro</th>
+                    <th class="px-4 py-2">Grupo</th>
+                    <th class="px-4 py-2">Programa</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for alumno in alumnos %}
+                <tr>
+                    <td class="px-4 py-2">{{ alumno.nombres }} {{ alumno.primer_apellido }} {{ alumno.segundo_apellido|default:"" }}</td>
+                    <td class="px-4 py-2">{{ alumno.grupo_actual.salon.sede.municipio.nombre }}</td>
+                    <td class="px-4 py-2">{{ alumno.fecha_retiro|date:'d/m/Y' }}</td>
+                    <td class="px-4 py-2">{{ alumno.grupo_actual.codigo }}</td>
+                    <td class="px-4 py-2">
+                        {% if alumno.tipo_programa == 'pre_privado' %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">PreICFES Privado</span>
+                        {% elif alumno.tipo_programa == 'pre_publico' %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">PreICFES Público</span>
+                        {% elif alumno.tipo_programa == 'politecnico' %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">Politécnico</span>
+                        {% elif alumno.tipo_programa == 'semillero' %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-100 text-pink-800">Semillero</span>
+                        {% else %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">No definido</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center py-4">No hay alumnos retirados con estos filtros.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <div class="mt-6 flex justify-center">
+        <ol class="flex justify-center gap-1 text-xs font-medium">
+            <!-- Botón "Anterior" -->
+            {% if page_obj.has_previous %}
+            <li>
+                <a href="?{{ params }}page={{ page_obj.previous_page_number }}" class="inline-flex h-8 w-8 items-center justify-center rounded border border-gray-300 bg-white text-gray-900 rtl:rotate-180">
+                    <span class="sr-only">Anterior</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </li>
+            {% else %}
+            <li>
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded border border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed">
+                    <span class="sr-only">Anterior</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </span>
+            </li>
+            {% endif %}
+            
+            <!-- Páginas -->
+            {% for i in paginator.page_range %}
+                {% if i == page_obj.number %}
+                <li>
+                    <span class="block h-8 w-8 rounded border-indigo-600 bg-indigo-600 text-center leading-8 text-white">
+                        {{ i }}
+                    </span>
+                </li>
+                {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                <li>
+                    <a href="?{{ params }}page={{ i }}" class="block h-8 w-8 rounded border border-gray-300 bg-white text-center leading-8 text-gray-900">
+                        {{ i }}
+                    </a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            <!-- Botón "Siguiente" -->
+            {% if page_obj.has_next %}
+            <li>
+                <a href="?{{ params }}page={{ page_obj.next_page_number }}" class="inline-flex h-8 w-8 items-center justify-center rounded border border-gray-300 bg-white text-gray-900 rtl:rotate-180">
+                    <span class="sr-only">Siguiente</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </li>
+            {% else %}
+            <li>
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded border border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed">
+                    <span class="sr-only">Siguiente</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </span>
+            </li>
+            {% endif %}
+        </ol>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

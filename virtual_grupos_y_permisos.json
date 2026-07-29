@@ -1,0 +1,43 @@
+[
+  {
+    "name": "Student",
+    "permissions": []
+  },
+  {
+    "name": "VirtualStudent",
+    "permissions": []
+  },
+  {
+    "name": "Teacher",
+    "permissions": [
+      [
+        "curriculo",
+        "view_materia"
+      ],
+      [
+        "curriculo",
+        "add_tema"
+      ],
+      [
+        "curriculo",
+        "change_tema"
+      ],
+      [
+        "curriculo",
+        "view_tema"
+      ],
+      [
+        "evaluaciones",
+        "add_pregunta"
+      ],
+      [
+        "evaluaciones",
+        "change_pregunta"
+      ],
+      [
+        "evaluaciones",
+        "view_pregunta"
+      ]
+    ]
+  }
+]

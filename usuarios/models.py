@@ -28,7 +28,7 @@ class User(AbstractUser):
         help_text="Programas a los que el profesor tiene acceso (rol: teacher)"
     )
     
-    email = models.EmailField('email address', unique=True)
+    email = models.EmailField('email address', unique=True, null=True, blank=True)
     
     # Identificación para Pico y Cédula
     TIPO_DOC_CHOICES = (
@@ -43,22 +43,62 @@ class User(AbstractUser):
 
     numero_documento = models.CharField(
         max_length=20, 
-        blank=False, 
-        null=False, 
+        blank=True, 
+        null=True, 
         unique=True, 
         validators=[RegexValidator(regex=r'^\d+$', message='El número de documento solo debe contener números, sin puntos ni espacios.')],
         help_text="Número de identificación legal"
     )
 
     telefono = models.CharField(
-        max_length=10,
-        blank=False,
-        null=False,
-        validators=[RegexValidator(regex=r'^\d{10}$', message='El teléfono debe tener exactamente 10 dígitos, sin comas, puntos ni espacios.')],
-        help_text="Número de teléfono celular (10 dígitos)"
+        max_length=20,
+        blank=True,
+        null=True,
+        help_text="Número de teléfono celular"
     )
     
     creador = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='usuarios_registrados', help_text="Usuario que registró a esta persona (ej. Admin/Secretaría)")
+
+    # Ubicaciones y Sedes (Fusión Cartera)
+    municipio = models.ForeignKey('ubicaciones.Municipio', on_delete=models.SET_NULL, related_name='usuarios', blank=True, null=True)
+    departamento = models.ForeignKey('ubicaciones.Departamento', on_delete=models.SET_NULL, related_name='usuarios', blank=True, null=True)
+    sede = models.ForeignKey('ubicaciones.Sede', on_delete=models.SET_NULL, related_name='usuarios', blank=True, null=True)
+
+    @property
+    def is_observador(self):
+        return self.groups.filter(name__in=['Observador', 'ObservadorColegio']).exists()
+
+    @property
+    def es_docente(self):
+        """True si el usuario es docente por role o por grupo Profesor/Teacher."""
+        if self.role == 'teacher':
+            return True
+        return self.groups.filter(name__in=['Profesor', 'Teacher']).exists()
+
+    @property
+    def es_personal_gestion(self):
+        """
+        Retorna True si el usuario pertenece al personal administrativo / de gestión académica y cartera
+        (SecretariaCartera, SecretariaAcademica, CoordinadorDepartamental, Auxiliar, ObservadorColegio)
+        y NO es docente ni superusuario.
+        """
+        if self.is_superuser or self.role == 'teacher':
+            return False
+        group_names = set(self.groups.values_list('name', flat=True))
+        if 'Profesor' in group_names or 'Teacher' in group_names:
+            return False
+        return bool(group_names.intersection({
+            'SecretariaCartera', 'SecretariaAcademica', 'CoordinadorDepartamental', 'Auxiliar', 'ObservadorColegio'
+        }) or self.is_staff)
+
+    @property
+    def es_estudiante(self):
+        """True si el usuario es estudiante por grupo Student/VirtualStudent o por falta de roles administrativos."""
+        if self.groups.filter(name__in=['Student', 'VirtualStudent']).exists():
+            return True
+        if self.is_superuser or self.is_staff or self.es_docente or self.is_observador:
+            return False
+        return True
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
@@ -130,3 +170,43 @@ from django.core.cache import cache
 @receiver([post_save, post_delete], sender=ConfiguracionPlataforma)
 def invalidar_tema_menu_cache(sender, instance, **kwargs):
     cache.delete('tema_menu_global')
+
+from django.db.models.signals import pre_save
+
+@receiver(pre_save, sender=User)
+def sanitizar_user_fields(sender, instance, **kwargs):
+    if instance.email == "":
+        instance.email = None
+    if instance.numero_documento == "":
+        instance.numero_documento = None
+
+
+import os
+from django.core.exceptions import ValidationError
+
+def firma_upload_path(instance, filename):
+    """Define la ruta donde se guardarán las firmas digitales"""
+    ext = filename.split('.')[-1]
+    filename = f"{instance.usuario.username}.{ext}"
+    return os.path.join('firmas', filename)
+
+
+class Firma(models.Model):
+    """Modelo para almacenar las firmas digitales de los usuarios del staff"""
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='firma')
+    imagen = models.ImageField(upload_to=firma_upload_path, help_text="Imagen de la firma digital (PNG transparente)")
+    
+    class Meta:
+        verbose_name = "Firma"
+        verbose_name_plural = "Firmas"
+    
+    def __str__(self):
+        return f"Firma de {self.usuario.get_full_name() or self.usuario.username}"
+    
+    def clean(self):
+        if not self.usuario.is_staff:
+            raise ValidationError({'usuario': 'Solo los usuarios del staff pueden tener firmas registradas.'})
+        if self.imagen:
+            ext = self.imagen.name.split('.')[-1].lower()
+            if ext not in ['png', 'jpg', 'jpeg']:
+                raise ValidationError({'imagen': 'El archivo debe ser una imagen PNG, JPG o JPEG.'})

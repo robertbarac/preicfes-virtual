@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% block title %}Calificar Simulacro - {{ grupo.codigo }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 relative">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden absolute inset-0 bg-white bg-opacity-80 z-50 flex flex-col items-center justify-center rounded-lg">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mb-4"></div>
+        <h2 class="text-xl font-bold text-gray-800">Extrayendo secuencias OMR...</h2>
+        <p class="text-gray-600">Esto puede tomar un momento. Por favor no cierres la ventana.</p>
+    </div>
+
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Calificar Simulacro: {{ grupo.codigo }}</h1>
+        <a href="{% url 'grupo_detalle' grupo.id %}" class="text-blue-600 hover:text-blue-800 font-semibold">&larr; Volver al grupo</a>
+    </div>
+
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="calificarForm" class="bg-white rounded-lg shadow-md p-6">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+            <!-- ── Columna izquierda: selección de alumnos ── -->
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">
+                    1. Seleccione los alumnos que presentaron el simulacro:
+                </label>
+                <div class="border rounded-lg max-h-60 overflow-y-auto p-4 bg-gray-50">
+                    <div class="mb-2 border-b pb-2">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="selectAll" class="form-checkbox h-5 w-5 text-blue-600" onchange="toggleAll(this)">
+                            <span class="ml-2 font-bold text-gray-800">Seleccionar Todos</span>
+                        </label>
+                    </div>
+                    {% for alumno in alumnos %}
+                    <div class="mb-2">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox"
+                                   class="form-checkbox h-4 w-4 text-blue-600 alumno-checkbox"
+                                   data-id="{{ alumno.id }}"
+                                   data-nombre="{{ alumno.primer_apellido }} {{ alumno.segundo_apellido }} {{ alumno.nombres }}"
+                                   onchange="syncOrdenList()">
+                            <span class="ml-2 text-gray-700">{{ alumno.primer_apellido }} {{ alumno.segundo_apellido }} {{ alumno.nombres }}</span>
+                        </label>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500 text-sm">No hay alumnos en este grupo.</p>
+                    {% endfor %}
+                </div>
+                <p class="text-sm text-gray-500 mt-2">Alumnos seleccionados: <span id="countAlumnos" class="font-bold">0</span></p>
+            </div>
+
+            <!-- ── Columna derecha: archivos + simulacro + fecha ── -->
+            <div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-bold mb-2" for="imagenes">Subir Imágenes de Respuestas (Pares):</label>
+                    <input type="file" id="imagenes" name="imagenes" multiple accept="image/*"
+                           class="w-full border p-2 rounded-lg" onchange="validateForm()">
+                    <p class="text-sm text-gray-500 mt-2">Suba 2 imágenes por alumno (S1 y S2), en el <strong>mismo orden</strong> que la lista de abajo.</p>
+                    <p class="text-sm mt-1">Imágenes seleccionadas: <span id="countImagenes" class="font-bold text-red-600">0</span></p>
+                    <p id="validationMsg" class="text-sm text-red-600 mt-1 font-semibold hidden">La cantidad de imágenes debe ser el doble de los alumnos seleccionados.</p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-bold mb-2" for="simulacro">Tipo de Simulacro:</label>
+                    <select name="simulacro" id="simulacro" class="w-full border p-2 rounded-lg bg-gray-100" required disabled>
+                        <option value="">Seleccione un simulacro...</option>
+                        {% for sim in simulacros %}
+                        <option value="{{ sim.id }}">{{ sim.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-bold mb-2" for="fecha_realizacion">Fecha de Realización:</label>
+                    <input type="date" id="fecha_realizacion" name="fecha_realizacion"
+                           class="w-full border p-2 rounded-lg bg-gray-100" required disabled>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Zona de reordenamiento según PDF ── -->
+        <div id="ordenSection" class="hidden mb-8">
+            <div class="border-t pt-6">
+                <h2 class="text-lg font-bold text-gray-800 mb-1">
+                    2. Ajusta el orden según el PDF escaneado
+                </h2>
+                <p class="text-sm text-gray-500 mb-4">
+                    Arrastra los alumnos para que el orden coincida con el orden en que aparecen en el PDF.
+                    El sistema asignará los pares de imágenes en este orden.
+                </p>
+
+                <ul id="sortableList"
+                    class="border rounded-lg divide-y bg-gray-50 select-none">
+                    <!-- Ítems inyectados por JS -->
+                </ul>
+
+                <!-- Inputs hidden que se envían al servidor -->
+                <div id="hiddenInputs"></div>
+            </div>
+        </div>
+
+        <div class="flex justify-end">
+            <button type="submit" id="btnSubmit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg opacity-50 cursor-not-allowed transition"
+                    disabled>
+                Extraer Secuencias
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- SortableJS (CDN, sin instalación) -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+<script>
+    // ── Inicializar SortableJS ────────────────────────────────────────────
+    const sortableList = document.getElementById('sortableList');
+    const sortable = Sortable.create(sortableList, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'bg-blue-50',
+        onEnd: syncHiddenInputs,
+    });
+
+    // ── toggleAll ─────────────────────────────────────────────────────────
+    function toggleAll(source) {
+        document.querySelectorAll('.alumno-checkbox').forEach(cb => cb.checked = source.checked);
+        syncOrdenList();
+    }
+
+    // ── syncOrdenList: reconstruye la lista sortable con los seleccionados ─
+    function syncOrdenList() {
+        const checked = [...document.querySelectorAll('.alumno-checkbox:checked')];
+
+        // Actualizar contador
+        document.getElementById('countAlumnos').innerText = checked.length;
+
+        const section = document.getElementById('ordenSection');
+        if (checked.length === 0) {
+            section.classList.add('hidden');
+            sortableList.innerHTML = '';
+            syncHiddenInputs();
+            validateForm();
+            return;
+        }
+
+        section.classList.remove('hidden');
+
+        // IDs ya presentes en la lista (para no perder el orden manual)
+        const existingIds = [...sortableList.querySelectorAll('li')].map(li => li.dataset.id);
+        const checkedIds  = checked.map(cb => cb.dataset.id);
+
+        // Eliminar los que ya no están seleccionados
+        sortableList.querySelectorAll('li').forEach(li => {
+            if (!checkedIds.includes(li.dataset.id)) li.remove();
+        });
+
+        // Añadir los nuevos al final
+        checked.forEach(cb => {
+            if (!existingIds.includes(cb.dataset.id)) {
+                const li = buildListItem(cb.dataset.id, cb.dataset.nombre);
+                sortableList.appendChild(li);
+            }
+        });
+
+        syncHiddenInputs();
+        validateForm();
+    }
+
+    // ── buildListItem: crea un <li> draggable ─────────────────────────────
+    function buildListItem(id, nombre) {
+        const li = document.createElement('li');
+        li.dataset.id = id;
+        li.className = 'flex items-center gap-3 px-4 py-3 bg-white hover:bg-blue-50 transition cursor-default';
+        li.innerHTML = `
+            <span class="drag-handle cursor-grab text-gray-400 text-xl leading-none" title="Arrastrar">⠿</span>
+            <span class="pos-badge inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex-shrink-0"></span>
+            <span class="text-gray-800 text-sm font-medium">${nombre}</span>
+        `;
+        return li;
+    }
+
+    // ── syncHiddenInputs: genera los inputs hidden en el orden actual ──────
+    function syncHiddenInputs() {
+        const container = document.getElementById('hiddenInputs');
+        container.innerHTML = '';
+
+        // Actualizar numeración visual
+        let pos = 1;
+        sortableList.querySelectorAll('li').forEach(li => {
+            li.querySelector('.pos-badge').textContent = pos++;
+
+            const input = document.createElement('input');
+            input.type  = 'hidden';
+            input.name  = 'alumnos_seleccionados';
+            input.value = li.dataset.id;
+            container.appendChild(input);
+        });
+    }
+
+    // ── validateForm ──────────────────────────────────────────────────────
+    function validateForm() {
+        const alumnosCount = sortableList.querySelectorAll('li').length;
+        const imagesCount  = document.getElementById('imagenes').files.length;
+
+        const countImgSpan = document.getElementById('countImagenes');
+        countImgSpan.innerText = imagesCount;
+
+        const validMatch = alumnosCount > 0 && imagesCount > 0 && imagesCount === alumnosCount * 2;
+
+        const simSelect  = document.getElementById('simulacro');
+        const dateInput  = document.getElementById('fecha_realizacion');
+        const submitBtn  = document.getElementById('btnSubmit');
+        const valMsg     = document.getElementById('validationMsg');
+
+        if (validMatch) {
+            countImgSpan.classList.replace('text-red-600', 'text-green-600');
+            valMsg.classList.add('hidden');
+            simSelect.disabled = false;
+            simSelect.classList.remove('bg-gray-100');
+            dateInput.disabled = false;
+            dateInput.classList.remove('bg-gray-100');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            countImgSpan.classList.replace('text-green-600', 'text-red-600');
+            if (imagesCount > 0 || alumnosCount > 0) {
+                valMsg.classList.remove('hidden');
+            } else {
+                valMsg.classList.add('hidden');
+            }
+            simSelect.disabled = true;
+            simSelect.classList.add('bg-gray-100');
+            dateInput.disabled = true;
+            dateInput.classList.add('bg-gray-100');
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    // ── Mostrar overlay al enviar ─────────────────────────────────────────
+    document.getElementById('calificarForm').addEventListener('submit', function () {
+        // Asegurarse de que los checkboxes del panel izquierdo NO dupliquen
+        // los valores (los hidden inputs ya los contienen en el orden correcto)
+        document.querySelectorAll('.alumno-checkbox').forEach(cb => cb.disabled = true);
+
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+        document.getElementById('btnSubmit').disabled = true;
+        document.getElementById('btnSubmit').innerText = 'Extrayendo...';
+    });
+</script>
+{% endblock %}

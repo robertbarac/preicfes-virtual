@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Acuerdos de Pago{% endblock title %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Listado de Acuerdos de Pago</h1>
+
+    <!-- Formulario de Filtros -->
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label for="{{ filter_form.estado.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ filter_form.estado.label }}</label>
+                {{ filter_form.estado }}
+            </div>
+            {% if not request.user.is_observador %}
+            <div>
+                <label for="{{ filter_form.departamento.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ filter_form.departamento.label }}</label>
+                {{ filter_form.departamento }}
+            </div>
+            <div>
+                <label for="{{ filter_form.municipio.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ filter_form.municipio.label }}</label>
+                {{ filter_form.municipio }}
+            </div>
+            {% endif %}
+            <div>
+                <label for="{{ filter_form.dias_restantes.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ filter_form.dias_restantes.label }}</label>
+                {{ filter_form.dias_restantes }}
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Filtrar</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full leading-normal">
+                <thead>
+                    <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Alumno</th>
+                        <th class="py-3 px-6 text-left">Nota</th>
+                        <th class="py-3 px-6 text-center">Fecha Prometida</th>
+                        <th class="py-3 px-6 text-center">Días Restantes</th>
+                        <th class="py-3 px-6 text-center">Estado</th>
+                        <th class="py-3 px-6 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 text-sm font-light">
+                    {% for acuerdo in acuerdos %}
+                        {% if acuerdo.estado == 'emitido' or acuerdo.estado == 'incumplido' %}
+                            <tr class="border-b border-gray-200 hover:bg-gray-100 
+                                {% if acuerdo.estado == 'incumplido' %} bg-red-100 text-red-800
+                                {% elif acuerdo.dias_faltantes <= 3 %} bg-yellow-100 text-yellow-800
+                                {% else %} bg-white {% endif %}">
+                                <td class="py-3 px-6 text-left whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <a href="{% url 'alumno_detail' acuerdo.cuota.deuda.alumno.pk %}" class="font-semibold hover:text-blue-600">
+                                            {{ acuerdo.cuota.deuda.alumno.nombres }} {{ acuerdo.cuota.deuda.alumno.apellidos }}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-6 text-left">
+                                    {{ acuerdo.nota }}
+                                </td>
+                                <td class="py-3 px-6 text-center">
+                                    {{ acuerdo.fecha_prometida_pago|date:"d/m/Y" }}
+                                </td>
+                                <td class="py-3 px-6 text-center">
+                                    {% if acuerdo.estado == 'incumplido' %}
+                                        <span class="font-bold">Vencido</span>
+                                    {% else %}
+                                        <span class="font-semibold">{{ acuerdo.dias_faltantes }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-6 text-center">
+                                    <span class="py-1 px-3 rounded-full text-xs font-semibold 
+                                        {% if acuerdo.estado == 'incumplido' %} bg-red-200 text-red-800
+                                        {% elif acuerdo.estado == 'emitido' %} bg-blue-200 text-blue-800
+                                        {% elif acuerdo.estado == 'cumplido' %} bg-green-200 text-green-800
+                                        {% endif %}">
+                                        {{ acuerdo.get_estado_display }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-6 text-center">
+                                                                        <a href="{% url 'alumno_detail' acuerdo.cuota.deuda.alumno.pk %}" class="text-blue-600 hover:text-blue-900">Ver Alumno</a>
+                                    <a href="{% url 'cartera:acuerdo_pago_update' acuerdo.pk %}" target="_blank" class="text-green-600 hover:text-green-900 ml-4">Editar</a>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="py-4 px-6 text-center text-gray-500">No hay acuerdos de pago pendientes o incumplidos.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    <div class="mt-6">
+        {% if is_paginated %}
+            <nav class="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0">
+                <div class="-mt-px flex w-0 flex-1">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="inline-flex items-center border-t-2 border-transparent pr-1 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
+                            <svg class="mr-3 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M18 10a.75.75 0 01-.75.75H4.66l2.1 1.95a.75.75 0 11-1.02 1.1l-3.5-3.25a.75.75 0 010-1.1l3.5-3.25a.75.75 0 111.02 1.1l-2.1 1.95h12.59A.75.75 0 0118 10z" clip-rule="evenodd" />
+                            </svg>
+                            Anterior
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="hidden md:-mt-px md:flex">
+                    {% for num in paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <a href="#" class="inline-flex items-center border-t-2 border-blue-500 px-4 pt-4 text-sm font-medium text-blue-600" aria-current="page">{{ num }}</a>
+                        {% else %}
+                            <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="-mt-px flex w-0 flex-1 justify-end">
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="inline-flex items-center border-t-2 border-transparent pl-1 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
+                            Siguiente
+                            <svg class="ml-3 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M2 10a.75.75 0 01.75-.75h12.59l-2.1-1.95a.75.75 0 111.02-1.1l3.5 3.25a.75.75 0 010 1.1l-3.5 3.25a.75.75 0 11-1.02-1.1l2.1-1.95H2.75A.75.75 0 012 10z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    {% endif %}
+                </div>
+            </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

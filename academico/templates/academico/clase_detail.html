@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle Clase{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-4">{{ titulo }}</h1>
+        
+        <!-- Detalles de la clase -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Información General</h3>
+                    <dl class="grid grid-cols-1 gap-2">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Fecha</dt>
+                            <dd class="text-sm text-gray-900">{{ clase.fecha }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Grupo</dt>
+                            <dd class="text-sm text-gray-900">{{ clase.grupo.codigo }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Salón</dt>
+                            <dd class="text-sm text-gray-900">{{ clase.salon.numero }} - {{ clase.salon.sede.nombre }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Sede</dt>
+                            <dd class="text-sm text-gray-900">{{ clase.salon.sede.nombre }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Ciudad</dt>
+                            <dd class="text-sm text-gray-900">{{ clase.salon.sede.municipio.nombre }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Estado</dt>
+                            <dd class="text-sm text-gray-900">{{ clase.get_estado_display }}</dd>
+                        </div>
+                    </dl>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Capacidad</h3>
+                    <dl class="grid grid-cols-1 gap-2">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Capacidad Total</dt>
+                            <dd class="text-sm text-gray-900">{{ clase.salon.capacidad_sillas }} sillas</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Grupo -->
+        <div class="mt-6">
+            <h3 class="text-lg font-semibold mb-2">Información del Grupo</h3>
+            <div class="mt-2">
+                <a href="{% url 'grupo_detalle' clase.grupo.id %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Ver Detalles del Grupo
+                </a>
+            </div>
+        </div>
+
+        <!-- Botón de Registrar Asistencia -->
+        <div class="flex justify-end">
+            {% if request.user.is_superuser or 'SecretariaAcademica' in request.user.groups.all.values_list.0 or clase.estado != 'vista' and request.user == clase.profesor %}
+            <a href="{% url 'registro_asistencia_nota' clase.id %}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <svg class="mr-2 -ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                </svg>
+                Registrar Asistencia
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,6 +3,11 @@ from .models.talleres import Taller
 from .models.simulacros import Simulacro, VentanaSimulacro
 
 class TallerForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['modulo'].required = False
+        self.fields['modulo'].empty_label = "Sin Módulo (Taller Presencial en Vivo)"
+
     class Meta:
         model = Taller
         fields = ['modulo', 'tema', 'titulo', 'descripcion', 'estado', 'orden', 'intentos_permitidos']
@@ -12,7 +17,6 @@ class TallerForm(forms.ModelForm):
             'estado': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'modulo': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'tema': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
-            'bloque_contexto': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'orden': forms.NumberInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
             'intentos_permitidos': forms.NumberInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
         }

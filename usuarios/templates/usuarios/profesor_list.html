@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Profesores{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-indigo-400">
+            👨‍🏫 {{ titulo|default:"Listado de Profesores" }}
+        </h1>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700/70 shadow-lg">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label for="q" class="block text-sm font-semibold text-slate-300 mb-1">Buscar</label>
+                <input type="text" name="q" id="q" value="{{ request.GET.q }}" placeholder="Nombre, cédula, teléfono..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:border-teal-500">
+            </div>
+
+            {% if request.user.is_superuser or is_coordinador %}
+            <div>
+                <label for="municipio" class="block text-sm font-semibold text-slate-300 mb-1">Municipio</label>
+                <select name="municipio" id="municipio" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:border-teal-500">
+                    <option value="">Todos los Municipios</option>
+                    {% for municipio in municipios %}
+                        <option value="{{ municipio.id }}" {% if request.GET.municipio == municipio.id|stringformat:"i" %}selected{% endif %}>
+                            {{ municipio.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div class="md:col-span-3 flex justify-end gap-2 pt-2">
+                {% if request.GET.q or request.GET.municipio %}
+                <a href="{% url 'profesor_list' %}" class="py-2 px-4 border border-slate-600 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">
+                    Limpiar Filtros
+                </a>
+                {% endif %}
+                <button type="submit" class="py-2 px-4 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-lg text-sm transition">
+                    Buscar Profesor
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de profesores -->
+    <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 shadow-xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+                <thead class="bg-slate-900/80 text-slate-400 uppercase text-xs">
+                    <tr>
+                        <th class="px-6 py-4">Profesor</th>
+                        <th class="px-6 py-4">Teléfono</th>
+                        <th class="px-6 py-4">Municipio</th>
+                        <th class="px-6 py-4 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for profesor in profesores %}
+                    <tr class="hover:bg-slate-700/30 transition">
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-white text-base">{{ profesor.get_full_name|default:profesor.username }}</div>
+                            <div class="text-xs text-slate-400">{{ profesor.email|default:"Sin email" }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-slate-300">{{ profesor.telefono|default:"Sin especificar" }}</td>
+                        <td class="px-6 py-4 text-slate-300">{{ profesor.municipio|default:"Global / General" }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'profesor_clases' profesor.id %}" class="inline-flex items-center gap-1 text-xs font-bold text-teal-400 hover:text-teal-300 bg-teal-500/10 px-3 py-1.5 rounded-lg border border-teal-500/20">
+                                📚 Ver Clases
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-6 text-center text-slate-400 italic">
+                            No se encontraron profesores registrados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

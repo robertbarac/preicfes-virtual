@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}Alerta Temprana — Alumnos Sin Cartera{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">🚨 Alerta Temprana: Alumnos sin Cartera Organizada</h1>
+            <p class="text-sm text-red-600 font-semibold mt-1">
+                Alumnos activos que no tienen deuda registrada o que no se les han generado las cuotas.
+            </p>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-red-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-red-800 uppercase tracking-wider">Alumno</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-red-800 uppercase tracking-wider">Identificación</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-red-800 uppercase tracking-wider">Grupo</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-red-800 uppercase tracking-wider">Municipio</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-red-800 uppercase tracking-wider">Fecha Inicio</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-red-800 uppercase tracking-wider">Fecha Culminación</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-red-800 uppercase tracking-wider">Creado Por</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-red-800 uppercase tracking-wider">Estado Cartera</th>
+                        <th class="px-6 py-3 text-center text-xs font-bold text-red-800 uppercase tracking-wider">Acción Requerida</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for alumno in alumnos %}
+                    <tr class="hover:bg-red-50/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="{% url 'alumno_detail' alumno.id %}" class="font-semibold text-blue-600 hover:text-blue-800">
+                                {{ alumno.primer_apellido }} {{ alumno.segundo_apellido|default:"" }} {{ alumno.nombres }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-mono">
+                            {{ alumno.identificacion }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
+                            {{ alumno.grupo_actual.codigo|default:"Sin Grupo" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-700">
+                            {{ alumno.municipio.nombre }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
+                            {{ alumno.fecha_ingreso|date:"d/m/Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
+                            {{ alumno.fecha_culminacion|date:"d/m/Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-800 font-medium">
+                            👤 {{ alumno.creador_nombre }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if not alumno.deuda %}
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
+                                    ❌ Sin Deuda Creada
+                                </span>
+                            {% elif not alumno.deuda.cuotas.exists or not alumno.deuda.cuotas_generadas %}
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800">
+                                    ⚠️ Deuda creada pero Sin Cuotas
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            {% if not alumno.deuda %}
+                                <a href="{% url 'cartera:deuda_agregar' alumno.id %}" 
+                                   class="inline-flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded text-xs transition shadow-sm">
+                                    ➕ Crear Deuda
+                                </a>
+                            {% else %}
+                                <a href="{% url 'cartera:generar_cuotas' alumno.id %}" 
+                                   class="inline-flex items-center px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded text-xs transition shadow-sm">
+                                    📋 Generar Cuotas
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="px-6 py-8 text-center text-gray-500 font-medium">
+                            ✅ ¡Excelente! Todos los alumnos activos tienen su cartera y cuotas organizadas.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

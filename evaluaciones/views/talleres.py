@@ -33,7 +33,9 @@ def agrupar_por_bloque(items_con_pregunta, get_pregunta=lambda x: x):
         global_counter += 1
     return grupos
 
-class TallerCreateView(HistorialMixin, CreateView):
+from .mixins import DocenteOStaffPermissionMixin, es_personal_docente_o_staff
+
+class TallerCreateView(DocenteOStaffPermissionMixin, HistorialMixin, CreateView):
     model = Taller
     form_class = TallerForm
     template_name = 'evaluaciones/taller_form.html'
@@ -48,7 +50,7 @@ class TallerCreateView(HistorialMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('curriculo:programa_list')
 
-class TallerUpdateView(HistorialMixin, UpdateView):
+class TallerUpdateView(DocenteOStaffPermissionMixin, HistorialMixin, UpdateView):
     model = Taller
     form_class = TallerForm
     template_name = 'evaluaciones/taller_form.html'
@@ -92,7 +94,7 @@ from django.contrib import messages
 from django.views.generic import TemplateView
 from ..models.banco import Pregunta
 
-class TallerPreguntaManageView(TemplateView):
+class TallerPreguntaManageView(DocenteOStaffPermissionMixin, TemplateView):
     template_name = 'evaluaciones/taller_preguntas.html'
 
     def get_context_data(self, **kwargs):
@@ -162,6 +164,20 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from ..models.talleres import IntentoTaller, RespuestaTaller
 from ..models.banco import Opcion
 
+def es_personal_docente_o_staff(user):
+    if not user.is_authenticated:
+        return False
+    group_names = set(user.groups.values_list('name', flat=True))
+    return (
+        user.is_superuser or 
+        user.is_staff or 
+        user.role == 'teacher' or 
+        'Profesor' in group_names or 
+        'Teacher' in group_names or 
+        'CoordinadorDepartamental' in group_names or 
+        'SecretariaAcademica' in group_names
+    )
+
 class TallerResolverView(LoginRequiredMixin, ProgramaVisibilidadMixin, TemplateView):
     template_name = 'evaluaciones/taller_resolver.html'
 
@@ -177,6 +193,31 @@ class TallerResolverView(LoginRequiredMixin, ProgramaVisibilidadMixin, TemplateV
         self.taller = get_object_or_404(Taller, pk=self.kwargs['pk'])
         return self.taller.modulo
 
+    def dispatch(self, request, *args, **kwargs):
+        taller = get_object_or_404(Taller, pk=self.kwargs['pk'])
+        user = request.user
+        
+        # 1. Si es docente o staff, se le permite acceso en Modo Vista Previa
+        if es_personal_docente_o_staff(user):
+            return super().dispatch(request, *args, **kwargs)
+
+        # 2. Si es estudiante presencial (student), verificar asistencia a clase física si el taller fue asignado a su grupo
+        if user.role == 'student':
+            from ..models.talleres import AsignacionTallerGrupo
+            from academico.models import Asistencia
+            
+            alumno = getattr(user, 'perfil_alumno', None)
+            if alumno and alumno.grupo_actual:
+                asignaciones = AsignacionTallerGrupo.objects.filter(taller=taller, grupo=alumno.grupo_actual, activo=True)
+                if asignaciones.exists():
+                    # Verificar si registra asistencia presencial a la clase de su grupo
+                    tiene_asistencia = Asistencia.objects.filter(alumno=alumno, clase__grupo=alumno.grupo_actual, asistio=True).exists()
+                    if not tiene_asistencia:
+                        messages.error(request, "Acceso Restringido: Debes contar con asistencia confirmada a tu clase presencial para presentar este examen/taller.")
+                        return redirect('evaluaciones:taller_detail', pk=taller.pk)
+
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         taller = get_object_or_404(Taller, pk=self.kwargs['pk'])
@@ -185,10 +226,14 @@ class TallerResolverView(LoginRequiredMixin, ProgramaVisibilidadMixin, TemplateV
         context['preguntas'] = preguntas_taller
         context['grupos'] = agrupar_por_bloque(preguntas_taller, get_pregunta=lambda pt: pt.pregunta)
         
+        # Modo Lectura para docentes / staff
+        es_docente = es_personal_docente_o_staff(self.request.user)
+        context['modo_lectura'] = es_docente
+        
         # Verificar intentos previos
         intentos = IntentoTaller.objects.filter(usuario=self.request.user, taller=taller)
         context['intentos_realizados'] = intentos.count()
-        context['puede_intentar'] = intentos.count() < taller.intentos_permitidos
+        context['puede_intentar'] = (intentos.count() < taller.intentos_permitidos) or es_docente
         context['intentos'] = intentos.order_by('-fecha_inicio')
         
         return context
@@ -196,6 +241,11 @@ class TallerResolverView(LoginRequiredMixin, ProgramaVisibilidadMixin, TemplateV
     def post(self, request, *args, **kwargs):
         taller = get_object_or_404(Taller, pk=self.kwargs['pk'])
         
+        # En modo lectura/vista previa docente, no crear intentos
+        if es_personal_docente_o_staff(request.user):
+            messages.info(request, "Vista Previa de Docente: Las respuestas introducidas no generan calificaciones ni intentos registrados.")
+            return redirect('evaluaciones:taller_detail', pk=taller.pk)
+
         # Verificar si tiene intentos disponibles
         intentos_realizados = IntentoTaller.objects.filter(usuario=request.user, taller=taller).count()
         if intentos_realizados >= taller.intentos_permitidos:

@@ -1,0 +1,9 @@
+👋 ¡Hola! Señor(a) {{ nombre_acudiente }}.
+Le saludamos de la Coordinación Académica del Refuerzo Académico Víctor Valdéz 📚.
+
+Le escribimos para informarle que el estudiante *{{ estudiante_nombre }}* no asistió a su clase programada:
+➡ *Materia:* {{ materia }}
+➡ *Fecha:* {{ fecha }}
+➡ *Horario:* {{ horario }}
+
+Quisiéramos saber qué sucedió con el alumno y si tiene alguna justificación para esta inasistencia. Quedamos atentos a su respuesta. ¡Muchas gracias!

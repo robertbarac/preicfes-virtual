@@ -9,7 +9,7 @@ class Taller(models.Model):
         ('publicado', 'Publicado'),
         ('oculto', 'Oculto'),
     )
-    modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE, related_name='talleres')
+    modulo = models.ForeignKey(Modulo, on_delete=models.SET_NULL, null=True, blank=True, related_name='talleres', help_text="Módulo del programa virtual opcional. Dejar en blanco para talleres presenciales.")
     tema = models.ForeignKey(Tema, on_delete=models.SET_NULL, null=True, blank=True, related_name='talleres')
     creador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='talleres_creados')
     titulo = models.CharField(max_length=255)
@@ -35,6 +35,7 @@ class PreguntaTaller(models.Model):
 class IntentoTaller(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='intentos_taller')
     taller = models.ForeignKey(Taller, on_delete=models.CASCADE, related_name='intentos')
+    clase = models.ForeignKey('academico.Clase', on_delete=models.CASCADE, null=True, blank=True, related_name='intentos_taller', help_text="Clase presencial asociada a este intento de taller.")
     fecha_inicio = models.DateTimeField(auto_now_add=True)
     fecha_fin = models.DateTimeField(blank=True, null=True)
     puntaje_porcentaje = models.FloatField(blank=True, null=True, help_text="De 0 a 100")
@@ -58,6 +59,22 @@ class RespuestaTaller(models.Model):
         indexes = [
             models.Index(fields=['intento']),
         ]
+
+
+class AsignacionTallerGrupo(models.Model):
+    taller = models.ForeignKey(Taller, on_delete=models.CASCADE, related_name='asignaciones_grupo')
+    grupo = models.ForeignKey('academico.Grupo', on_delete=models.CASCADE, related_name='talleres_asignados')
+    fecha_asignacion = models.DateField(auto_now_add=True)
+    activo = models.BooleanField(default=True, help_text="Si está marcado, los alumnos de este grupo presencial verán este examen/taller para realizar.")
+    intentos_permitidos = models.PositiveIntegerField(default=1, help_text="Por defecto 1 intento para evaluaciones presenciales en aula.")
+
+    class Meta:
+        verbose_name = "Asignación de Taller a Grupo"
+        verbose_name_plural = "Asignaciones de Talleres a Grupos"
+        unique_together = ('taller', 'grupo')
+
+    def __str__(self):
+        return f"{self.taller.titulo} -> {self.grupo}"
 
 
 # ─── Invalidación de caché ────────────────────────────────────────────────────

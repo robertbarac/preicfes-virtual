@@ -8,7 +8,9 @@ from django.db import models
 from ..forms import PreguntaForm, OpcionFormSet, ImagenPreguntaFormSet
 from curriculo.views.mixins import HistorialMixin
 
-class PreguntaCreateView(HistorialMixin, CreateView):
+from .mixins import DocenteOStaffPermissionMixin
+
+class PreguntaCreateView(DocenteOStaffPermissionMixin, HistorialMixin, CreateView):
     model = Pregunta
     form_class = PreguntaForm
     template_name = 'evaluaciones/pregunta_form.html'
@@ -51,7 +53,7 @@ class PreguntaCreateView(HistorialMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('evaluaciones:pregunta_list')
 
-class PreguntaUpdateView(HistorialMixin, UpdateView):
+class PreguntaUpdateView(DocenteOStaffPermissionMixin, HistorialMixin, UpdateView):
     model = Pregunta
     form_class = PreguntaForm
     template_name = 'evaluaciones/pregunta_form.html'
@@ -189,7 +191,7 @@ class BloqueContextoListView(LoginRequiredMixin, BloqueListViewBase):
         return context
 
 
-class BloqueContextoCreateView(LoginRequiredMixin, CreateView):
+class BloqueContextoCreateView(DocenteOStaffPermissionMixin, CreateView):
     model = BloqueContexto
     form_class = BloqueContextoForm
     template_name = 'evaluaciones/bloque_contexto_form.html'
@@ -216,7 +218,7 @@ class BloqueContextoCreateView(LoginRequiredMixin, CreateView):
         return reverse_lazy('evaluaciones:bloque_contexto_list')
 
 
-class BloqueContextoUpdateView(LoginRequiredMixin, UpdateView):
+class BloqueContextoUpdateView(DocenteOStaffPermissionMixin, UpdateView):
     model = BloqueContexto
     form_class = BloqueContextoForm
     template_name = 'evaluaciones/bloque_contexto_form.html'
@@ -244,7 +246,7 @@ class BloqueContextoUpdateView(LoginRequiredMixin, UpdateView):
         return reverse_lazy('evaluaciones:bloque_contexto_list')
 
 
-class BloqueContextoDeleteView(LoginRequiredMixin, DeleteView):
+class BloqueContextoDeleteView(DocenteOStaffPermissionMixin, DeleteView):
     model = BloqueContexto
     template_name = 'evaluaciones/bloque_contexto_confirm_delete.html'
     success_url = reverse_lazy('evaluaciones:bloque_contexto_list')

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Inasistencia{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Registrar Inasistencia</h1>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <p class="mb-4"><strong>Alumno:</strong> {{ alumno.nombres }} {{ alumno.primer_apellido }} {{ alumno.segundo_apellido }}</p>
+        <p class="mb-4"><strong>Clase:</strong> {{ clase.materia.nombre }} del {{ clase.fecha }}</p>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="space-y-4">
+                {{ form.as_p }}
+            </div>
+
+            <div class="mt-6">
+                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Guardar Justificación
+                </button>
+                <a href="{% url 'alumno_detail' pk=alumno.pk %}" class="ml-4 text-sm text-gray-600 hover:text-gray-900">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

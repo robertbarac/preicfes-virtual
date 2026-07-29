@@ -49,11 +49,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
+    'django.contrib.humanize',
     'usuarios',
     'suscripciones',
     'contenidos',
     'evaluaciones',
     'curriculo',
+    'ubicaciones',
+    'academico',
+    'cartera',
+    'ventas',
+    'simulacros',
     'crispy_forms',
     'crispy_tailwind',
 ]
@@ -67,6 +73,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'suscripciones.middleware.SubscriptionCheckMiddleware',
+    'usuarios.middleware.RestringirAccesoAulaVirtualMiddleware',
 ]
 
 ROOT_URLCONF = 'previrtual.urls'
@@ -84,6 +91,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'usuarios.context_processors.configuracion_global',
                 'usuarios.context_processors.mis_programas',
+                'cartera.context_processors.alertas_cartera',
             ],
         },
     },
@@ -157,7 +165,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 AUTH_USER_MODEL = 'usuarios.User'
 
 # Auth Config
-LOGIN_REDIRECT_URL = '/programa/'
+LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 # Crispy Forms Config

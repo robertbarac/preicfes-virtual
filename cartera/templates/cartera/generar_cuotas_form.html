@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Generar Cuotas para {{ alumno.nombre }} {{ alumno.apellido }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-4 text-gray-800">Generar Cuotas Masivas</h1>
+        
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-700">Información del Alumno</h2>
+            <p><strong>Nombre:</strong> {{ alumno.nombres }} {{ alumno.primer_apellido }} {{ alumno.segundo_apellido }}</p>
+            <p><strong>Deuda Total:</strong> ${{ deuda.valor_total|floatformat:"2g" }}</p>
+            <p><strong>Periodo del Curso:</strong> {{ alumno.fecha_ingreso|date:"d/m/Y" }} - {{ alumno.fecha_culminacion|date:"d/m/Y" }}</p>
+        </div>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {{ form|crispy }}
+
+            <div class="flex items-center justify-end space-x-4">
+                <a href="{% url 'alumno_detail' pk=alumno.id %}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                    Cancelar
+                </a>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                    Generar Cuotas
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

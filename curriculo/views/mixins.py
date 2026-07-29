@@ -91,7 +91,7 @@ class ProgramaVisibilidadMixin(UserPassesTestMixin):
         user = self.request.user
         if not user.is_authenticated:
             return False
-        if user.is_superuser:
+        if user.is_superuser or user.is_staff:
             return True
             
         try:
@@ -99,8 +99,8 @@ class ProgramaVisibilidadMixin(UserPassesTestMixin):
             if not programa:
                 return False
                 
-            # Verificar acceso según rol
-            if user.role == 'teacher':
+            # Verificar acceso según rol/grupo
+            if user.es_docente:
                 tiene_acceso = user.programas_docente.filter(id=programa.id).exists()
             else:
                 # Alumno: debe ser su programa asignado y tener suscripción activa
@@ -115,14 +115,14 @@ class ProgramaVisibilidadMixin(UserPassesTestMixin):
                 
             ciclo = self._resolver_ciclo()
             if ciclo and not ciclo.visible:
-                # Si el ciclo no está visible, solo profesores de ese programa pueden entrar
-                if user.role != 'teacher':
+                # Si el ciclo no está visible, solo profesores de ese programa o admins pueden entrar
+                if not user.es_docente:
                     return False
 
             modulo = self._resolver_modulo()
             if modulo and not modulo.activo:
-                # Si el módulo no está activo, solo profesores de ese programa pueden entrar
-                if user.role != 'teacher':
+                # Si el módulo no está activo, solo profesores de ese programa o admins pueden entrar
+                if not user.es_docente:
                     return False
                 
             return True

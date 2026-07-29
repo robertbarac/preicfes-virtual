@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Cartera{% endblock title %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Cartera</h1>
+
+    <!-- Filtros -->
+    <div class="mb-6 bg-white p-6 rounded-lg shadow-md">
+        <form method="get" class="flex gap-4">
+            <select name="estado">
+                <option value="">Todos los estados</option>
+                <option value="emitida" {% if request.GET.estado == "emitida" %}selected{% endif %}>Emitida</option>
+                <option value="pagada" {% if request.GET.estado == "pagada" %}selected{% endif %}>Pagada</option>
+                <option value="pagada_parcial" {% if request.GET.estado == "pagada_parcial" %}selected{% endif %}>Pagada Parcial</option>
+                <option value="vencida" {% if request.GET.estado == "vencida" %}selected{% endif %}>Vencida</option>
+            </select>
+        
+            <input type="text" name="nombre" placeholder="Nombre del alumno" value="{{ request.GET.nombre }}">
+            <input type="text" name="sede" placeholder="Sede" value="{{ request.GET.sede }}">
+        
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Filtrar</button>
+        </form>
+        
+    </div>
+
+    <!-- Tabla de cuotas vencidas -->
+    <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alumno</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Abonado</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Días de No Pago</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Vencimiento</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for cuota in cuotas %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ cuota.deuda.alumno.nombres }} {{ cuota.deuda.alumno.primer_apellido }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${{ cuota.monto }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${{ cuota.monto_abonado }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ cuota.estado }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ cuota.dias_sin_pago }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ cuota.fecha_vencimiento }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <div class="mt-6 flex justify-center">
+        <ol class="flex justify-center gap-1 text-xs font-medium">
+            {% if page_obj.has_previous %}
+            <li>
+                <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}"
+                class="inline-flex size-8 items-center justify-center rounded-sm border border-gray-100 bg-white text-gray-900">
+                    <span class="sr-only">Página anterior</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="size-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            <li>
+                {% if page_obj.number == num %}
+                <span class="block size-8 rounded-sm border-blue-600 bg-blue-600 text-center leading-8 text-white">
+                    {{ num }}
+                </span>
+                {% else %}
+                <a href="?page={{ num }}&{{ request.GET.urlencode }}"
+                class="block size-8 rounded-sm border border-gray-100 bg-white text-center leading-8 text-gray-900">
+                    {{ num }}
+                </a>
+                {% endif %}
+            </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li>
+                <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}"
+                class="inline-flex size-8 items-center justify-center rounded-sm border border-gray-100 bg-white text-gray-900">
+                    <span class="sr-only">Página siguiente</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="size-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </a>
+            </li>
+            {% endif %}
+        </ol>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

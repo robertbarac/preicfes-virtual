@@ -1,0 +1,23 @@
+🌞 Muy buenos días, bendiciones 🙏
+Señor(a) padre/madre de familia del estudiante *{{ nombres }} {{ primer_apellido }} {{ segundo_apellido }}* 
+
+Somos el Departamento de Cartera 📑 del Refuerzo Académico Víctor Valdéz, en convenio exclusivo con la Universidad de Córdoba 🎓.
+
+📌 Hemos notado que, a la fecha de hoy:
+➡ Presenta *{{ dias_atraso }} días*  en mora 📅 de las cuotas pactadas por valor de *${{ monto|floatformat:0 }} pesos* mensuales 💵.
+➡ No se han registrado abonos de esta cuota (*${{ monto_abonado|floatformat:0 }} pesos*)
+➡ El saldo pendiente es de *${{ saldo_pendiente|floatformat:0 }} pesos*
+
+💳 Para normalizar su situación, puede realizar el pago a través de:
+🔹 Nequi: 310-452-6623
+🔹 Bancolombia: 504-776-16576
+🔹 Efectivo
+
+📞 En caso de tener alguna dificultad, le pedimos comunicarse con nosotros al 320-505-2106 📲 para buscar una solución conjunta 🤝 y así evitar la suspensión del estudiante ❌🎓.
+
+✨ Muchas gracias por su atención y colaboración.
+
+Atentamente,
+✍ Departamento de Cartera
+
+📚 “Invertir en educación es sembrar un futuro mejor.”

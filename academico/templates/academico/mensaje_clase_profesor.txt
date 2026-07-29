@@ -1,0 +1,8 @@
+👋 ¡Hola profe {{ nombre }}, buen día! 🌞
+
+📅 El día {{ fecha }} tiene clase de {{ materia }}. 📚
+
+📍 Lugar: {{ sede }} 
+⏰ Hora: {{ horario }}
+
+🎨 Esperamos su taller con entusiasmo! ✨

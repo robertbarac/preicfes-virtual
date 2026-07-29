@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalles del Grupo{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Detalles del Grupo: {{ grupo.codigo }}</h1>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{% url 'simulacros:grupo_calificar_simulacro' grupo.id %}" 
+               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm text-sm transition-colors">
+                📝 Calificar Simulacro (2 Sesiones)
+            </a>
+            <a href="{% url 'simulacros:grupo_calificar_diagnostico' grupo.id %}" 
+               class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-sm text-sm transition-colors">
+                📋 Calificar Diagnóstico (90P)
+            </a>
+        </div>
+    </div>
+
+    <!-- Mostrar la gráfica -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <img src="data:image/png;base64,{{ graphic }}" alt="Gráfica de materias vistas" class="w-full max-w-4xl mx-auto">
+    </div>
+
+    <!-- Lista de alumnos -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4">Alumnos del Grupo</h2>
+        <ul class="space-y-4">
+            {% for alumno in alumnos %}
+                <li>
+                    <a href="{% url 'alumno_detail' alumno.id %}" class="block bg-gray-100 p-4 rounded-lg hover:bg-gray-200 transition duration-300">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-lg font-semibold">{{ alumno.nombres }} {{ alumno.primer_apellido }}</span>
+                                <span class="text-gray-600"> - {{ alumno.celular }}</span>
+                            </div>
+                            {% if alumno.id in alumnos_con_cuotas_vencidas_ids %}
+                                <span class="px-3 py-1 text-sm font-semibold text-red-800 bg-red-100 rounded-full">No está al día</span>
+                            {% else %}
+                                <span class="px-3 py-1 text-sm font-semibold text-green-800 bg-green-100 rounded-full">Al día</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                </li>
+            {% empty %}
+                <p class="text-gray-600">No hay alumnos en este grupo.</p>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Lista de clases vistas -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-2xl font-bold mb-4">Clases Vistas</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profesor</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sede</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Salón</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for clase in clases_vistas %}
+                    <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ clase.fecha|date:"l d \\d\\e F \\d\\e Y" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ clase.materia.nombre }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ clase.profesor.get_full_name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ clase.salon.sede.nombre }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ clase.salon.numero }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Este grupo aún no ha visto clases.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Botones de acciones -->
+    <div class="mt-6 flex space-x-4">
+        <a href="{% url 'grupo_list' %}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg inline-block transition">
+            Volver a la lista de grupos
+        </a>
+    </div>
+</div>
+{% endblock %}

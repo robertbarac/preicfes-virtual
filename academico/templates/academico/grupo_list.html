@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Grupos{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">{{ titulo }}</h1>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="search_q" class="block text-sm font-medium text-gray-700">Buscar por Código</label>
+                <div class="relative mt-1 rounded-md shadow-sm">
+                    <input type="text" name="q" id="search_q" value="{{ q }}"
+                           placeholder="Ej. MON-101..."
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm pr-10"
+                           autocomplete="off">
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="sede" class="block text-sm font-medium text-gray-700">Sede</label>
+                <select name="sede" id="sede" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Todas</option>
+                    {% for sede in sedes %}
+                        <option value="{{ sede.id }}" {% if request.GET.sede == sede.id|stringformat:"i" %}selected{% endif %}>
+                            {{ sede.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if request.user.is_superuser or is_coordinador %}
+            <div>
+                <label for="ciudad" class="block text-sm font-medium text-gray-700">Ciudad</label>
+                <select name="ciudad" id="ciudad" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Todas</option>
+                    {% for ciudad in ciudades %}
+                        <option value="{{ ciudad }}" {% if request.GET.ciudad == ciudad %}selected{% endif %}>
+                            {{ ciudad }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            
+            <div>
+                <label for="tipo_programa" class="block text-sm font-medium text-gray-700">Tipo de Programa</label>
+                <select name="tipo_programa" id="tipo_programa" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Todos</option>
+                    {% for key, value in tipos_programa.items %}
+                        <option value="{{ key }}" {% if tipo_programa_seleccionado == key %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="md:col-span-2 flex justify-end gap-2">
+                {% if q or request.GET.sede or request.GET.ciudad or tipo_programa_seleccionado %}
+                <a href="{% url 'grupo_list' %}" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
+                    Limpiar Filtros
+                </a>
+                {% endif %}
+                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Buscar / Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de grupos -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Código
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Salón
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Sede
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ciudad
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ocupación
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Estado
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Programas
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for grupo in grupos %}
+                <tr class="{% cycle 'bg-white' 'bg-gray-50' %} hover:bg-gray-100">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <a href="{% url 'grupo_detalle' grupo.id %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
+                            {{ grupo.codigo }}
+                        </a>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ grupo.salon.numero }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ grupo.salon.sede.nombre }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ grupo.salon.sede.municipio.nombre }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">
+                            {{ grupo.sillas_ocupadas }} / {{ grupo.sillas_totales }}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if grupo.sillas_ocupadas == 0 %}bg-gray-100 text-gray-800
+                            {% elif grupo.sillas_ocupadas == grupo.sillas_totales %}bg-red-100 text-red-800
+                            {% else %}bg-green-100 text-green-800{% endif %}">
+                            {% if grupo.sillas_ocupadas == 0 %}
+                                Vacío
+                            {% elif grupo.sillas_ocupadas == grupo.sillas_totales %}
+                                Lleno
+                            {% else %}
+                                Disponible
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex flex-wrap gap-1">
+                            {% for programa in grupo.programas_lista %}
+                                {% if programa == 'pre_privado' %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">PreICFES Privado</span>
+                                {% elif programa == 'pre_publico' %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">PreICFES Público</span>
+                                {% elif programa == 'politecnico' %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">Politécnico</span>
+                                {% elif programa == 'semillero' %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-100 text-pink-800">Semillero</span>
+                                {% endif %}
+                            {% empty %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Ninguno</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        No hay grupos para mostrar.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <div class="mt-6 flex justify-center">
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <span class="sr-only">Anterior</span>
+                Anterior
+            </a>
+            {% endif %}
+
+            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <span class="sr-only">Siguiente</span>
+                Siguiente
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Script para auto-submit y filtrado dinámico por código -->
+<script>
+    document.querySelectorAll('select').forEach(function(element) {
+        element.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+
+    const searchInput = document.getElementById('search_q');
+    if (searchInput) {
+        let debounceTimer;
+        searchInput.addEventListener('input', function() {
+            const filter = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                const codeCell = row.querySelector('td a');
+                if (codeCell) {
+                    const text = codeCell.textContent.toLowerCase().trim();
+                    if (text.includes(filter)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+
+            // Si se presiona Enter o se pausa la escritura por 800ms con búsqueda avanzada,
+            // realizar submit para filtrar en la BD de forma global
+            clearTimeout(debounceTimer);
+            if (filter.length >= 3) {
+                debounceTimer = setTimeout(() => {
+                    this.form.submit();
+                }, 800);
+            }
+        });
+    }
+</script>
+{% endblock %}

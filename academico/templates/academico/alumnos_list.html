@@ -1,0 +1,432 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista Alumnos{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-4">Lista de Alumnos</h1>
+
+    <!-- Formulario de búsqueda -->
+    <form method="get" class="mb-6 bg-white p-4 rounded-lg shadow-md">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="sm:col-span-2">
+                <label for="buscador" class="block text-sm font-medium text-gray-700">Nombres / Apellidos / Identificación / Nombres Padres / Nombres Madres</label>
+                <input type="text" name="buscador" id="buscador" value="{{ request.GET.buscador }}" placeholder="Ej: Diego Acuña, Galvan..."
+                    class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+
+            {% if not request.user.is_observador %}
+            <div>
+                <label for="sede" class="block text-sm font-medium text-gray-700">Sede</label>
+                <select name="sede" id="sede" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todas</option>
+                    {% for sede in sedes %}
+                    <option value="{{ sede.nombre }}" {% if request.GET.sede == sede.nombre %}selected{% endif %}>{{ sede.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div>
+                <label for="grupo" class="block text-sm font-medium text-gray-700">Grupo</label>
+                <select name="grupo" id="grupo" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    {% for grupo in grupos %}
+                    <option value="{{ grupo.id }}" {% if grupo_seleccionado == grupo.id|stringformat:"s" %}selected{% endif %}>{{ grupo.codigo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if request.user.is_superuser %}
+            <div>
+                <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento</label>
+                <select name="departamento" id="departamento" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    {% for depto in departamentos %}
+                    <option value="{{ depto.id }}" {% if depto.id|stringformat:"s" == departamento_seleccionado %}selected{% endif %}>{{ depto.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            {% if request.user.is_superuser or is_coordinador_or_auxiliar %}
+            <div>
+                <label for="ciudad" class="block text-sm font-medium text-gray-700">Ciudad</label>
+                <select name="ciudad" id="ciudad" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todas</option>
+                    {% for ciudad in ciudades %}
+                    <option value="{{ ciudad.nombre }}" {% if request.GET.ciudad == ciudad.nombre %}selected{% endif %}>{{ ciudad.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div>
+                <label for="culminado" class="block text-sm font-medium text-gray-700">Culminado</label>
+                <select name="culminado" id="culminado" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    <option value="si" {% if request.GET.culminado == 'si' %}selected{% endif %}>Sí</option>
+                    <option value="no" {% if request.GET.culminado == 'no' %}selected{% endif %}>No</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="estado_deuda" class="block text-sm font-medium text-gray-700">Estado de Deuda</label>
+                <select name="estado_deuda" id="estado_deuda" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    <option value="pagada" {% if request.GET.estado_deuda == 'pagada' %}selected{% endif %}>Pagada</option>
+                    <option value="pendiente" {% if request.GET.estado_deuda == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                    <option value="no_tiene" {% if request.GET.estado_deuda == 'no_tiene' %}selected{% endif %}>No tiene</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="es_becado" class="block text-sm font-medium text-gray-700">Becado</label>
+                <select name="es_becado" id="es_becado" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    <option value="si" {% if request.GET.es_becado == 'si' %}selected{% endif %}>Sí</option>
+                    <option value="no" {% if request.GET.es_becado == 'no' %}selected{% endif %}>No</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="tipo_programa" class="block text-sm font-medium text-gray-700">Tipo de Programa</label>
+                <select name="tipo_programa" id="tipo_programa" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    {% for key, value in tipos_programa.items %}
+                    <option value="{{ key }}" {% if tipo_programa_seleccionado == key %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="estado_alumno" class="block text-sm font-medium text-gray-700">Estado</label>
+                <select name="estado_alumno" id="estado_alumno" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    <option value="activo" {% if request.GET.estado_alumno == 'activo' %}selected{% endif %}>Activo</option>
+                    <option value="retirado" {% if request.GET.estado_alumno == 'retirado' %}selected{% endif %}>Retirado</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="tiene_cuotas" class="block text-sm font-medium text-gray-700">Tiene Cuotas</label>
+                <select name="tiene_cuotas" id="tiene_cuotas" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    <option value="si" {% if request.GET.tiene_cuotas == 'si' %}selected{% endif %}>Sí</option>
+                    <option value="no" {% if request.GET.tiene_cuotas == 'no' %}selected{% endif %}>No</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="mes_culminacion" class="block text-sm font-medium text-gray-700">Mes Culminación</label>
+                <select name="mes_culminacion" id="mes_culminacion" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    {% for val, name in meses_anio %}
+                    <option value="{{ val }}" {% if mes_culminacion_seleccionado == val %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="ano_culminacion" class="block text-sm font-medium text-gray-700">Año Culminación</label>
+                <select name="ano_culminacion" id="ano_culminacion" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    {% for y in years_culminacion %}
+                    <option value="{{ y }}" {% if ano_culminacion_seleccionado == y %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if not request.user.is_observador %}
+            <div>
+                <label for="vendedor" class="block text-sm font-medium text-gray-700">Vendedor</label>
+                <select name="vendedor" id="vendedor" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Todos</option>
+                    {% for vend in vendedores %}
+                    <option value="{{ vend.id }}" {% if request.GET.vendedor == vend.id|stringformat:"s" %}selected{% endif %}>{{ vend.nombres }} {{ vend.apellidos }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div class="flex items-end space-x-2 sm:col-span-2 lg:col-span-1">
+                <button type="submit" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Filtrar</button>
+                <a href="{% url 'alumnos_list' %}" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Limpiar</a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Resumen de filtros y conteo -->
+    <div class="mb-4">
+        <div class="bg-white p-4 rounded-lg shadow-md">
+            <div class="flex justify-between items-center">
+                <div>
+                    <span class="text-lg font-semibold">Total: {{ total_alumnos }} alumno{{ total_alumnos|pluralize }}</span>
+                </div>
+                {% if filtros_activos %}
+                <div>
+                    <a href="{% url 'alumnos_list' %}" class="text-indigo-600 hover:text-indigo-800 text-sm">
+                        Limpiar todos los filtros
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if filtros_activos %}
+            <div class="mt-2">
+                <p class="text-sm font-medium text-gray-700">Filtros aplicados:</p>
+                <div class="mt-1 flex flex-wrap gap-2">
+                    {% for filtro in filtros_activos %}
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        {{ filtro }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if perms.academico.add_alumno %}
+    <div class="mt-4">
+        <a href="/admin/academico/alumno/add/"
+            class="inline-flex justify-center py-1 px-3 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                    clip-rule="evenodd" />
+            </svg>
+            Nuevo Alumno
+        </a>
+    </div>
+    {% endif %}
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <div class="mt-6 flex justify-center">
+        <ol class="flex justify-center gap-1 text-xs font-medium">
+            <!-- Botón "Anterior" -->
+            {% if page_obj.has_previous %}
+            <li>
+                <a href="?page={{ page_obj.previous_page_number }}{% if query_string %}&{{ query_string }}{% endif %}"
+                    class="inline-flex size-8 items-center justify-center rounded-sm border border-gray-100 bg-white text-gray-900">
+                    <span class="sr-only">Página anterior</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="size-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- Números de página -->
+            {% for num in page_range %}
+            <li>
+                {% if num == page_obj.paginator.ELLIPSIS %}
+                <span
+                    class="block size-8 rounded-sm border border-transparent bg-transparent text-center leading-8 text-gray-500 font-bold">
+                    {{ num }}
+                </span>
+                {% elif page_obj.number == num %}
+                <span class="block size-8 rounded-sm border-blue-600 bg-blue-600 text-center leading-8 text-white">
+                    {{ num }}
+                </span>
+                {% else %}
+                <a href="?page={{ num }}{% if query_string %}&{{ query_string }}{% endif %}"
+                    class="block size-8 rounded-sm border border-gray-100 bg-white text-center leading-8 text-gray-900">
+                    {{ num }}
+                </a>
+                {% endif %}
+            </li>
+            {% endfor %}
+
+            <!-- Botón "Siguiente" -->
+            {% if page_obj.has_next %}
+            <li>
+                <a href="?page={{ page_obj.next_page_number }}{% if query_string %}&{{ query_string }}{% endif %}"
+                    class="inline-flex size-8 items-center justify-center rounded-sm border border-gray-100 bg-white text-gray-900">
+                    <span class="sr-only">Página siguiente</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="size-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </li>
+            {% endif %}
+        </ol>
+    </div>
+    {% endif %}
+
+    <!-- Tabla de alumnos -->
+    <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre
+                        completo</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Identificación</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Salón
+                    </th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sede</th>
+                    {% if request.user.is_superuser or is_coordinador_or_auxiliar %}
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudad
+                    </th>
+                    {% endif %}
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Padre
+                    </th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cel.
+                        Padre</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Madre
+                    </th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cel.
+                        Madre</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de
+                        Inscripción</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha
+                        Culminación</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Culminado
+                    </th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado
+                    </th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado
+                        Deuda</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Becado
+                    </th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Programa
+                    </th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiene
+                        Cuotas</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendedor
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for alumno in page_obj %}
+                <tr onclick="window.location='{% url 'alumno_detail' alumno.id %}';"
+                    class="cursor-pointer hover:bg-gray-50 transition duration-200">
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        <a href="{% url 'alumno_detail' alumno.id %}" onclick="event.stopPropagation()"
+                            class="font-medium text-gray-900 hover:text-indigo-600">
+                            {{ alumno.nombres }} {{ alumno.primer_apellido }} {{ alumno.segundo_apellido }}
+                        </a>
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">{{ alumno.identificacion }}</td>
+                    <td class="px-3 py-2 whitespace-nowrap">{{ alumno.grupo_actual.salon.numero }}</td>
+                    <td class="px-3 py-2 whitespace-nowrap">{{ alumno.grupo_actual.salon.sede.nombre }}</td>
+                    {% if request.user.is_superuser or is_coordinador_or_auxiliar %}
+                    <td class="px-3 py-2 whitespace-nowrap">{{ alumno.municipio.nombre }}</td>
+                    {% endif %}
+                    <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
+                        {{ alumno.nombres_padre|default:"-" }} {{ alumno.primer_apellido_padre|default:"" }}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">{{ alumno.celular_padre|default:"-" }}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
+                        {{ alumno.nombres_madre|default:"-" }} {{ alumno.primer_apellido_madre|default:"" }}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">{{ alumno.celular_madre|default:"-" }}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">{{ alumno.fecha_ingreso|date:"d/m/Y" }}</td>
+                    <td class="px-3 py-2 whitespace-nowrap">{{ alumno.fecha_culminacion|date:"d/m/Y" }}</td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {% if alumno.culminado %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Sí</span>
+                        {% else %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">No</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {% if alumno.estado == 'activo' %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Activo</span>
+                        {% else %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Retirado</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {% if alumno.estado_deuda == 'pagada' %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Pagada</span>
+                        {% elif alumno.estado_deuda == 'pendiente' %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>
+                        {% else %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">No
+                            tiene</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {% if alumno.es_becado %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">Sí</span>
+                        {% else %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">No</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {% if alumno.tipo_programa == 'pre_privado' %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">PreICFES
+                            Privado</span>
+                        {% elif alumno.tipo_programa == 'pre_publico' %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">PreICFES
+                            Público</span>
+                        {% elif alumno.tipo_programa == 'politecnico' %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">Politécnico</span>
+                        {% elif alumno.tipo_programa == 'semillero' %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-100 text-pink-800">Semillero</span>
+                        {% elif alumno.tipo_programa == 'preicfes_kids' %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">PreICFES
+                            Kids</span>
+                        {% elif alumno.tipo_programa == 'premedico' %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Pre-médico</span>
+                        {% elif alumno.tipo_programa == 'formacion_laboral' %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Formación
+                            Laboral</span>
+                        {% elif alumno.tipo_programa == 'preicfes_virtual' %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">PreICFES
+                            Virtual</span>
+                        {% else %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">No
+                            definido</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {% if alumno.tiene_cuotas %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Sí</span>
+                        {% else %}
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">No</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {% if alumno.vendedor %}
+                        {{ alumno.vendedor.nombres }} {{ alumno.vendedor.apellidos }}
+                        {% else %}
+                        <span class="text-gray-400">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% load i18n %}
+<h3>{% trans title %}</h3>
+<ul style="list-style-type: none; padding-left: 0; margin-top: 5px; margin-bottom: 15px;">
+    <li>
+        <form method="get" style="padding: 2px 0;">
+            {% for key, val in spec.get_preserved_params %}
+                <input type="hidden" name="{{ key }}" value="{{ val }}">
+            {% endfor %}
+            <div style="margin-bottom: 5px;">
+                <label style="display:block; font-size: 11px; color: #666;">Desde:</label>
+                <input type="date" name="{{ spec.parameter_name_desde }}" value="{{ spec.current_value_desde }}" style="width: 95%; box-sizing: border-box; padding: 2px 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px;">
+            </div>
+            <div style="margin-bottom: 8px;">
+                <label style="display:block; font-size: 11px; color: #666;">Hasta:</label>
+                <input type="date" name="{{ spec.parameter_name_hasta }}" value="{{ spec.current_value_hasta }}" style="width: 95%; box-sizing: border-box; padding: 2px 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px;">
+            </div>
+            <div style="display: flex; gap: 5px; align-items: center;">
+                <input type="submit" value="Filtrar" style="background: #417690; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold;">
+                {% if spec.current_value_desde or spec.current_value_hasta %}
+                    <a href="{{ spec.reset_url }}" style="font-size: 11px; color: #ba2121; text-decoration: underline;">Limpiar</a>
+                {% endif %}
+            </div>
+        </form>
+    </li>
+</ul>

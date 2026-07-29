@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+{% block title %}Clases profesor Lista: {{ profesor.get_full_name|default:profesor.username }}{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 space-y-4 md:space-y-0">
+        <h1 class="text-3xl font-bold">{{ titulo }}</h1>
+        
+        <!-- Filtros -->
+        <form method="get" class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center space-x-2">
+                <label for="año" class="text-sm font-medium text-gray-700">Año:</label>
+                <select name="año" id="año" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    {% for anio in años %}
+                        <option value="{{ anio }}" {% if anio == año_actual %}selected{% endif %}>
+                            {{ anio }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-center space-x-2">
+                <label for="mes" class="text-sm font-medium text-gray-700">Mes:</label>
+                <select name="mes" id="mes" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    {% for mes in meses %}
+                        <option value="{{ mes.numero }}" {% if mes.numero == mes_actual %}selected{% endif %}>
+                            {{ mes.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-center space-x-2">
+                <label for="estado" class="text-sm font-medium text-gray-700">Estado:</label>
+                <select name="estado" id="estado" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    {% for estado in estados_clase %}
+                        <option value="{{ estado.valor }}" {% if estado.valor == estado_actual %}selected{% endif %}>
+                            {{ estado.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                Filtrar
+            </button>
+        </form>
+    </div>
+
+    <!-- Resumen de materias -->
+    {% if materias_profesor %}
+    <div class="mb-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-3">Materias impartidas este mes:</h2>
+        <div class="flex flex-wrap gap-2">
+            {% for materia in materias_profesor %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                {{ materia.materia__nombre }}
+                <span class="ml-2 bg-indigo-200 px-2 py-0.5 rounded-full">{{ materia.total }}</span>
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Lista de clases -->
+    <div class="bg-white shadow-md rounded-lg overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Fecha
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Horario
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Materia
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Salón
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Sede
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Estado
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Valor
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Acciones
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for clase in clases %}
+                <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ clase.fecha|date:"d/m/Y" }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ clase.get_horario_display }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ clase.materia.nombre }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ clase.salon.nombre|default:clase.salon.numero }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ clase.salon.sede.nombre }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if clase.estado == 'programada' %}bg-yellow-100 text-yellow-800
+                            {% elif clase.estado == 'vista' %}bg-green-100 text-green-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ clase.get_estado_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${{ clase.valor|floatformat:0|default:"0" }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap flex items-center gap-2">
+                        {% if request.user.is_superuser or 'SecretariaAcademica' in request.user.groups.all|join:',' %}
+                            <a href="{% url 'registro_asistencia_nota' clase.id %}" 
+                               class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Registrar Asistencia
+                            </a>
+                        {% elif request.user == clase.profesor %}
+                            {% if clase.puede_registrar %}
+                                <a href="{% url 'registro_asistencia_nota' clase.id %}" 
+                                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Registrar Asistencia
+                                </a>
+                            {% else %}
+                                <span class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Fuera de horario
+                                </span>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if clase.taller %}
+                            <a href="{% url 'clase_taller_control' clase.id %}" 
+                               class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-extrabold rounded-md text-white bg-teal-600 hover:bg-teal-700 shadow-sm transition">
+                                ⚡ Control Taller
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        No hay clases para mostrar en este período.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            {% if estado_actual == 'vista' %}
+            <tfoot>
+                <tr class="bg-gray-50">
+                    <td colspan="6" class="px-6 py-4 text-right font-bold">
+                        Total a pagar:
+                    </td>
+                    <td class="px-6 py-4 font-bold">
+                        ${{ total_valor|floatformat:0 }}
+                    </td>
+                    <td></td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <div class="py-5">
+        <nav class="flex items-center justify-between">
+            <div class="flex-1 flex justify-between sm:hidden">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&mes={{ mes_actual }}&estado={{ estado_actual }}&año={{ año_actual }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Anterior
+                </a>
+                {% else %}
+                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-gray-100 cursor-not-allowed">
+                    Anterior
+                </span>
+                {% endif %}
+                
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&mes={{ mes_actual }}&estado={{ estado_actual }}&año={{ año_actual }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Siguiente
+                </a>
+                {% else %}
+                <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-gray-100 cursor-not-allowed">
+                    Siguiente
+                </span>
+                {% endif %}
+            </div>
+            
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <!-- Botón Anterior -->
+                        {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}&mes={{ mes_actual }}&estado={{ estado_actual }}&año={{ año_actual }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Anterior</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        {% else %}
+                        <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-300 cursor-not-allowed">
+                            <span class="sr-only">Anterior</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        {% endif %}
+                        
+                        <!-- Números de página -->
+                        {% for p in page_range %}
+                            {% if p == page_obj.number %}
+                            <span aria-current="page" class="z-10 bg-indigo-50 border-indigo-500 text-indigo-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                {{ p }}
+                            </span>
+                            {% elif p == '...' %}
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                ...
+                            </span>
+                            {% else %}
+                            <a href="?page={{ p }}&mes={{ mes_actual }}&estado={{ estado_actual }}&año={{ año_actual }}" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                {{ p }}
+                            </a>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <!-- Botón Siguiente -->
+                        {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}&mes={{ mes_actual }}&estado={{ estado_actual }}&año={{ año_actual }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Siguiente</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        {% else %}
+                        <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-300 cursor-not-allowed">
+                            <span class="sr-only">Siguiente</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Script para auto-submit del formulario cuando cambian los filtros -->
+<script>
+    document.getElementById('año').addEventListener('change', function() {
+        this.form.submit();
+    });
+    document.getElementById('mes').addEventListener('change', function() {
+        this.form.submit();
+    });
+    document.getElementById('estado').addEventListener('change', function() {
+        this.form.submit();
+    });
+</script>
+{% endblock %}

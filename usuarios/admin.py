@@ -41,16 +41,31 @@ class SuscripcionActivaFilter(admin.SimpleListFilter):
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     model = User
-    list_display = ['username', 'email', 'get_full_name', 'numero_documento', 'telefono', 'role', 'tiene_suscripcion', 'suscripcion_activa', 'fin_suscripcion', 'is_active']
-    list_filter = ['role', TieneSuscripcionFilter, SuscripcionActivaFilter, 'is_staff', 'is_active']
+    list_display = ['username', 'email', 'get_full_name', 'numero_documento', 'telefono', 'role', 'get_grupo', 'departamento', 'municipio', 'sede', 'is_superuser', 'is_staff', 'is_active', 'tiene_suscripcion']
+    list_filter = ['groups', 'role', 'departamento', 'municipio', 'sede', 'is_superuser', 'is_staff', 'is_active', TieneSuscripcionFilter, SuscripcionActivaFilter]
     search_fields = ('username', 'first_name', 'last_name', 'numero_documento', 'telefono', 'email')
-    fieldsets = UserAdmin.fieldsets + (
-        ('Información de PreVirtual', {'fields': ('role', 'tipo_documento', 'numero_documento', 'telefono', 'creador', 'programa', 'programas_docente')}),
+    
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        ('Información Personal', {'fields': ('first_name', 'last_name', 'email', 'tipo_documento', 'numero_documento', 'telefono')}),
+        ('Ubicación y Sede', {'fields': ('departamento', 'municipio', 'sede')}),
+        ('Configuración PreVirtual', {'fields': ('role', 'programa', 'programas_docente', 'creador')}),
+        ('Permisos y Grupos', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Fechas Importantes', {'fields': ('last_login', 'date_joined')}),
     )
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Información de PreVirtual', {'fields': ('role', 'tipo_documento', 'numero_documento', 'telefono')}),
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'tipo_documento', 'numero_documento', 'telefono', 'role', 'departamento', 'municipio', 'sede'),
+        }),
     )
-    filter_horizontal = ('programas_docente',)
+    filter_horizontal = ('groups', 'user_permissions', 'programas_docente')
+
+    def get_grupo(self, obj):
+        if obj.groups.exists():
+            return ", ".join([g.name for g in obj.groups.all()])
+        return 'Sin grupo'
+    get_grupo.short_description = 'Grupo(s)'
 
     def delete_queryset(self, request, queryset):
         pks = list(queryset.values_list('pk', flat=True))

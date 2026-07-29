@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <!-- Back link -->
+    <div class="mb-6">
+        {% if object %}
+            <a href="{% url 'ventas:preventa_detail' object.pk %}" class="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800">
+                <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Volver al Detalle
+            </a>
+        {% else %}
+            <a href="{% url 'ventas:preventa_list' %}" class="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800">
+                <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Volver a la Lista
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
+        <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">{{ titulo }}</h2>
+        <p class="text-sm text-gray-500 mb-6">Complete la información para registrar o editar los datos de contacto inicial del estudiante y su acudiente.</p>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="space-y-4">
+                {{ form|crispy }}
+            </div>
+
+            <!-- Submit buttons -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-150">
+                {% if object %}
+                    <a href="{% url 'ventas:preventa_detail' object.pk %}" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancelar
+                    </a>
+                {% else %}
+                    <a href="{% url 'ventas:preventa_list' %}" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancelar
+                    </a>
+                {% endif %}
+                <button type="submit" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                    Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

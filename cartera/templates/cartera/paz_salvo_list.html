@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}Alumnos Paz y Salvo{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6">Certificados Paz y Salvo</h1>
+    
+    <!-- Barra de búsqueda y filtros -->
+    <form method="get" class="mb-6 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
+            <!-- Filtro Departamento (Superuser) -->
+            {% if user.is_superuser %}
+            <div>
+                <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento</label>
+                <select name="departamento" id="departamento" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option value="">Todos</option>
+                    {% for depto in departamentos %}
+                        <option value="{{ depto.id }}" {% if depto.id|stringformat:"s" == departamento_seleccionado %}selected{% endif %}>{{ depto.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <!-- Filtro Municipio (Superuser, Coordinador, Auxiliar) -->
+            {% if user.is_superuser or is_coordinador_or_auxiliar %}
+            <div>
+                <label for="municipio" class="block text-sm font-medium text-gray-700">Municipio</label>
+                <select name="municipio" id="municipio" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option value="">Todos</option>
+                    {% for mun in municipios %}
+                        <option value="{{ mun.id }}" {% if mun.id|stringformat:"s" == municipio_seleccionado %}selected{% endif %}>{{ mun.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <!-- Búsqueda por Nombre -->
+            <div class="lg:col-span-2">
+                <label for="search" class="block text-sm font-medium text-gray-700">Buscar por nombre o apellidos</label>
+                <div class="mt-1 flex rounded-md shadow-sm">
+                    <input type="text" name="q" id="search" value="{{ search_query }}" 
+                           placeholder="Buscar..."
+                           class="flex-grow block w-full px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <button type="submit" 
+                            class="-ml-px relative inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                        <span>Buscar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+    
+    <!-- Estadísticas -->
+    <div class="bg-white shadow rounded-lg p-4 mb-4">
+        <h2 class="text-lg font-medium text-gray-900 mb-2">Estadísticas</h2>
+        <div class="grid grid-cols-1 gap-4">
+            <div class="bg-blue-50 rounded-lg p-4">
+                <p class="text-blue-800 font-medium">Total alumnos paz y salvo:</p>
+                <p class="text-2xl font-bold text-blue-900">{{ total_alumnos }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de alumnos -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombres</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apellidos</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado Deuda</th>
+                    {% if user.is_superuser %}
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Municipio</th>
+                    {% endif %}
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for alumno in alumnos %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ alumno.nombres }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ alumno.primer_apellido }} {{ alumno.segundo_apellido }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Saldada
+                        </span>
+                    </td>
+                    {% if user.is_superuser %}
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {% if alumno.grupo_actual %}
+                            {{ alumno.grupo_actual.salon.sede.municipio.nombre }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <a href="{% url 'cartera:paz_salvo_pdf' alumno.id %}" target="_blank"
+                           class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-xs inline-flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Generar Paz y salvo
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                        No se encontraron alumnos con deuda saldada
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <div class="py-5">
+        <nav class="flex items-center justify-between">
+            <div class="flex-1 flex justify-between sm:hidden">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if selected_municipio %}&municipio={{ selected_municipio }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Anterior
+                </a>
+                {% else %}
+                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-gray-100 cursor-not-allowed">
+                    Anterior
+                </span>
+                {% endif %}
+                
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if selected_municipio %}&municipio={{ selected_municipio }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Siguiente
+                </a>
+                {% else %}
+                <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-gray-100 cursor-not-allowed">
+                    Siguiente
+                </span>
+                {% endif %}
+            </div>
+            
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <!-- Botón Anterior -->
+                        {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% if selected_municipio %}&municipio={{ selected_municipio }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Anterior</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        {% else %}
+                        <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-300 cursor-not-allowed">
+                            <span class="sr-only">Anterior</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        {% endif %}
+                        
+                        <!-- Números de página -->
+                        {% for p in page_range %}
+                            {% if p == page_obj.number %}
+                            <span aria-current="page" class="z-10 bg-blue-50 border-blue-500 text-blue-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                {{ p }}
+                            </span>
+                            {% elif p == '...' %}
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                ...
+                            </span>
+                            {% else %}
+                            <a href="?page={{ p }}{% if selected_municipio %}&municipio={{ selected_municipio }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                {{ p }}
+                            </a>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <!-- Botón Siguiente -->
+                        {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if selected_municipio %}&municipio={{ selected_municipio }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Siguiente</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        {% else %}
+                        <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-300 cursor-not-allowed">
+                            <span class="sr-only">Siguiente</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

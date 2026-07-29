@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-6">{% if object %}Editar{% else %}Crear{% endif %} Acuerdo de Pago</h1>
+        
+        <div class="mb-6 p-4 bg-gray-100 rounded-lg">
+            <h2 class="text-lg font-semibold">Detalles de la Cuota</h2>
+            {% with acuerdo_cuota=object.cuota|default:cuota %}
+            <p><strong>Alumno:</strong> {{ acuerdo_cuota.deuda.alumno }}</p>
+            <p><strong>Monto de la Cuota:</strong> ${{ acuerdo_cuota.monto }}</p>
+            <p><strong>Fecha de Vencimiento:</strong> {{ acuerdo_cuota.fecha_vencimiento|date:"d/m/Y" }}</p>
+            {% endwith %}
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <label for="id_fecha_acuerdo" class="block text-sm font-medium text-gray-700">Fecha del Acuerdo</label>
+                {{ form.fecha_acuerdo }}
+                {% if form.fecha_acuerdo.help_text %}
+                <p class="text-xs text-gray-500 mt-1">{{ form.fecha_acuerdo.help_text }}</p>
+                {% endif %}
+                {% for error in form.fecha_acuerdo.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="mb-4">
+                <label for="id_fecha_prometida_pago" class="block text-sm font-medium text-gray-700">Fecha Prometida de Pago</label>
+                {{ form.fecha_prometida_pago }}
+                {% if form.fecha_prometida_pago.help_text %}
+                <p class="text-xs text-gray-500 mt-1">{{ form.fecha_prometida_pago.help_text }}</p>
+                {% endif %}
+                {% for error in form.fecha_prometida_pago.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="mb-4">
+                <label for="id_nota" class="block text-sm font-medium text-gray-700">Nota</label>
+                {{ form.nota }}
+                {% if form.nota.help_text %}
+                <p class="text-xs text-gray-500 mt-1">{{ form.nota.help_text }}</p>
+                {% endif %}
+                {% for error in form.nota.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="flex items-center justify-between mt-6">
+                                {% with acuerdo_cuota=object.cuota|default:cuota %}
+                <a href="{% url 'alumno_detail' pk=acuerdo_cuota.deuda.alumno.pk %}" class="text-gray-600 hover:text-gray-800">Cancelar</a>
+                {% endwith %}
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Guardar Acuerdo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fields = ['id_fecha_acuerdo', 'id_fecha_prometida_pago'];
+    fields.forEach(function(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.type = 'date';
+            field.classList.add('mt-1', 'block', 'w-full', 'px-3', 'py-2', 'bg-white', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-indigo-500', 'focus:border-indigo-500', 'sm:text-sm');
+        }
+    });
+    
+    const notaField = document.getElementById('id_nota');
+    if (notaField) {
+        notaField.classList.add('mt-1', 'block', 'w-full', 'px-3', 'py-2', 'bg-white', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-indigo-500', 'focus:border-indigo-500', 'sm:text-sm');
+        notaField.rows = 3;
+    }
+});
+</script>
+
+{% endblock %}

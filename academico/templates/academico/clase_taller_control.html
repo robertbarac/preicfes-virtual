@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Panel de Control: {{ taller.titulo }} | {{ clase.materia.nombre }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <!-- Encabezado del Docente -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 border border-indigo-500/30 shadow-2xl text-white">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+                <span class="inline-block px-3 py-1 bg-teal-500/20 border border-teal-400/40 text-teal-300 text-xs font-black rounded-full uppercase tracking-wider mb-2">
+                    ⚡ PANEL DE CONTROL EN VIVO DEL DOCENTE
+                </span>
+                <h1 class="text-2xl font-black text-white">{{ taller.titulo }}</h1>
+                <p class="text-sm text-slate-300">
+                    Materia: <strong class="text-teal-300">{{ clase.materia.nombre }}</strong> | 
+                    Grupo: <strong class="text-indigo-300">{{ clase.grupo.codigo }}</strong> | 
+                    Fecha: <strong>{{ clase.fecha|date:"d/m/Y" }}</strong>
+                </p>
+            </div>
+            
+            <a href="{% url 'profesor_clases' clase.profesor.id %}" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl border border-slate-700 text-slate-300 hover:text-white transition">
+                ← Volver a Mis Clases
+            </a>
+        </div>
+    </div>
+
+    <!-- Métrica de Asistentes y Entregas en Tiempo Real -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+            <div class="p-3.5 bg-blue-100 text-blue-700 rounded-2xl">
+                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+            </div>
+            <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Asistentes Presentes</span>
+                <span class="text-2xl font-black text-slate-800">{{ total_asistentes }}</span>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+            <div class="p-3.5 bg-emerald-100 text-emerald-700 rounded-2xl">
+                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Talleres Entregados</span>
+                <span class="text-2xl font-black text-emerald-600">{{ total_entregados }}</span>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+            <div class="p-3.5 bg-amber-100 text-amber-700 rounded-2xl">
+                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">En Progreso / Pendientes</span>
+                <span class="text-2xl font-black text-amber-600">{{ total_pendientes }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de Acción / Comandos del Docente -->
+    <div class="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-xl space-y-4">
+        <h2 class="text-sm font-extrabold text-indigo-400 uppercase tracking-wider">🛠️ Botones de Control de Clase Presencial</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- BOTÓN 1: CORTE Y CIERRE DE TALLER -->
+            <form method="POST" class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 space-y-3">
+                {% csrf_token %}
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-slate-300">1. CORTE DE RECEPCIÓN</span>
+                    {% if clase.taller_cerrado %}
+                        <span class="px-2.5 py-0.5 bg-rose-500/20 text-rose-300 text-[10px] font-black rounded-full border border-rose-500/40">TALLER CERRADO</span>
+                    {% else %}
+                        <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] font-black rounded-full border border-emerald-500/40">RECEPCIÓN ABIERTA</span>
+                    {% endif %}
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Presiona para cerrar el tiempo de respuesta. Forzará la entrega y evaluará lo marcado por los estudiantes pendientes.
+                </p>
+                {% if not clase.taller_cerrado %}
+                    <button type="submit" name="action" value="cerrar_taller" class="w-full py-3 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                        <span>🔴 Cortar Tiempo & Cerrar Recepción</span>
+                    </button>
+                {% else %}
+                    <button type="submit" name="action" value="reabrir_taller" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs rounded-xl transition flex items-center justify-center gap-2">
+                        <span>🟢 Reabrir Recepción de Respuestas</span>
+                    </button>
+                {% endif %}
+            </form>
+
+            <!-- BOTÓN 2: LIBERACIÓN DE NOTAS Y SOLUCIONARIO -->
+            <form method="POST" class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 space-y-3">
+                {% csrf_token %}
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-slate-300">2. VISIBILIDAD DE NOTAS</span>
+                    {% if clase.taller_notas_liberadas %}
+                        <span class="px-2.5 py-0.5 bg-teal-500/20 text-teal-300 text-[10px] font-black rounded-full border border-teal-500/40">NOTAS LIBERADAS</span>
+                    {% else %}
+                        <span class="px-2.5 py-0.5 bg-amber-500/20 text-amber-300 text-[10px] font-black rounded-full border border-amber-500/40">NOTAS OCULTAS</span>
+                    {% endif %}
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Al terminar la socialización, presiona para permitir que los estudiantes vean sus calificaciones finales y explicaciones.
+                </p>
+                {% if not clase.taller_notas_liberadas %}
+                    <button type="submit" name="action" value="liberar_notas" class="w-full py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                        <span>🎉 Liberar Notas y Solucionario a Estudiantes</span>
+                    </button>
+                {% else %}
+                    <button type="submit" name="action" value="ocultar_notas" class="w-full py-3 bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 font-bold text-xs rounded-xl border border-amber-500/40 transition flex items-center justify-center gap-2">
+                        <span>🔒 Ocultar Notas Temporales</span>
+                    </button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Estudiantes Asistentes y Estado de Entregas -->
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-700">📋 Lista de Estudiantes Asistentes a Clase</h3>
+            <span class="text-xs text-slate-500 font-semibold">{{ total_asistentes }} Estudiantes Registrados</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-100 text-slate-600 font-extrabold uppercase border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3">Estudiante</th>
+                        <th class="px-6 py-3">Identificación</th>
+                        <th class="px-6 py-3">Estado de Entrega</th>
+                        <th class="px-6 py-3">Calificación Obt.</th>
+                        <th class="px-6 py-3">Acción</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 font-semibold text-slate-700">
+                    {% for est in estudiantes_status %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-6 py-4 font-bold text-slate-900">
+                            {{ est.alumno.get_full_name }}
+                        </td>
+                        <td class="px-6 py-4 font-mono text-slate-500">
+                            {{ est.alumno.identificacion }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if est.entregado %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
+                                    ✓ Entregado ({{ est.intento.fecha_fin|date:"H:i" }})
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 animate-pulse">
+                                    ⏳ En Progreso / Pendiente
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 font-extrabold">
+                            {% if est.entregado %}
+                                <span class="text-indigo-600 text-sm">{{ est.intento.puntaje_porcentaje|floatformat:1 }}%</span>
+                            {% else %}
+                                <span class="text-slate-400">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if est.entregado %}
+                                <a href="{% url 'evaluaciones:taller_intento_detail' est.intento.pk %}" class="text-indigo-600 hover:text-indigo-900 font-bold underline">
+                                    Ver Intento
+                                </a>
+                            {% else %}
+                                <span class="text-slate-400 text-[10px]">Esperando envío...</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-slate-400 font-medium">
+                            No hay estudiantes marcados como asistentes (Presente) en esta clase aún.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% block title %}Revisar Secuencias — {{ simulacro.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8"
+     style="background: linear-gradient(160deg, #f8fafc 0%, #f1f5f9 60%, #e9f0fb 100%); min-height: 100vh;">
+
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">Revisar Secuencias OMR</h1>
+      <p class="text-sm text-gray-500 mt-1">{{ simulacro.nombre }} — {{ batch.fecha }}</p>
+    </div>
+    <div id="globalStatus" class="flex items-center gap-3">
+      <span class="text-sm font-semibold text-gray-600">Errores detectados:</span>
+      <span id="errorCount"
+            class="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold
+                   {% if total_errores > 0 %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+        {{ total_errores }}
+      </span>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="mb-6 space-y-2">
+    {% for message in messages %}
+    <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="post" id="revisarForm">
+    {% csrf_token %}
+
+    <div class="space-y-6">
+      {% for alumno in batch.alumnos %}
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+
+        <!-- Encabezado del alumno -->
+        <div class="flex items-center justify-between px-5 py-3
+                    bg-gradient-to-r from-slate-50 via-blue-50 to-slate-50 border-b border-gray-100">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+              {{ forloop.counter }}
+            </div>
+            <span class="font-semibold text-gray-800">{{ alumno.nombre }}</span>
+          </div>
+          {% if alumno.error %}
+          <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
+            ⚠ {{ alumno.error }}
+          </span>
+          {% endif %}
+          <span class="alumno-status text-xs font-semibold px-2 py-1 rounded-full"></span>
+        </div>
+
+        <!-- Tiras -->
+        <div class="p-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          <!-- Sesión 1 -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-widest text-blue-600 mb-3">Sesión 1 (120 respuestas)</h3>
+            <div class="grid grid-cols-2 gap-3">
+              {% for tira in alumno.s1 %}
+              {% with campo_id="s1_"|add:alumno.id|stringformat:"s"|add:"_"|add:tira.etiqueta %}
+              <div class="tira-group" data-alumno="{{ alumno.id }}" data-sesion="s1" data-etiqueta="{{ tira.etiqueta }}" data-esperado="{{ tira.esperado }}">
+                <div class="flex items-center justify-between mb-1">
+                  <label for="{{ campo_id }}" class="text-xs font-semibold text-gray-600">
+                    {{ tira.etiqueta }}
+                    <span class="text-gray-400 font-normal">({{ tira.esperado }} resp.)</span>
+                  </label>
+                  <span class="tira-badge text-xs font-bold px-1.5 py-0.5 rounded
+                               {% if tira.ok %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                    <span class="tira-len">{{ tira.secuencia|length }}</span>/{{ tira.esperado }}
+                  </span>
+                </div>
+                <textarea id="{{ campo_id }}"
+                          name="s1_{{ alumno.id }}_{{ tira.etiqueta }}"
+                          rows="2"
+                          spellcheck="false"
+                          class="tira-input w-full font-mono text-sm border-2 rounded-lg px-2 py-1 resize-none
+                                 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors
+                                 {% if tira.ok %}border-green-400 bg-green-50{% else %}border-red-400 bg-red-50{% endif %}"
+                          data-esperado="{{ tira.esperado }}">{{ tira.secuencia }}</textarea>
+              </div>
+              {% endwith %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Sesión 2 -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-3">Sesión 2 (134 respuestas)</h3>
+            <div class="grid grid-cols-2 gap-3">
+              {% for tira in alumno.s2 %}
+              {% with campo_id="s2_"|add:alumno.id|stringformat:"s"|add:"_"|add:tira.etiqueta %}
+              <div class="tira-group" data-alumno="{{ alumno.id }}" data-sesion="s2" data-etiqueta="{{ tira.etiqueta }}" data-esperado="{{ tira.esperado }}">
+                <div class="flex items-center justify-between mb-1">
+                  <label for="{{ campo_id }}" class="text-xs font-semibold text-gray-600">
+                    {{ tira.etiqueta }}
+                    <span class="text-gray-400 font-normal">({{ tira.esperado }} resp.)</span>
+                  </label>
+                  <span class="tira-badge text-xs font-bold px-1.5 py-0.5 rounded
+                               {% if tira.ok %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                    <span class="tira-len">{{ tira.secuencia|length }}</span>/{{ tira.esperado }}
+                  </span>
+                </div>
+                <textarea id="{{ campo_id }}"
+                          name="s2_{{ alumno.id }}_{{ tira.etiqueta }}"
+                          rows="2"
+                          spellcheck="false"
+                          class="tira-input w-full font-mono text-sm border-2 rounded-lg px-2 py-1 resize-none
+                                 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors
+                                 {% if tira.ok %}border-green-400 bg-green-50{% else %}border-red-400 bg-red-50{% endif %}"
+                          data-esperado="{{ tira.esperado }}">{{ tira.secuencia }}</textarea>
+              </div>
+              {% endwith %}
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-12 text-gray-500">No hay alumnos para revisar.</div>
+      {% endfor %}
+    </div>
+
+    <!-- Barra fija inferior -->
+    <div class="sticky bottom-0 mt-8 bg-white/90 backdrop-blur border-t border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl shadow-lg">
+      <div class="flex items-center gap-2 text-sm">
+        <span class="text-gray-600">Tiras con error:</span>
+        <span id="footerErrorCount" class="font-bold text-red-600">{{ total_errores }}</span>
+        <span id="footerOkMsg" class="font-bold text-green-600 hidden">✅ Todo listo para calificar</span>
+      </div>
+      <div class="flex gap-3">
+        <a href="javascript:history.back()"
+           class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
+          ← Volver
+        </a>
+        <button type="submit" id="btnCalificar"
+                class="px-6 py-2 rounded-lg text-white text-sm font-bold transition
+                       {% if total_errores > 0 %}bg-gray-400 cursor-not-allowed{% else %}bg-indigo-600 hover:bg-indigo-700{% endif %}"
+                {% if total_errores > 0 %}disabled{% endif %}>
+          Calificar
+        </button>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<script>
+// Convertir a mayúsculas y solo letras A-Z al escribir
+document.querySelectorAll('.tira-input').forEach(textarea => {
+  textarea.addEventListener('input', function () {
+    // Eliminar caracteres no letra y forzar mayúsculas
+    const pos   = this.selectionStart;
+    const clean = this.value.toUpperCase().replace(/[^A-Z]/g, '');
+    if (this.value !== clean) {
+      this.value = clean;
+      this.setSelectionRange(pos, pos);
+    }
+    updateTiraStatus(this);
+    updateGlobalStatus();
+  });
+});
+
+function updateTiraStatus(textarea) {
+  const group    = textarea.closest('.tira-group');
+  const badge    = group.querySelector('.tira-badge');
+  const lenSpan  = group.querySelector('.tira-len');
+  const esperado = parseInt(textarea.dataset.esperado);
+  const actual   = textarea.value.replace(/\s/g, '').length;
+  const ok       = actual === esperado;
+
+  lenSpan.textContent = actual;
+
+  if (ok) {
+    badge.className     = 'tira-badge text-xs font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-700';
+    textarea.className  = textarea.className
+      .replace('border-red-400 bg-red-50', 'border-green-400 bg-green-50');
+    if (!textarea.className.includes('border-green-400')) {
+      textarea.className += ' border-green-400 bg-green-50';
+    }
+  } else {
+    badge.className     = 'tira-badge text-xs font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700';
+    textarea.className  = textarea.className
+      .replace('border-green-400 bg-green-50', 'border-red-400 bg-red-50');
+    if (!textarea.className.includes('border-red-400')) {
+      textarea.className += ' border-red-400 bg-red-50';
+    }
+  }
+}
+
+function updateGlobalStatus() {
+  const totalErrores = document.querySelectorAll(
+    '.tira-input'
+  ).length - [...document.querySelectorAll('.tira-input')].filter(t => {
+    const actual   = t.value.replace(/\s/g, '').length;
+    const esperado = parseInt(t.dataset.esperado);
+    return actual === esperado;
+  }).length;
+
+  document.getElementById('errorCount').textContent      = totalErrores;
+  document.getElementById('footerErrorCount').textContent = totalErrores;
+
+  const btnCalificar = document.getElementById('btnCalificar');
+  const okMsg        = document.getElementById('footerOkMsg');
+  const errCount     = document.getElementById('footerErrorCount');
+
+  if (totalErrores === 0) {
+    btnCalificar.disabled = false;
+    btnCalificar.className = btnCalificar.className
+      .replace('bg-gray-400 cursor-not-allowed', 'bg-indigo-600 hover:bg-indigo-700');
+    document.getElementById('errorCount').className =
+      'inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700';
+    errCount.classList.add('hidden');
+    okMsg.classList.remove('hidden');
+  } else {
+    btnCalificar.disabled = true;
+    btnCalificar.className = btnCalificar.className
+      .replace('bg-indigo-600 hover:bg-indigo-700', 'bg-gray-400 cursor-not-allowed');
+    document.getElementById('errorCount').className =
+      'inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700';
+    errCount.classList.remove('hidden');
+    okMsg.classList.add('hidden');
+  }
+}
+
+// Sanear al cargar (por si llegó con espacios del textarea)
+document.querySelectorAll('.tira-input').forEach(t => {
+  t.value = t.value.trim();
+  updateTiraStatus(t);
+});
+updateGlobalStatus();
+
+// Feedback al enviar
+document.getElementById('revisarForm').addEventListener('submit', function () {
+  const btn = document.getElementById('btnCalificar');
+  btn.disabled   = true;
+  btn.textContent = 'Calificando...';
+});
+</script>
+{% endblock %}

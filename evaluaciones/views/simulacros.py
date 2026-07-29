@@ -19,14 +19,14 @@ from curriculo.views.mixins import HistorialMixin
 class StaffRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         user = self.request.user
-        return user.is_authenticated and (user.is_superuser or (user.is_staff and user.role != 'teacher'))
+        return user.is_authenticated and (user.is_superuser or (user.is_staff and not user.es_docente))
 
 class SimulacroAccessMixin(UserPassesTestMixin):
     def test_func(self):
         user = self.request.user
         if not user.is_authenticated:
             return False
-        if user.is_superuser:
+        if user.is_superuser or user.is_staff and not user.es_docente:
             return True
             
         if hasattr(self, 'get_object'):
@@ -39,15 +39,15 @@ class SimulacroAccessMixin(UserPassesTestMixin):
         else:
             simulacro = obj
         
-        # Profesores y Staff
-        if user.is_staff or user.role == 'teacher':
-            if user.role == 'teacher' and simulacro.modulo and simulacro.modulo.ciclo:
+        # Profesores
+        if user.es_docente:
+            if simulacro.modulo and simulacro.modulo.ciclo:
                 programa = simulacro.modulo.ciclo.programa
                 return user.programas_docente.filter(id=programa.id).exists()
             return True
             
         # Estudiantes
-        if user.role != 'virtual_student':
+        if user.es_docente or user.es_personal_gestion:
             return False
             
         from suscripciones.models import Subscription

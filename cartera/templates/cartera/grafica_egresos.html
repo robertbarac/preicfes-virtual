@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load cartera_tags humanize %}
+
+{% block title %}Gráfica de Egresos{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Reporte de Egresos</h1>
+
+    <!-- Filtros Unificados -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <form method="get" id="filtros-form" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end">
+            
+            <!-- Año y Mes -->
+            <div>
+                <label for="año" class="block text-sm font-medium text-gray-700">Año</label>
+                <select name="año" id="año" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    {% for anio in años_disponibles %}
+                        <option value="{{ anio }}" {% if anio == año_seleccionado %}selected{% endif %}>{{ anio }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="mes" class="block text-sm font-medium text-gray-700">Mes</label>
+                <select name="mes" id="mes" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    {% for num, nombre in meses %}
+                        <option value="{{ num }}" {% if num == mes_seleccionado %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Departamento (solo para superuser) -->
+            {% if user.is_superuser %}
+            <div>
+                <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento</label>
+                <select name="departamento" id="departamento" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos</option>
+                    {% for depto in departamentos %}
+                        <option value="{{ depto.id }}" {% if depto.id == departamento_seleccionado %}selected{% endif %}>{{ depto.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <!-- Municipio (superuser, coordinador, auxiliar) -->
+            {% if user.is_superuser or is_coordinador_or_auxiliar %}
+            <div>
+                <label for="municipio" class="block text-sm font-medium text-gray-700">Municipio</label>
+                <select name="municipio" id="municipio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos</option>
+                    {% for mun in municipios %}
+                        <option value="{{ mun.id }}" {% if mun.id == municipio_seleccionado %}selected{% endif %}>{{ mun.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <!-- Concepto -->
+            <div>
+                <label for="concepto" class="block text-sm font-medium text-gray-700">Concepto</label>
+                <select name="concepto" id="concepto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    <option value="">Todos</option>
+                    {% for key, value in conceptos %}
+                        <option value="{{ key }}" {% if key == concepto_seleccionado %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Botón de Aplicar -->
+            <div class="self-end">
+                <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Aplicar Filtros
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Gráfica de egresos -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-xl font-semibold mb-4">Egresos - {{ año_seleccionado }}{% if concepto_seleccionado %} - {{ concepto_seleccionado|get_concepto_display }}{% endif %}</h2>
+        <img src="{% url 'cartera:grafica_egresos' %}?año={{ año_seleccionado }}&grafica=1{% if departamento_seleccionado %}&departamento={{ departamento_seleccionado }}{% endif %}{% if municipio_seleccionado %}&municipio={{ municipio_seleccionado }}{% endif %}{% if concepto_seleccionado %}&concepto={{ concepto_seleccionado }}{% endif %}" 
+             alt="Gráfica de Egresos" 
+             class="w-full h-auto border rounded">
+    </div>
+
+    <!-- Resumen de egresos del año -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-xl font-semibold mb-4">Resumen Anual</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-sm font-medium text-gray-500">Total Egresos {{ año_seleccionado }}</h3>
+                <p class="text-2xl font-semibold">${{ total_egresos_año|floatformat:0|intcomma }}</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-sm font-medium text-gray-500">Promedio Mensual</h3>
+                <p class="text-2xl font-semibold">${{ total_egresos_año|divide:12|floatformat:0|intcomma }}</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-sm font-medium text-gray-500">Egresos {{ nombre_mes }}</h3>
+                <p class="text-2xl font-semibold">${{ total_egresos_mes|floatformat:0|intcomma }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detalles de egresos por concepto para el mes seleccionado -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-semibold mb-4">Detalle de Egresos - {{ nombre_mes }} {{ año_seleccionado }}</h2>
+        
+        {% if detalles_conceptos %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concepto</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Porcentaje</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for detalle in detalles_conceptos %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ detalle.concepto }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">${{ detalle.monto|floatformat:0|intcomma }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">{{ detalle.porcentaje|floatformat:1 }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-900">${{ total_egresos_mes|floatformat:0|intcomma }}</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-900">100%</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-gray-500">
+            No hay egresos registrados para {{ nombre_mes }} {{ año_seleccionado }}
+        </div>
+        {% endif %}
+        
+        <!-- Gráfico de pastel para distribución por concepto -->
+        {% if detalles_conceptos|length > 1 %}
+        <div class="mt-8">
+            <h3 class="text-lg font-medium mb-4">Distribución por Concepto</h3>
+            <div class="w-full h-64">
+                <canvas id="graficoDistribucion"></canvas>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if detalles_conceptos|length > 1 %}
+<!-- Script para el gráfico de pastel -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var ctx = document.getElementById('graficoDistribucion').getContext('2d');
+        
+        // Colores para el gráfico
+        var colores = [
+            '#4CAF50', '#F44336', '#2196F3', '#FF9800', '#9C27B0', 
+            '#607D8B', '#E91E63', '#00BCD4', '#8BC34A', '#FFC107'
+        ];
+        
+        // Datos para el gráfico
+        const detalles = JSON.parse('{{ detalles_conceptos_json|escapejs }}');
+        const etiquetas = detalles.map(d => d.concepto);
+        const valores = detalles.map(d => d.monto);
+        
+        var datos = {
+            labels: etiquetas,
+            datasets: [{
+                data: valores,
+                backgroundColor: colores.slice(0, detalles.length),
+                borderWidth: 1
+            }]
+        };
+        
+        // Crear el gráfico
+        var grafico = new Chart(ctx, {
+            type: 'pie',
+            data: datos,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.label || '';
+                                var value = context.raw || 0;
+                                var total = 0;
+                                for (var i = 0; i < valores.length; i++) {
+                                    total += valores[i];
+                                }
+                                var percentage = Math.round((value / total) * 100);
+                                return label + ": $" + value.toLocaleString() + " (" + percentage + "%)"; 
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+
+<!-- Script para auto-submit del formulario cuando cambian los filtros -->
+<script>
+    document.querySelectorAll('select').forEach(function(element) {
+        element.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+</script>
+{% endblock %}

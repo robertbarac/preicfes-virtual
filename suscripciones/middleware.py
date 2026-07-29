@@ -29,12 +29,12 @@ class SubscriptionCheckMiddleware:
         if not request.user.is_authenticated:
             return self.get_response(request)
             
-        # 1.5. Bypass if user is staff or superuser, regardless of their text 'role'
-        if request.user.is_staff or request.user.is_superuser:
+        # 1.5. Bypass if user is staff, superuser, teacher or management staff
+        if request.user.is_staff or request.user.is_superuser or request.user.es_docente or request.user.es_personal_gestion:
             return self.get_response(request)
             
-        # 2. Bypass if user is not a student or virtual_student
-        if request.user.role not in ['student', 'virtual_student']:
+        # 2. Bypass if user is not a student
+        if request.user.es_docente or request.user.es_personal_gestion:
             return self.get_response(request)
 
         # 3. Bypass if the path is in the allowed list or starts with allowed prefixes

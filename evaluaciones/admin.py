@@ -48,6 +48,14 @@ class PreguntaAdmin(admin.ModelAdmin):
             )
         return queryset, use_distinct
 
+from .models.talleres import Taller, PreguntaTaller, AsignacionTallerGrupo
+
+@admin.register(AsignacionTallerGrupo)
+class AsignacionTallerGrupoAdmin(admin.ModelAdmin):
+    list_display = ('taller', 'grupo', 'fecha_asignacion', 'activo', 'intentos_permitidos')
+    list_filter = ('grupo', 'activo', 'fecha_asignacion')
+    search_fields = ('taller__titulo', 'grupo__nombre')
+
 # --- TALLERES ---
 
 class PreguntaTallerInline(admin.TabularInline):
