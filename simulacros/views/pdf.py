@@ -573,18 +573,7 @@ class DescargarInformeDirectivoPDFView(LoginRequiredMixin, PermisosResultadosMix
             clasificar_area(r.puntaje_ingles_modificado, niv_ing)
 
         # Análisis de Ítems Críticos
-        errores_s1 = Counter()
-        errores_s2 = Counter()
-        sol_s1 = simulacro.soluciones_s1
-        sol_s2 = simulacro.soluciones_s2
-        
-        for r in qs:
-            if r.respuestas_s1 and sol_s1:
-                for idx, (resp, sol) in enumerate(zip(r.respuestas_s1, sol_s1)):
-                    if resp != sol: errores_s1[idx+1] += 1
-            if r.respuestas_s2 and sol_s2:
-                for idx, (resp, sol) in enumerate(zip(r.respuestas_s2, sol_s2)):
-                    if resp != sol: errores_s2[idx+1] += 1
+        top_errores = []
 
         def get_componente_from_item(item_idx, cortes, componentes):
             c_idx = 0
@@ -593,24 +582,61 @@ class DescargarInformeDirectivoPDFView(LoginRequiredMixin, PermisosResultadosMix
                 c_idx += 1
             return componentes[-1] if componentes else "N/A"
 
-        cortes_s1 = simulacro.puntos_corte_s1 if isinstance(simulacro.puntos_corte_s1, list) else simulacro.puntos_corte_s1.get('cortes', [])
-        cortes_s2 = simulacro.puntos_corte_s2 if isinstance(simulacro.puntos_corte_s2, list) else simulacro.puntos_corte_s2.get('cortes', [])
-        comp_s1 = simulacro.get_componentes_s1()
-        comp_s2 = simulacro.get_componentes_s2()
+        if es_diag:
+            errores = Counter()
+            sol = getattr(simulacro, 'soluciones', '')
+            for r in qs:
+                resp = getattr(r, 'respuestas', '')
+                if resp and sol:
+                    for idx, (ans, s_val) in enumerate(zip(resp, sol)):
+                        if ans != s_val:
+                            errores[idx + 1] += 1
+            
+            p_corte = getattr(simulacro, 'puntos_corte', [])
+            cortes = p_corte if isinstance(p_corte, list) else (p_corte.get('cortes', []) if isinstance(p_corte, dict) else [])
+            comp = simulacro.get_componentes() if hasattr(simulacro, 'get_componentes') else []
+            
+            for item, count in errores.most_common(50):
+                pct = (count / total_alumnos) * 100
+                c_nombre = get_componente_from_item(item, cortes, comp).upper()
+                top_errores.append(['SD', item, c_nombre, pct, count])
+            top_errores.sort(key=lambda x: x[3], reverse=True)
+            top_errores = top_errores[:50]
+        else:
+            errores_s1 = Counter()
+            errores_s2 = Counter()
+            sol_s1 = getattr(simulacro, 'soluciones_s1', '')
+            sol_s2 = getattr(simulacro, 'soluciones_s2', '')
+            
+            for r in qs:
+                resp_s1 = getattr(r, 'respuestas_s1', '')
+                resp_s2 = getattr(r, 'respuestas_s2', '')
+                if resp_s1 and sol_s1:
+                    for idx, (resp, sol) in enumerate(zip(resp_s1, sol_s1)):
+                        if resp != sol: errores_s1[idx+1] += 1
+                if resp_s2 and sol_s2:
+                    for idx, (resp, sol) in enumerate(zip(resp_s2, sol_s2)):
+                        if resp != sol: errores_s2[idx+1] += 1
 
-        top_errores = []
-        for item, count in errores_s1.most_common(50):
-            pct = (count / total_alumnos) * 100
-            comp = get_componente_from_item(item, cortes_s1, comp_s1).upper()
-            top_errores.append(['S1', item, comp, pct, count])
-            
-        for item, count in errores_s2.most_common(50):
-            pct = (count / total_alumnos) * 100
-            comp = get_componente_from_item(item, cortes_s2, comp_s2).upper()
-            top_errores.append(['S2', item, comp, pct, count])
-            
-        top_errores.sort(key=lambda x: x[3], reverse=True)
-        top_errores = top_errores[:50] # Top 50 de ambos cuadernillos combinados
+            p_s1 = getattr(simulacro, 'puntos_corte_s1', [])
+            p_s2 = getattr(simulacro, 'puntos_corte_s2', [])
+            cortes_s1 = p_s1 if isinstance(p_s1, list) else (p_s1.get('cortes', []) if isinstance(p_s1, dict) else [])
+            cortes_s2 = p_s2 if isinstance(p_s2, list) else (p_s2.get('cortes', []) if isinstance(p_s2, dict) else [])
+            comp_s1 = simulacro.get_componentes_s1() if hasattr(simulacro, 'get_componentes_s1') else []
+            comp_s2 = simulacro.get_componentes_s2() if hasattr(simulacro, 'get_componentes_s2') else []
+
+            for item, count in errores_s1.most_common(50):
+                pct = (count / total_alumnos) * 100
+                comp = get_componente_from_item(item, cortes_s1, comp_s1).upper()
+                top_errores.append(['S1', item, comp, pct, count])
+                
+            for item, count in errores_s2.most_common(50):
+                pct = (count / total_alumnos) * 100
+                comp = get_componente_from_item(item, cortes_s2, comp_s2).upper()
+                top_errores.append(['S2', item, comp, pct, count])
+                
+            top_errores.sort(key=lambda x: x[3], reverse=True)
+            top_errores = top_errores[:50] # Top 50 de ambos cuadernillos combinados
 
         # Formatear el PDF
         response = HttpResponse(content_type='application/pdf')
