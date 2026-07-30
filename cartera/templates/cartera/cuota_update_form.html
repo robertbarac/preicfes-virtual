@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">Editar Cuota para {{ object.deuda.alumno }}</h1>
-    <form method="post" id="cuota-form">
+    <form method="post" id="cuota-form" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
@@ -15,6 +15,14 @@
         {% for field in form %}
             <div class="mb-4">
                 <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
+                {% if field.name == 'soporte_pago' and object.soporte_pago %}
+                    <div class="mt-1 mb-2 text-xs">
+                        <span class="text-gray-500 font-semibold">Comprobante Registrado:</span>
+                        <a href="{{ object.soporte_pago.url }}" target="_blank" class="text-blue-600 font-bold underline ml-1">
+                            📎 Ver Imagen Adjunta Actual
+                        </a>
+                    </div>
+                {% endif %}
                 {{ field }}
                 {% if field.help_text %}
                     <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>

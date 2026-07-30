@@ -105,11 +105,11 @@
             <nav class="mt-2 flex-1 px-2 space-y-2">
                 {% if user.is_authenticated %}
 
-                {% if user.es_personal_gestion or user.is_observador or user.is_staff and not user.es_estudiante and not user.es_docente %}
+                {% if 'academico' in request.path or 'cartera' in request.path or 'ventas' in request.path or 'ubicaciones' in request.path or 'simulacros' in request.path %}
                 <!-- PORTAL 2: GESTIÓN ACADÉMICA Y CARTERA -->
 
                 <!-- GESTIÓN ACADÉMICA — solo staff, observador y docentes -->
-                {% if user.is_staff or user.is_observador or user.es_docente %}
+                {% if user.is_superuser or user.is_staff or user.is_observador or user.es_docente %}
                 <div x-data="{ open: true }" class="space-y-1">
                     <button @click="open = !open" type="button" class="w-full flex items-center justify-between px-3 pt-3 pb-1 text-[10px] font-extrabold tracking-wider text-indigo-400 uppercase hover:text-indigo-200 transition-colors">
                         <span class="flex items-center gap-1.5">🏫 Gestión Académica</span>
@@ -201,7 +201,7 @@
                 {% endif %}{# /Gestión Académica — is_staff or is_observador or es_docente #}
 
                 <!-- CARTERA Y FACTURACIÓN (DESPLEGABLE) -->
-                {% if perms.cartera.view_cuota or user.is_observador %}
+                {% if user.is_superuser or perms.cartera.view_cuota or user.is_observador %}
                 <div x-data="{ open: true }" class="space-y-1 pt-2">
                     <button @click="open = !open" type="button" class="w-full flex items-center justify-between px-3 pt-3 pb-1 text-[10px] font-extrabold tracking-wider text-emerald-400 uppercase hover:text-emerald-200 transition-colors">
                         <span class="flex items-center gap-1.5">💳 Cartera y Facturación</span>
@@ -544,7 +544,7 @@
 
                 <div class="flex items-center gap-4">
                     <!-- NOTIFICACIONES DE CARTERA (solo para usuarios con permiso de editar cuotas) -->
-                    {% if perms.cartera.change_cuota %}
+                    {% if user.is_superuser or perms.cartera.change_cuota %}
                     <div class="relative" x-data="{ open: false }">
                         <button
                           @click="open = !open"
