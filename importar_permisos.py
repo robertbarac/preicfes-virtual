@@ -3,13 +3,14 @@ import os
 import sys
 import django
 
-sys.path.append('/home/robertbarac/vya/previrtual')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(BASE_DIR)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'previrtual.settings')
 django.setup()
 
 from django.contrib.auth.models import Group, Permission
 
-json_path = '/home/robertbarac/vya/previrtual/grupos_y_permisos.json'
+json_path = os.path.join(BASE_DIR, 'grupos_y_permisos.json')
 
 if not os.path.exists(json_path):
     print(f"⚠️ El archivo '{json_path}' no existe. Asegúrate de haberlo exportado primero.")

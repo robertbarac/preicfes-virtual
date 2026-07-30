@@ -101,7 +101,10 @@ class User(AbstractUser):
         return True
 
     def __str__(self):
-        return f"{self.username} ({self.get_role_display()})"
+        full = self.get_full_name().strip()
+        if full:
+            return f"{full} ({self.username})"
+        return str(self.username)
 
 from django.utils import timezone
 
