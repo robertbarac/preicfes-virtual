@@ -24,6 +24,24 @@
                     </div>
                 {% endif %}
                 {{ field }}
+                {% if field.name == 'soporte_pago' %}
+                    <div id="paste-drop-zone" class="mt-3 border-2 border-dashed border-blue-400 bg-blue-50/70 hover:bg-blue-100/80 p-4 rounded-xl text-center transition-all cursor-pointer shadow-sm">
+                        <div id="paste-prompt" class="space-y-1">
+                            <svg class="mx-auto h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            <p class="text-xs font-black text-blue-900">📋 Presiona <kbd class="px-1.5 py-0.5 bg-white border border-blue-300 rounded shadow-sm font-mono text-[11px] text-blue-900">Ctrl + V</kbd> para pegar la captura directamente</p>
+                            <p class="text-[11px] text-gray-600">O también puedes arrastrar y soltar la imagen aquí / hacer clic para buscar</p>
+                        </div>
+                        <div id="paste-preview-container" class="hidden mt-2">
+                            <img id="paste-preview-img" class="max-h-48 mx-auto rounded-lg border border-gray-300 shadow-md object-contain" />
+                            <p class="text-xs text-emerald-600 font-bold mt-2 flex items-center justify-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                ¡Imagen de comprobante lista para guardar!
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
                 {% if field.help_text %}
                     <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
                 {% endif %}
@@ -44,32 +62,112 @@
 </div>
 
 <script>
-document.getElementById('cuota-form').addEventListener('submit', function(e) {
-    // Intentar encontrar el campo de monto_abonado por su name
-    var montoInput = this.querySelector('[name="monto_abonado"]');
-    var montoMonto = this.querySelector('[name="monto"]');
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirmación al guardar
+    document.getElementById('cuota-form').addEventListener('submit', function(e) {
+        var montoInput = this.querySelector('[name="monto_abonado"]');
+        var montoMonto = this.querySelector('[name="monto"]');
 
-    var lineas = [];
+        var lineas = [];
 
-    if (montoInput) {
-        var valor = parseFloat(montoInput.value.replace(',', '.'));
-        if (!isNaN(valor)) {
-            var formateado = valor.toLocaleString('es-CO', {minimumFractionDigits: 0, maximumFractionDigits: 2});
-            lineas.push('💰 Monto abonado: $' + formateado);
+        if (montoInput) {
+            var valor = parseFloat(montoInput.value.replace(',', '.'));
+            if (!isNaN(valor)) {
+                var formateado = valor.toLocaleString('es-CO', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+                lineas.push('💰 Monto abonado: $' + formateado);
+            }
         }
-    }
-    if (montoMonto) {
-        var valorMonto = parseFloat(montoMonto.value.replace(',', '.'));
-        if (!isNaN(valorMonto)) {
-            var formateadoMonto = valorMonto.toLocaleString('es-CO', {minimumFractionDigits: 0, maximumFractionDigits: 2});
-            lineas.push('📋 Monto de cuota: $' + formateadoMonto);
+        if (montoMonto) {
+            var valorMonto = parseFloat(montoMonto.value.replace(',', '.'));
+            if (!isNaN(valorMonto)) {
+                var formateadoMonto = valorMonto.toLocaleString('es-CO', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+                lineas.push('📋 Monto de cuota: $' + formateadoMonto);
+            }
         }
+
+        var mensaje = '¿Confirma que desea guardar los siguientes cambios?\n\n' + lineas.join('\n') + '\n\nEsta acción quedará registrada bajo su usuario.';
+        if (!confirm(mensaje)) {
+            e.preventDefault();
+        }
+    });
+
+    // FUNCIONALIDAD DE PEGAR (Ctrl+V) Y DRAG AND DROP
+    const fileInput = document.querySelector('input[name="soporte_pago"]');
+    const dropZone = document.getElementById('paste-drop-zone');
+    const previewContainer = document.getElementById('paste-preview-container');
+    const previewImg = document.getElementById('paste-preview-img');
+    const promptDiv = document.getElementById('paste-prompt');
+
+    if (!fileInput) return;
+
+    function handleFile(file) {
+        if (!file.type.startsWith('image/')) {
+            alert('Por favor, selecciona o pega un archivo de imagen válido (PNG, JPG, WEBP).');
+            return;
+        }
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            promptDiv.classList.add('hidden');
+            previewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
     }
 
-    var mensaje = '¿Confirma que desea guardar los siguientes cambios?\n\n' + lineas.join('\n') + '\n\nEsta acción quedará registrada bajo su usuario.';
-    if (!confirm(mensaje)) {
-        e.preventDefault();
+    // Evento de pegar en cualquier parte de la ventana (Ctrl + V)
+    window.addEventListener('paste', function(e) {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                const file = new File([blob], 'comprobante_pegado_' + Date.now() + '.png', { type: items[i].type });
+                handleFile(file);
+                break;
+            }
+        }
+    });
+
+    // Eventos de Drag & Drop sobre la zona punteada
+    if (dropZone) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('bg-blue-100', 'border-blue-600');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('bg-blue-100', 'border-blue-600');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'INPUT') {
+                fileInput.click();
+            }
+        });
     }
+
+    // Cuando el usuario elige un archivo con el selector estándar
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            handleFile(this.files[0]);
+        }
+    });
 });
 </script>
 {% endblock %}
