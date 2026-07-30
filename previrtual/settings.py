@@ -196,3 +196,8 @@ else:
 # Incrementar el límite máximo de campos en solicitudes POST (para borrados masivos de miles de registros)
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
+# Compatibilidad con PostgreSQL 12.2 en PythonAnywhere
+from django.db.backends.base.base import BaseDatabaseWrapper
+BaseDatabaseWrapper.check_database_version_supported = lambda self: None
+
+
