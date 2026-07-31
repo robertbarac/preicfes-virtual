@@ -13,5 +13,6 @@ urlpatterns = [
     path('resultados/pdf/', views.DescargarResultadosPDFView.as_view(), name='descargar_resultados_pdf'),
     path('resultados/pdf-reales/', views.DescargarResultadosRealesPDFView.as_view(), name='descargar_resultados_reales_pdf'),
     path('resultados/informe-directivo/', views.DescargarInformeDirectivoPDFView.as_view(), name='descargar_informe_directivo'),
+    path('resultados/informe-directivo-real/', views.DescargarInformeDirectivoRealPDFView.as_view(), name='descargar_informe_directivo_real'),
     path('resultados/<int:resultado_pk>/pdf/', views.DescargarResultadoIndividualPDFView.as_view(), name='descargar_resultado_individual_pdf'),
 ]

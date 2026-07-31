@@ -40,7 +40,18 @@
                 <input type="hidden" name="fecha_inicio" value="{{ request.GET.fecha_inicio }}">
                 <input type="hidden" name="fecha_fin" value="{{ request.GET.fecha_fin }}">
                 <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded shadow text-sm">
-                    Generar Informe Directivo
+                    Informe Directivo (Modificado)
+                </button>
+            </form>
+            <form action="{% url 'simulacros:descargar_informe_directivo_real' %}" method="get" class="inline" target="_blank">
+                <input type="hidden" name="es_diagnostico" value="1">
+                <input type="hidden" name="sede" value="{{ request.GET.sede }}">
+                <input type="hidden" name="grupo" value="{{ request.GET.grupo }}">
+                <input type="hidden" name="simulacro" value="{{ request.GET.simulacro }}">
+                <input type="hidden" name="fecha_inicio" value="{{ request.GET.fecha_inicio }}">
+                <input type="hidden" name="fecha_fin" value="{{ request.GET.fecha_fin }}">
+                <button type="submit" class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-4 rounded shadow text-sm">
+                    Informe Directivo (Real)
                 </button>
             </form>
         </div>

@@ -506,12 +506,18 @@ class DescargarResultadoIndividualPDFView(LoginRequiredMixin, View):
         return response
 
 class DescargarInformeDirectivoPDFView(LoginRequiredMixin, PermisosResultadosMixin, View):
+    es_real_forced = False
+
     def get(self, request):
         es_diag = request.GET.get('es_diagnostico') == '1'
+        es_real = self.es_real_forced or request.GET.get('tipo') == 'real' or request.GET.get('es_real') == '1'
+
+        order_field = '-puntaje_global' if es_real else '-puntaje_global_modificado'
+
         if es_diag:
-            qs = ResultadoSimulacroDiagnostico.objects.all().select_related('alumno', 'simulacro', 'alumno__grupo_actual').order_by('-puntaje_global_modificado')
+            qs = ResultadoSimulacroDiagnostico.objects.all().select_related('alumno', 'simulacro', 'alumno__grupo_actual').order_by(order_field)
         else:
-            qs = ResultadoSimulacro.objects.all().select_related('alumno', 'simulacro', 'alumno__grupo_actual').order_by('-puntaje_global_modificado')
+            qs = ResultadoSimulacro.objects.all().select_related('alumno', 'simulacro', 'alumno__grupo_actual').order_by(order_field)
         
         sede_id = request.GET.get('sede')
         grupo_id = request.GET.get('grupo')
@@ -533,16 +539,28 @@ class DescargarInformeDirectivoPDFView(LoginRequiredMixin, PermisosResultadosMix
         total_alumnos = qs.count()
 
         # Promedios, Min y Max
-        puntajes_globales = [r.puntaje_global_modificado for r in qs]
-        avg_global = sum(puntajes_globales) / total_alumnos
-        max_global = max(puntajes_globales)
-        min_global = min(puntajes_globales)
-        
-        avg_mat = sum(r.puntaje_matematicas_modificado for r in qs) / total_alumnos
-        avg_lec = sum(r.puntaje_lectura_modificado for r in qs) / total_alumnos
-        avg_soc = sum(r.puntaje_sociales_modificado for r in qs) / total_alumnos
-        avg_nat = sum(r.puntaje_naturales_modificado for r in qs) / total_alumnos
-        avg_ing = sum(r.puntaje_ingles_modificado for r in qs) / total_alumnos
+        if es_real:
+            puntajes_globales = [r.puntaje_global for r in qs]
+            avg_global = sum(puntajes_globales) / total_alumnos
+            max_global = max(puntajes_globales)
+            min_global = min(puntajes_globales)
+            
+            avg_mat = sum(r.puntaje_matematicas for r in qs) / total_alumnos
+            avg_lec = sum(r.puntaje_lectura for r in qs) / total_alumnos
+            avg_soc = sum(r.puntaje_sociales for r in qs) / total_alumnos
+            avg_nat = sum(r.puntaje_naturales for r in qs) / total_alumnos
+            avg_ing = sum(r.puntaje_ingles for r in qs) / total_alumnos
+        else:
+            puntajes_globales = [r.puntaje_global_modificado for r in qs]
+            avg_global = sum(puntajes_globales) / total_alumnos
+            max_global = max(puntajes_globales)
+            min_global = min(puntajes_globales)
+            
+            avg_mat = sum(r.puntaje_matematicas_modificado for r in qs) / total_alumnos
+            avg_lec = sum(r.puntaje_lectura_modificado for r in qs) / total_alumnos
+            avg_soc = sum(r.puntaje_sociales_modificado for r in qs) / total_alumnos
+            avg_nat = sum(r.puntaje_naturales_modificado for r in qs) / total_alumnos
+            avg_ing = sum(r.puntaje_ingles_modificado for r in qs) / total_alumnos
 
         # Distribución de Niveles Globales (Pie Chart)
         niveles_global = {'Alto': 0, 'Medio': 0, 'Básico': 0, 'Bajo': 0}
@@ -566,11 +584,18 @@ class DescargarInformeDirectivoPDFView(LoginRequiredMixin, PermisosResultadosMix
             else: dict_niv['Bajo'] += 1
 
         for r in qs:
-            clasificar_area(r.puntaje_matematicas_modificado, niv_mat)
-            clasificar_area(r.puntaje_lectura_modificado, niv_lec)
-            clasificar_area(r.puntaje_sociales_modificado, niv_soc)
-            clasificar_area(r.puntaje_naturales_modificado, niv_nat)
-            clasificar_area(r.puntaje_ingles_modificado, niv_ing)
+            if es_real:
+                clasificar_area(r.puntaje_matematicas, niv_mat)
+                clasificar_area(r.puntaje_lectura, niv_lec)
+                clasificar_area(r.puntaje_sociales, niv_soc)
+                clasificar_area(r.puntaje_naturales, niv_nat)
+                clasificar_area(r.puntaje_ingles, niv_ing)
+            else:
+                clasificar_area(r.puntaje_matematicas_modificado, niv_mat)
+                clasificar_area(r.puntaje_lectura_modificado, niv_lec)
+                clasificar_area(r.puntaje_sociales_modificado, niv_soc)
+                clasificar_area(r.puntaje_naturales_modificado, niv_nat)
+                clasificar_area(r.puntaje_ingles_modificado, niv_ing)
 
         # Análisis de Ítems Críticos
         top_errores = []
@@ -640,7 +665,8 @@ class DescargarInformeDirectivoPDFView(LoginRequiredMixin, PermisosResultadosMix
 
         # Formatear el PDF
         response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = f'inline; filename="Informe_Directivo_{simulacro.nombre}.pdf"'
+        fn_prefix = "Informe_Directivo_Real_" if es_real else "Informe_Directivo_"
+        response['Content-Disposition'] = f'inline; filename="{fn_prefix}{simulacro.nombre}.pdf"'
         
         doc = SimpleDocTemplate(response, pagesize=LETTER, rightMargin=40, leftMargin=40, topMargin=35, bottomMargin=35)
         elements = []
@@ -655,7 +681,8 @@ class DescargarInformeDirectivoPDFView(LoginRequiredMixin, PermisosResultadosMix
         if os.path.exists(logo_path):
             elements.append(RLImage(logo_path, width=90, height=90*377/661.0, kind='proportional'))
             
-        elements.append(Paragraph('INFORME DIRECTIVO DE RESULTADOS', t_style))
+        header_title = 'INFORME DIRECTIVO DE RESULTADOS REALES' if es_real else 'INFORME DIRECTIVO DE RESULTADOS'
+        elements.append(Paragraph(header_title, t_style))
         elements.append(Paragraph(f'Simulacro: {simulacro.nombre} &nbsp;|&nbsp; Estudiantes Evaluados: {total_alumnos}', s_style))
         
         # 1. Resumen Global
@@ -836,13 +863,21 @@ class DescargarInformeDirectivoPDFView(LoginRequiredMixin, PermisosResultadosMix
         # 4. Escalafón
         elements.append(Paragraph('4. Escalafón de Estudiantes', h2))
         
-        top_mat = sorted(list(set(r.puntaje_matematicas_modificado for r in qs)), reverse=True)[:3]
-        top_lec = sorted(list(set(r.puntaje_lectura_modificado for r in qs)), reverse=True)[:3]
-        top_soc = sorted(list(set(r.puntaje_sociales_modificado for r in qs)), reverse=True)[:3]
-        top_nat = sorted(list(set(r.puntaje_naturales_modificado for r in qs)), reverse=True)[:3]
-        top_ing = sorted(list(set(r.puntaje_ingles_modificado for r in qs)), reverse=True)[:3]
-        top_glb = sorted(list(set(r.puntaje_global_modificado for r in qs)), reverse=True)[:3]
-        
+        if es_real:
+            top_mat = sorted(list(set(r.puntaje_matematicas for r in qs)), reverse=True)[:3]
+            top_lec = sorted(list(set(r.puntaje_lectura for r in qs)), reverse=True)[:3]
+            top_soc = sorted(list(set(r.puntaje_sociales for r in qs)), reverse=True)[:3]
+            top_nat = sorted(list(set(r.puntaje_naturales for r in qs)), reverse=True)[:3]
+            top_ing = sorted(list(set(r.puntaje_ingles for r in qs)), reverse=True)[:3]
+            top_glb = sorted(list(set(r.puntaje_global for r in qs)), reverse=True)[:3]
+        else:
+            top_mat = sorted(list(set(r.puntaje_matematicas_modificado for r in qs)), reverse=True)[:3]
+            top_lec = sorted(list(set(r.puntaje_lectura_modificado for r in qs)), reverse=True)[:3]
+            top_soc = sorted(list(set(r.puntaje_sociales_modificado for r in qs)), reverse=True)[:3]
+            top_nat = sorted(list(set(r.puntaje_naturales_modificado for r in qs)), reverse=True)[:3]
+            top_ing = sorted(list(set(r.puntaje_ingles_modificado for r in qs)), reverse=True)[:3]
+            top_glb = sorted(list(set(r.puntaje_global_modificado for r in qs)), reverse=True)[:3]
+
         cell_style = ParagraphStyle(name='CellCenter', parent=styles['Normal'], fontSize=8, alignment=1)
         
         def format_score_with_medal(score, top_values):
@@ -866,16 +901,28 @@ class DescargarInformeDirectivoPDFView(LoginRequiredMixin, PermisosResultadosMix
             if len(nombre) > 35:
                 nombre = nombre[:32] + "..."
                 
-            esc_data.append([
-                str(rank), 
-                Paragraph(nombre, ParagraphStyle(name='CellLeft', parent=styles['Normal'], fontSize=8)), 
-                format_score_with_medal(r.puntaje_global_modificado, top_glb),
-                format_score_with_medal(r.puntaje_matematicas_modificado, top_mat),
-                format_score_with_medal(r.puntaje_lectura_modificado, top_lec),
-                format_score_with_medal(r.puntaje_sociales_modificado, top_soc),
-                format_score_with_medal(r.puntaje_naturales_modificado, top_nat),
-                format_score_with_medal(r.puntaje_ingles_modificado, top_ing),
-            ])
+            if es_real:
+                esc_data.append([
+                    str(rank), 
+                    Paragraph(nombre, ParagraphStyle(name='CellLeft', parent=styles['Normal'], fontSize=8)), 
+                    format_score_with_medal(r.puntaje_global, top_glb),
+                    format_score_with_medal(r.puntaje_matematicas, top_mat),
+                    format_score_with_medal(r.puntaje_lectura, top_lec),
+                    format_score_with_medal(r.puntaje_sociales, top_soc),
+                    format_score_with_medal(r.puntaje_naturales, top_nat),
+                    format_score_with_medal(r.puntaje_ingles, top_ing),
+                ])
+            else:
+                esc_data.append([
+                    str(rank), 
+                    Paragraph(nombre, ParagraphStyle(name='CellLeft', parent=styles['Normal'], fontSize=8)), 
+                    format_score_with_medal(r.puntaje_global_modificado, top_glb),
+                    format_score_with_medal(r.puntaje_matematicas_modificado, top_mat),
+                    format_score_with_medal(r.puntaje_lectura_modificado, top_lec),
+                    format_score_with_medal(r.puntaje_sociales_modificado, top_soc),
+                    format_score_with_medal(r.puntaje_naturales_modificado, top_nat),
+                    format_score_with_medal(r.puntaje_ingles_modificado, top_ing),
+                ])
             
         t_esc = Table(esc_data, colWidths=[25, 215, 40, 39, 39, 39, 39, 39], repeatRows=1)
         t_esc.setStyle(TableStyle([
@@ -895,3 +942,8 @@ class DescargarInformeDirectivoPDFView(LoginRequiredMixin, PermisosResultadosMix
         
         doc.build(elements)
         return response
+
+
+class DescargarInformeDirectivoRealPDFView(DescargarInformeDirectivoPDFView):
+    es_real_forced = True
+
