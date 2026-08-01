@@ -268,6 +268,7 @@ class ClaseAdmin(admin.ModelAdmin):
     list_display = ('materia', 'fecha', 'horario', 'salon', 'profesor', 'grupo', 'estado')
     list_filter = ('estado', 'fecha', 'horario', 'salon', 'materia', 'grupo__salon__sede', 'profesor', 'grupo__salon__sede__municipio', 'grupo__codigo')
     search_fields = ('materia__nombre', 'profesor__username', 'grupo__codigo', 'estado')
+    autocomplete_fields = ['taller']
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request).select_related(
