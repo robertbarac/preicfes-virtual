@@ -4,27 +4,40 @@ from suscripciones.models import Subscription
 
 User = get_user_model()
 
+TIPO_REGISTRO_CHOICES = [
+    ('', '--- Selecciona tipo de usuario ---'),
+    ('student', 'Estudiante Presencial'),
+    ('virtual_student', 'Estudiante Virtual'),
+    ('teacher', 'Docente / Profesor'),
+    ('staff', 'Personal Administrativo'),
+]
+
 class RegistroInternoForm(forms.ModelForm):
+    # Campo propio (no del modelo) para determinar qué grupo asignar
+    tipo_registro = forms.ChoiceField(
+        choices=TIPO_REGISTRO_CHOICES,
+        label='Tipo de Usuario',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
     # Campos adicionales para la suscripción
     start_date = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
     end_date = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
 
     class Meta:
         model = User
-        fields = ['tipo_documento', 'numero_documento', 'first_name', 'last_name', 'email', 'telefono', 'username', 'role', 'programa']
+        fields = ['tipo_documento', 'numero_documento', 'first_name', 'last_name', 'email', 'telefono', 'username', 'programa']
 
     def clean(self):
         cleaned_data = super().clean()
-        role = cleaned_data.get('role')
+        tipo = cleaned_data.get('tipo_registro')
         start_date = cleaned_data.get('start_date')
         end_date = cleaned_data.get('end_date')
 
-        if role in ['student', 'virtual_student']:
+        if tipo in ['student', 'virtual_student']:
             if not start_date:
                 self.add_error('start_date', 'La fecha de inicio es requerida para estudiantes.')
             if not end_date:
                 self.add_error('end_date', 'La fecha de fin es requerida para estudiantes.')
-            
             if start_date and end_date and start_date >= end_date:
                 self.add_error('end_date', 'La fecha de fin debe ser posterior a la fecha de inicio.')
 
@@ -44,10 +57,19 @@ class VentanaRegistroForm(forms.ModelForm):
 class RegistroPublicoForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}))
     password_confirm = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}))
+    tipo_registro = forms.ChoiceField(
+        choices=[
+            ('', '--- Selecciona tu Modalidad ---'),
+            ('student', 'Estudiante Presencial (Asiste a clases físicas)'),
+            ('virtual_student', 'Estudiante 100% Virtual (Plataforma)'),
+        ],
+        label='Modalidad',
+        widget=forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'})
+    )
     
     class Meta:
         model = User
-        fields = ['tipo_documento', 'numero_documento', 'first_name', 'last_name', 'email', 'telefono', 'username', 'role']
+        fields = ['tipo_documento', 'numero_documento', 'first_name', 'last_name', 'email', 'telefono', 'username']
         widgets = {
             'tipo_documento': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
             'numero_documento': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
@@ -56,17 +78,7 @@ class RegistroPublicoForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
             'telefono': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
             'username': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
-            'role': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Solo permitimos roles de estudiantes
-        self.fields['role'].choices = [
-            ('', '--- Selecciona tu Modalidad ---'),
-            ('student', 'Estudiante Presencial (Asiste a clases físicas)'),
-            ('virtual_student', 'Estudiante 100% Virtual (Plataforma)'),
-        ]
 
     def clean(self):
         cleaned_data = super().clean()

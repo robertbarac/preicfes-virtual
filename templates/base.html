@@ -657,7 +657,7 @@
                     <div class="flex items-center gap-2 border-l border-slate-700 pl-4">
                         <span class="text-xs font-bold text-slate-200">{{ user.get_full_name|default:user.username }}</span>
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-teal-300 border border-slate-700">
-                            {{ user.get_role_display }}
+                            {% if user.es_docente %}Docente{% elif user.groups.filter(name='VirtualStudent').exists %}Virtual{% elif user.groups.filter(name='Student').exists %}Presencial{% elif user.is_superuser %}Admin{% elif user.is_staff %}Staff{% else %}Usuario{% endif %}
                         </span>
                     </div>
                     {% endif %}

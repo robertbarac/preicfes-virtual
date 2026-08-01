@@ -37,7 +37,7 @@
                 <a href="{% url 'evaluaciones:taller_create' %}?modulo={{ modulo.id }}" class="text-xs font-semibold bg-green-100 hover:bg-green-200 text-green-800 py-1.5 px-3 rounded">
                     + Taller
                 </a>
-                {% if request.user.role == 'virtual_student' or request.user.is_staff or request.user.is_superuser %}
+                {% if request.user.groups.filter(name='VirtualStudent').exists or request.user.is_staff or request.user.is_superuser %}
                 <a href="{% url 'evaluaciones:simulacro_create' %}?modulo={{ modulo.id }}" class="text-xs font-semibold bg-red-100 hover:bg-red-200 text-red-800 py-1.5 px-3 rounded">
                     + Simulacro
                 </a>
@@ -98,7 +98,7 @@
                     {% endfor %}
 
                     <!-- Simulacros (Solo Virtuales/Staff) -->
-                    {% if request.user.role == 'virtual_student' or request.user.is_staff or request.user.is_superuser %}
+                    {% if request.user.groups.filter(name='VirtualStudent').exists or request.user.is_staff or request.user.is_superuser %}
                         {% for simulacro in modulo.simulacros.all %}
                             <div class="bg-white border rounded p-4 hover:shadow transition relative flex flex-col justify-between">
                                 <div>

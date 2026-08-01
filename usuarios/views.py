@@ -68,19 +68,23 @@ class RegistroUsuarioView(UserPassesTestMixin, FormView):
         user.set_password(temporal_password)
         user.save()
 
-        # Asignación de Grupos de Permisos según el rol seleccionado en el formulario
+        # Asignación de Grupos de Permisos según el tipo_registro seleccionado en el formulario
+        tipo = form.cleaned_data.get('tipo_registro', '')
         try:
-            if user.role == 'teacher':
+            if tipo == 'teacher':
                 teacher_group, _ = Group.objects.get_or_create(name='Teacher')
                 user.groups.add(teacher_group)
                 user.is_staff = True
                 user.save(update_fields=['is_staff'])
-            elif user.role == 'student':
+            elif tipo == 'student':
                 student_group, _ = Group.objects.get_or_create(name='Student')
                 user.groups.add(student_group)
-            elif user.role == 'virtual_student':
+            elif tipo == 'virtual_student':
                 virtual_student_group, _ = Group.objects.get_or_create(name='VirtualStudent')
                 user.groups.add(virtual_student_group)
+            elif tipo == 'staff':
+                user.is_staff = True
+                user.save(update_fields=['is_staff'])
         except Exception:
             pass
 
@@ -98,8 +102,8 @@ class RegistroUsuarioView(UserPassesTestMixin, FormView):
             formato_rol = "Estudiante Virtual" if es_virtual else "Estudiante"
             messages.success(self.request, f"{formato_rol} {user.username} registrado con éxito. Contraseña temporal: {temporal_password}. Suscripción activada.")
         else:
-            tipo = "Docente" if user.es_docente else "Usuario"
-            messages.success(self.request, f"{tipo} {user.username} registrado con éxito. Contraseña temporal: {temporal_password}.")
+            tipo_label = "Docente" if user.es_docente else "Usuario"
+            messages.success(self.request, f"{tipo_label} {user.username} registrado con éxito. Contraseña temporal: {temporal_password}.")
 
         # Renderizar la respuesta con una bandera de éxito para que copien la password
         context = self.get_context_data(form=self.form_class())
@@ -180,12 +184,13 @@ class RegistroPublicoView(FormView):
         user.is_staff = False  # Strictly override just in case
         user.save()
 
-        # Group assignment
+        # Asignación de grupo según tipo_registro
+        tipo = form.cleaned_data.get('tipo_registro', 'student')
         try:
-            if user.role == 'student':
+            if tipo == 'student':
                 group, _ = Group.objects.get_or_create(name='Student')
                 user.groups.add(group)
-            elif user.role == 'virtual_student':
+            elif tipo == 'virtual_student':
                 group, _ = Group.objects.get_or_create(name='VirtualStudent')
                 user.groups.add(group)
         except Exception:
@@ -210,7 +215,8 @@ class RegistroPublicoView(FormView):
             end_date=end_date
         )
 
-        messages.success(self.request, f"¡Tu cuenta como {user.get_role_display()} ha sido creada! Ya puedes iniciar sesión.")
+        tipo_label = "Estudiante Virtual" if user.groups.filter(name='VirtualStudent').exists() else "Estudiante"
+        messages.success(self.request, f"¡Tu cuenta como {tipo_label} ha sido creada! Ya puedes iniciar sesión.")
         return super().form_valid(form)
 
 from django.conf import settings
@@ -353,7 +359,7 @@ class VigilarActividadView(UserPassesTestMixin, TemplateView):
         user_id = self.request.GET.get('user_id', '').strip()
         
         # Filtrar solo usuarios que sean estudiantes o estudiantes virtuales
-        students_qs = User.objects.filter(role__in=['student', 'virtual_student'], is_active=True)
+        students_qs = User.objects.filter(groups__name__in=['Student', 'VirtualStudent'], is_active=True).distinct()
         
         if q:
             students_qs = students_qs.filter(
@@ -370,7 +376,7 @@ class VigilarActividadView(UserPassesTestMixin, TemplateView):
         selected_user = None
         if user_id:
             try:
-                selected_user = User.objects.get(id=user_id, role__in=['student', 'virtual_student'])
+                selected_user = User.objects.filter(id=user_id, groups__name__in=['Student', 'VirtualStudent']).first()
             except User.DoesNotExist:
                 pass
         elif students_qs.count() == 1 and q:
@@ -461,7 +467,7 @@ class ProfesorListView(UserPassesTestMixin, ListView):
         return self.request.user.is_staff or self.request.user.is_superuser
 
     def get_queryset(self):
-        queryset = User.objects.filter(Q(groups__name__in=['Profesor', 'Teacher']) | Q(role='teacher')).distinct()
+        queryset = User.objects.filter(groups__name__in=['Profesor', 'Teacher']).distinct()
         
         user = self.request.user
         if user.is_superuser:

@@ -4,13 +4,7 @@ from django.core.validators import RegexValidator
 from datetime import timedelta
 
 class User(AbstractUser):
-    ROLE_CHOICES = (
-        ('student', 'Student'),
-        ('teacher', 'Teacher'),
-        ('virtual_student', 'VirtualStudent'),
-    )
-    # Admin role is handled by is_superuser and is_staff boolean properties inherited from AbstractUser
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
+    # Grupos de Django gestionan los roles: Student, VirtualStudent, Teacher, Profesor, y grupos administrativos.
     
     # Asignaciones de Programas (Directas)
     programa = models.ForeignKey(

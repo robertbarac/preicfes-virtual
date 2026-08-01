@@ -4,7 +4,7 @@
 {% block content %}
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
     <h1 class="text-3xl font-bold text-gray-800">Simulacros ICFES</h1>
-    {% if user.is_superuser or user.is_staff and user.role != 'teacher' %}
+    {% if user.is_superuser or user.is_staff and not user.es_docente %}
     <a href="{% url 'evaluaciones:simulacro_create' %}" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded shadow whitespace-nowrap">
         + Nuevo Simulacro
     </a>
@@ -68,7 +68,7 @@
         
         <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 flex flex-wrap justify-end gap-2 text-sm">
             <a href="{% url 'evaluaciones:simulacro_detail' simulacro.pk %}" class="bg-red-600 text-white hover:bg-red-700 font-medium py-1 px-4 rounded shadow-sm">Entrar</a>
-            {% if user.is_superuser or user.is_staff and user.role != 'teacher' %}
+            {% if user.is_superuser or user.is_staff and not user.es_docente %}
             <a href="{% url 'evaluaciones:simulacro_update' simulacro.pk %}" class="text-indigo-600 hover:text-indigo-900 border border-transparent font-medium py-1 px-2">Editar</a>
             {% endif %}
         </div>

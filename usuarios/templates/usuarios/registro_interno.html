@@ -30,7 +30,7 @@
                     <p class="mb-2"><span class="font-bold text-gray-700">Usuario:</span> {{ new_user.username }}</p>
                     <p class="mb-2"><span class="font-bold text-gray-700">Contraseña temporal:</span> <span
                             class="bg-yellow-100 px-2 py-1 rounded text-yellow-800 select-all">{{ temp_password }}</span></p>
-                    <p><span class="font-bold text-gray-700">Rol:</span> {{ new_user.get_role_display }}</p>
+                    <p><span class="font-bold text-gray-700">Tipo:</span> {% if new_user.es_docente %}Docente{% elif new_user.groups.filter(name='VirtualStudent').exists %}Estudiante Virtual{% elif new_user.groups.filter(name='Student').exists %}Estudiante Presencial{% elif new_user.is_staff %}Staff{% else %}Usuario{% endif %}</p>
                 </div>
                 <p class="text-sm text-green-700">Copia esta contraseña y entrégala al usuario. Le pedirá que la cambie
                     cuando inicie sesión por primera vez (si está configurado).</p>
@@ -48,14 +48,14 @@
                 se generará automáticamente de forma segura.
             </p>
 
-            <div x-data="{ role: 'student' }" x-init="
+            <div x-data="{ tipo: 'student' }" x-init="
                 setTimeout(() => {
-                    const roleSel = document.getElementById('id_role');
-                    if(roleSel) { role = roleSel.value; }
+                    const sel = document.getElementById('id_tipo_registro');
+                    if(sel) { tipo = sel.value; }
                 }, 100);
             ">
                 <form method="POST" action="{% url 'usuarios:registro_interno' %}" class="space-y-4" 
-                      @change="if($event.target.id === 'id_role') role = $event.target.value">
+                      @change="if($event.target.id === 'id_tipo_registro') tipo = $event.target.value">
                     {% csrf_token %}
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -78,11 +78,11 @@
                     </div>
 
                     <div>
-                        {{ form.role|as_crispy_field }}
+                        {{ form.tipo_registro|as_crispy_field }}
                     </div>
 
                     <!-- Panel Condicional de Suscripción para Estudiantes -->
-                    <div x-show="role === 'student' || role === 'virtual_student'" style="display: none;" x-transition
+                    <div x-show="tipo === 'student' || tipo === 'virtual_student'" style="display: none;" x-transition
                         class="bg-indigo-50 p-5 rounded-xl mt-6 border border-indigo-100">
                         <h3 class="font-bold text-indigo-800 mb-4 flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
