@@ -84,9 +84,17 @@ class User(AbstractUser):
         }) or self.is_staff)
 
     @property
+    def es_estudiante_virtual(self):
+        return self.groups.filter(name='VirtualStudent').exists()
+
+    @property
+    def es_estudiante_presencial(self):
+        return self.groups.filter(name='Student').exists()
+
+    @property
     def es_estudiante(self):
         """True si el usuario es estudiante por grupo Student/VirtualStudent o por falta de roles administrativos."""
-        if self.groups.filter(name__in=['Student', 'VirtualStudent']).exists():
+        if self.es_estudiante_presencial or self.es_estudiante_virtual:
             return True
         if self.is_superuser or self.is_staff or self.es_docente or self.is_observador:
             return False

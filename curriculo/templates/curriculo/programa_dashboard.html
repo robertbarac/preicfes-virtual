@@ -148,7 +148,7 @@
                             <!-- Simulacros (Solo PreICFES) -->
                             {% if programa.tipo == 'preicfes' %}
                                 {% for simulacro in modulo.simulacros.all %}
-                                    {% if request.user.groups.filter(name='VirtualStudent').exists or es_teacher %}
+                                    {% if request.user.es_estudiante_virtual or es_teacher %}
                                     <div class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow transition relative flex flex-col justify-between">
                                         <div>
                                             <div class="text-[10px] bg-red-50 text-red-700 border border-red-200 rounded px-2 py-0.5 inline-block mb-2 font-bold uppercase tracking-wider">Simulacro ICFES</div>
