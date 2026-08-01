@@ -35,8 +35,8 @@ def mis_programas(request):
             'es_profesor_ingles': True,
         }
 
-    # Si es profesor (role == 'teacher')
-    if user.role == 'teacher':
+    # Si es profesor (pertenece al grupo Profesor/Teacher)
+    if user.es_docente:
         mis_progs = list(user.programas_docente.filter(activo=True))
         es_profesor_ingles = user.programas_docente.filter(tipo='ingles', activo=True).exists()
         return {

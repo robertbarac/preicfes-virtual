@@ -16,7 +16,7 @@ class ProfesorListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return self.request.user.is_staff or self.request.user.is_superuser
 
     def get_queryset(self):
-        queryset = User.objects.filter(Q(groups__name__in=['Profesor', 'Teacher']) | Q(role='teacher')).distinct()
+        queryset = User.objects.filter(groups__name__in=['Profesor', 'Teacher']).distinct()
         
         user = self.request.user
         if user.is_superuser:

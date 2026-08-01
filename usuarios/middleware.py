@@ -20,8 +20,8 @@ class RestringirAccesoAulaVirtualMiddleware:
 
         # Solo aplicamos la restricción si intentan ingresar a rutas del Aula Virtual
         if path.startswith('/programa/') or path.startswith('/evaluaciones/') or path.startswith('/contenidos/'):
-            # Superusuarios y Teachers (role=='teacher' o grupos Profesor/Teacher) SI tienen acceso a ambos portales
-            if user.is_superuser or getattr(user, 'role', '') == 'teacher':
+            # Superusuarios y Docentes (grupos Profesor/Teacher) SI tienen acceso a ambos portales
+            if user.is_superuser or user.es_docente:
                 return self.get_response(request)
 
             group_names = set(user.groups.values_list('name', flat=True))

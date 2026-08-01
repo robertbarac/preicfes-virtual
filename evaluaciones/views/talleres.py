@@ -171,7 +171,6 @@ def es_personal_docente_o_staff(user):
     return (
         user.is_superuser or 
         user.is_staff or 
-        user.role == 'teacher' or 
         'Profesor' in group_names or 
         'Teacher' in group_names or 
         'CoordinadorDepartamental' in group_names or 
@@ -201,8 +200,8 @@ class TallerResolverView(LoginRequiredMixin, ProgramaVisibilidadMixin, TemplateV
         if es_personal_docente_o_staff(user):
             return super().dispatch(request, *args, **kwargs)
 
-        # 2. Si es estudiante presencial (student), verificar asistencia a clase física si el taller fue asignado a su grupo
-        if user.role == 'student':
+        # 2. Si es estudiante presencial (grupo Student), verificar asistencia a clase física si el taller fue asignado a su grupo
+        if user.groups.filter(name='Student').exists():
             from ..models.talleres import AsignacionTallerGrupo
             from academico.models import Asistencia
             

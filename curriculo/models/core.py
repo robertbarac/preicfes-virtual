@@ -170,11 +170,11 @@ def crear_registros_asistencia(sender, instance, created, **kwargs):
         if programa_id:
             alumnos = User.objects.filter(
                 programa_id=programa_id,
-                role__in=['student', 'virtual_student'],
+                groups__name__in=['Student', 'VirtualStudent'],
                 is_active=True
             ).distinct()
         else:
-            alumnos = User.objects.filter(role__in=['student', 'virtual_student'], is_active=True)
+            alumnos = User.objects.filter(groups__name__in=['Student', 'VirtualStudent'], is_active=True).distinct()
         asistencias_a_crear = [
             Asistencia(clase=instance, alumno=alumno) 
             for alumno in alumnos

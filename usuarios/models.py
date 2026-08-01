@@ -70,9 +70,7 @@ class User(AbstractUser):
 
     @property
     def es_docente(self):
-        """True si el usuario es docente por role o por grupo Profesor/Teacher."""
-        if self.role == 'teacher':
-            return True
+        """True si el usuario es docente por grupo Profesor/Teacher."""
         return self.groups.filter(name__in=['Profesor', 'Teacher']).exists()
 
     @property
@@ -82,7 +80,7 @@ class User(AbstractUser):
         (SecretariaCartera, SecretariaAcademica, CoordinadorDepartamental, Auxiliar, ObservadorColegio)
         y NO es docente ni superusuario.
         """
-        if self.is_superuser or self.role == 'teacher':
+        if self.is_superuser:
             return False
         group_names = set(self.groups.values_list('name', flat=True))
         if 'Profesor' in group_names or 'Teacher' in group_names:

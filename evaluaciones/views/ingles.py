@@ -70,7 +70,7 @@ class ActividadVirtualGestionView(LoginRequiredMixin, UserPassesTestMixin, View)
     Vista única para que el docente liste y agregue bloques de ejercicios a una actividad.
     """
     def test_func(self):
-        return self.request.user.role == 'teacher' or self.request.user.is_superuser
+        return self.request.user.es_docente or self.request.user.is_superuser
 
     def get(self, request, pk):
         actividad = get_object_or_404(ActividadVirtual, pk=pk)
@@ -109,7 +109,7 @@ class BloqueActividadUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
     template_name = 'evaluaciones/ingles/bloque_form.html'
 
     def test_func(self):
-        return self.request.user.role == 'teacher' or self.request.user.is_superuser
+        return self.request.user.es_docente or self.request.user.is_superuser
 
     def get_success_url(self):
         return reverse_lazy('evaluaciones:actividad_gestion_bloques', kwargs={'pk': self.object.actividad.pk})
@@ -120,7 +120,7 @@ class BloqueActividadDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
     Eliminación de un bloque de ejercicio específico.
     """
     def test_func(self):
-        return self.request.user.role == 'teacher' or self.request.user.is_superuser
+        return self.request.user.es_docente or self.request.user.is_superuser
 
     def post(self, request, pk):
         bloque = get_object_or_404(BloqueActividad, pk=pk)
@@ -165,7 +165,7 @@ class ActividadVirtualResolverView(LoginRequiredMixin, ProgramaVisibilidadMixin,
 
         # Permitir al docente gestionar si está visualizando la vista
         es_teacher = self.request.user.is_superuser or (
-            self.request.user.role == 'teacher' and self.request.user.programas_docente.filter(id=self.object.modulo.ciclo.programa.id).exists()
+            self.request.user.es_docente and self.request.user.programas_docente.filter(id=self.object.modulo.ciclo.programa.id).exists()
         )
 
         context['ultimo_intento'] = ultimo_intento
@@ -315,7 +315,7 @@ class AudioSubmissionPendingListView(LoginRequiredMixin, UserPassesTestMixin, Li
             return False
         if user.is_superuser:
             return True
-        return user.role == 'teacher' and user.programas_docente.filter(tipo='ingles', activo=True).exists()
+        return user.es_docente and user.programas_docente.filter(tipo='ingles', activo=True).exists()
 
     def get_queryset(self):
         user = self.request.user
@@ -335,7 +335,7 @@ class AudioSubmissionCalificarView(LoginRequiredMixin, UserPassesTestMixin, View
             return False
         if user.is_superuser:
             return True
-        return user.role == 'teacher' and user.programas_docente.filter(tipo='ingles', activo=True).exists()
+        return user.es_docente and user.programas_docente.filter(tipo='ingles', activo=True).exists()
 
     def post(self, request, pk):
         sub = get_object_or_404(IntentoAudioBloque, pk=pk)

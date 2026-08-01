@@ -39,8 +39,8 @@ class MisNotasView(LoginRequiredMixin, TemplateView):
             'simulacros_fisicos': simulacros_fisicos,
             'intentos_talleres': intentos_talleres,
             'intentos_simulacros_virtuales': intentos_simulacros_virtuales,
-            'is_presencial': user.role == 'student',
-            'is_virtual': user.role == 'virtual_student',
+            'is_presencial': user.groups.filter(name='Student').exists(),
+            'is_virtual': user.groups.filter(name='VirtualStudent').exists(),
         })
         
         return context

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
+from .models import User, Firma
 from suscripciones.models import Subscription
 from django.utils import timezone
 
@@ -41,22 +41,22 @@ class SuscripcionActivaFilter(admin.SimpleListFilter):
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     model = User
-    list_display = ['username', 'email', 'get_full_name', 'numero_documento', 'telefono', 'role', 'get_grupo', 'departamento', 'municipio', 'sede', 'is_superuser', 'is_staff', 'is_active', 'tiene_suscripcion']
-    list_filter = ['groups', 'role', 'departamento', 'municipio', 'sede', 'is_superuser', 'is_staff', 'is_active', TieneSuscripcionFilter, SuscripcionActivaFilter]
+    list_display = ['username', 'email', 'get_full_name', 'numero_documento', 'telefono', 'get_grupo', 'departamento', 'municipio', 'sede', 'is_superuser', 'is_staff', 'is_active', 'tiene_suscripcion']
+    list_filter = ['groups', 'departamento', 'municipio', 'sede', 'is_superuser', 'is_staff', 'is_active', TieneSuscripcionFilter, SuscripcionActivaFilter]
     search_fields = ('username', 'first_name', 'last_name', 'numero_documento', 'telefono', 'email')
     
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('Información Personal', {'fields': ('first_name', 'last_name', 'email', 'tipo_documento', 'numero_documento', 'telefono')}),
         ('Ubicación y Sede', {'fields': ('departamento', 'municipio', 'sede')}),
-        ('Configuración PreVirtual', {'fields': ('role', 'programa', 'programas_docente', 'creador')}),
+        ('Configuración PreVirtual', {'fields': ('programa', 'programas_docente', 'creador')}),
         ('Permisos y Grupos', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Fechas Importantes', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'email', 'tipo_documento', 'numero_documento', 'telefono', 'role', 'departamento', 'municipio', 'sede'),
+            'fields': ('username', 'email', 'tipo_documento', 'numero_documento', 'telefono', 'departamento', 'municipio', 'sede'),
         }),
     )
     filter_horizontal = ('groups', 'user_permissions', 'programas_docente')
@@ -114,3 +114,10 @@ class ConfiguracionPlataformaAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser and request.user.username == 'robertbarac'
+
+
+@admin.register(Firma)
+class FirmaAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'imagen')
+    search_fields = ('usuario__username', 'usuario__first_name', 'usuario__last_name')
+    autocomplete_fields = ['usuario']

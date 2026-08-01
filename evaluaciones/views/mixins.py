@@ -9,7 +9,6 @@ def es_personal_docente_o_staff(user):
     return (
         user.is_superuser or 
         user.is_staff or 
-        getattr(user, 'role', '') in ['admin', 'teacher'] or 
         'Profesor' in group_names or 
         'Teacher' in group_names or 
         'CoordinadorDepartamental' in group_names or 

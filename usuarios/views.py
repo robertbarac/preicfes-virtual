@@ -60,45 +60,46 @@ class RegistroUsuarioView(UserPassesTestMixin, FormView):
         user = form.save(commit=False)
         user.creador = self.request.user
         
-        # Asignar nivel de Staff basado en el Rol elegido
-        if user.role == 'teacher':
-            user.is_staff = True
-        elif user.role in ['student', 'virtual_student']:
-            user.is_staff = False
-            
+        # Asignar nivel de Staff basado en el Grupo elegido
+        # (se asigna después del save inicial para poder evaluar grupos)
         # Generar contraseña temporal segura
         alphabet = string.ascii_letters + string.digits
         temporal_password = ''.join(secrets.choice(alphabet) for i in range(10))
         user.set_password(temporal_password)
         user.save()
 
-        # Asignación de Grupos de Permisos
+        # Asignación de Grupos de Permisos según el rol seleccionado en el formulario
         try:
             if user.role == 'teacher':
-                teacher_group, created = Group.objects.get_or_create(name='Teacher')
+                teacher_group, _ = Group.objects.get_or_create(name='Teacher')
                 user.groups.add(teacher_group)
+                user.is_staff = True
+                user.save(update_fields=['is_staff'])
             elif user.role == 'student':
-                student_group, created = Group.objects.get_or_create(name='Student')
+                student_group, _ = Group.objects.get_or_create(name='Student')
                 user.groups.add(student_group)
             elif user.role == 'virtual_student':
-                virtual_student_group, created = Group.objects.get_or_create(name='VirtualStudent')
+                virtual_student_group, _ = Group.objects.get_or_create(name='VirtualStudent')
                 user.groups.add(virtual_student_group)
-        except Exception as e:
-            # Silently pass or log if group creation fails, to not break registration flow
+        except Exception:
             pass
 
-        # Si es estudiante o estudiante virtual, crear suscripción
-        if user.role in ['student', 'virtual_student']:
+        # Si pertenece a grupos de estudiante, crear suscripción
+        es_estudiante_registrado = user.groups.filter(name__in=['Student', 'VirtualStudent']).exists()
+        es_virtual = user.groups.filter(name='VirtualStudent').exists()
+
+        if es_estudiante_registrado:
             Subscription.objects.create(
                 user=user,
                 creador=self.request.user,
                 start_date=form.cleaned_data['start_date'],
                 end_date=form.cleaned_data['end_date']
             )
-            formato_rol = "Estudiante" if user.role == 'student' else "Estudiante Virtual"
+            formato_rol = "Estudiante Virtual" if es_virtual else "Estudiante"
             messages.success(self.request, f"{formato_rol} {user.username} registrado con éxito. Contraseña temporal: {temporal_password}. Suscripción activada.")
         else:
-            messages.success(self.request, f"Usuario {user.role} registrado con éxito. Contraseña temporal: {temporal_password}.")
+            tipo = "Docente" if user.es_docente else "Usuario"
+            messages.success(self.request, f"{tipo} {user.username} registrado con éxito. Contraseña temporal: {temporal_password}.")
 
         # Renderizar la respuesta con una bandera de éxito para que copien la password
         context = self.get_context_data(form=self.form_class())

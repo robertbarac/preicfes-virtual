@@ -57,10 +57,10 @@ def auto_inscribir_preicfes(sender, instance, created, **kwargs):
         from curriculo.models import Programa
         preicfes = Programa.objects.filter(slug='preicfes').first()
         if preicfes:
-            if user.role in ['student', 'virtual_student'] and not user.programa_id:
+            if user.groups.filter(name__in=['Student', 'VirtualStudent']).exists() and not user.programa_id:
                 user.programa = preicfes
                 user.save()
-            elif user.role == 'teacher':
+            elif user.es_docente:
                 # Agregar PreICFES a sus programas docente si no tiene ninguno
                 if not user.programas_docente.exists():
                     user.programas_docente.add(preicfes)
