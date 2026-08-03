@@ -6,7 +6,12 @@ from .views import (
     RegistroAsistenciaNotaView, registrar_o_editar_inasistencia
 )
 from . import views
-from usuarios.views import ProfesorListView
+from usuarios.views import (
+    ProfesorListView,
+    ProfesorDetailView,
+    CertificadoTrabajoFormView,
+    GenerarCertificadoTrabajoView
+)
 
 from evaluaciones.views.talleres_presenciales import MisClasesPresencialesView, TallerPresencialEjecutarView, ClaseTallerControlView
 
@@ -29,6 +34,9 @@ urlpatterns = [
         name='profesor_clases'
     ),
     path('profesores/', ProfesorListView.as_view(), name='profesor_list'),
+    path('profesores/<int:pk>/', ProfesorDetailView.as_view(), name='profesor_detail'),
+    path('profesores/<int:profesor_id>/certificado/', CertificadoTrabajoFormView.as_view(), name='certificado_trabajo_form'),
+    path('profesores/<int:profesor_id>/generar-certificado/', GenerarCertificadoTrabajoView.as_view(), name='generar_certificado_trabajo'),
     path('clases/', ClaseListView.as_view(), name='clase_list'),
     path('clases/<int:pk>/', ClaseDetailView.as_view(), name='clase_detail'),
     path('clases/<int:pk>/registro/', RegistroAsistenciaNotaView.as_view(), name='registro_asistencia_nota'),

@@ -66,10 +66,18 @@
                         </td>
                         <td class="px-6 py-4 text-slate-300">{{ profesor.telefono|default:"Sin especificar" }}</td>
                         <td class="px-6 py-4 text-slate-300">{{ profesor.municipio|default:"Global / General" }}</td>
-                        <td class="px-6 py-4 text-right">
-                            <a href="{% url 'profesor_clases' profesor.id %}" class="inline-flex items-center gap-1 text-xs font-bold text-teal-400 hover:text-teal-300 bg-teal-500/10 px-3 py-1.5 rounded-lg border border-teal-500/20">
-                                📚 Ver Clases
+                        <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
+                            <a href="{% url 'usuarios:profesor_detail' profesor.id %}" class="inline-flex items-center gap-1 text-xs font-bold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-2.5 py-1.5 rounded-lg border border-indigo-500/20" title="Ver perfil y detalles">
+                                🔍 Detalles
                             </a>
+                            <a href="{% url 'profesor_clases' profesor.id %}" class="inline-flex items-center gap-1 text-xs font-bold text-teal-400 hover:text-teal-300 bg-teal-500/10 px-2.5 py-1.5 rounded-lg border border-teal-500/20" title="Ver clases del docente">
+                                📚 Clases
+                            </a>
+                            {% if request.user.is_superuser or 'SecretariaAcademica' in request.user.groups.values_list_names %}
+                            <a href="{% url 'usuarios:certificado_trabajo_form' profesor.id %}" class="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 px-2.5 py-1.5 rounded-lg border border-emerald-500/20" title="Generar Certificado de Trabajo">
+                                📄 Certificado
+                            </a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% empty %}

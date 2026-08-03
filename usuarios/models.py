@@ -64,8 +64,14 @@ class User(AbstractUser):
 
     @property
     def es_docente(self):
-        """True si el usuario es docente por grupo Profesor/Teacher."""
-        return self.groups.filter(name__in=['Profesor', 'Teacher']).exists()
+        """True si el usuario es docente por grupo Profesor/Teacher, por asignación de programas o por impartir clases."""
+        if self.groups.filter(name__in=['Profesor', 'Teacher']).exists():
+            return True
+        if self.programas_docente.exists():
+            return True
+        if hasattr(self, 'clases') and self.clases.exists():
+            return True
+        return False
 
     @property
     def es_personal_gestion(self):

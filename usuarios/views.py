@@ -467,7 +467,13 @@ class ProfesorListView(UserPassesTestMixin, ListView):
         return self.request.user.is_staff or self.request.user.is_superuser
 
     def get_queryset(self):
-        queryset = User.objects.filter(groups__name__in=['Profesor', 'Teacher']).distinct()
+        queryset = User.objects.filter(
+            Q(groups__name__in=['Profesor', 'Teacher']) |
+            Q(programas_docente__isnull=False) |
+            Q(clases__isnull=False)
+        ).exclude(
+            groups__name__in=['Student', 'VirtualStudent']
+        ).distinct()
         
         user = self.request.user
         if user.is_superuser:
@@ -512,4 +518,213 @@ class ProfesorListView(UserPassesTestMixin, ListView):
         else:
             context['municipios'] = Municipio.objects.filter(id=user.municipio.id) if hasattr(user, 'municipio') and user.municipio else Municipio.objects.none()
         return context
+
+
+from django.views.generic import DetailView
+from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpResponse, Http404
+from .forms import CertificadoTrabajoForm
+
+class ProfesorDetailView(UserPassesTestMixin, DetailView):
+    model = User
+    template_name = 'usuarios/profesor_detail.html'
+    context_object_name = 'profesor'
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = f'Detalles del Profesor: {self.object.get_full_name() or self.object.username}'
+        puede_generar_certificado = (
+            self.request.user.is_superuser or
+            self.request.user.groups.filter(name='SecretariaAcademica').exists()
+        )
+        context['puede_generar_certificado'] = puede_generar_certificado
+        return context
+
+
+class CertificadoTrabajoFormView(UserPassesTestMixin, FormView):
+    template_name = 'usuarios/certificado_trabajo_form.html'
+    form_class = CertificadoTrabajoForm
+
+    def test_func(self):
+        return (
+            self.request.user.is_superuser or
+            self.request.user.groups.filter(name='SecretariaAcademica').exists()
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profesor_id = self.kwargs.get('profesor_id')
+        profesor = get_object_or_404(User, pk=profesor_id)
+        context['profesor'] = profesor
+        return context
+
+    def form_valid(self, form):
+        profesor_id = self.kwargs.get('profesor_id')
+        fecha_inicio = form.cleaned_data['fecha_inicio']
+        fecha_fin = form.cleaned_data['fecha_fin']
+        url = reverse('generar_certificado_trabajo', kwargs={'profesor_id': profesor_id})
+        url += f'?fecha_inicio={fecha_inicio}&fecha_fin={fecha_fin}'
+        return redirect(url)
+
+
+import os
+from datetime import datetime
+from django.views import View
+from django.conf import settings
+from django.utils import timezone
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+from .models import Firma
+from academico.models import Clase
+
+class GenerarCertificadoTrabajoView(UserPassesTestMixin, View):
+    def test_func(self):
+        return (
+            self.request.user.is_superuser or
+            self.request.user.groups.filter(name='SecretariaAcademica').exists()
+        )
+
+    def get(self, request, profesor_id):
+        profesor = get_object_or_404(User, pk=profesor_id)
+        if not profesor.es_docente and not profesor.is_staff:
+            raise Http404("El usuario no es un profesor registrado")
+
+        fecha_inicio_str = request.GET.get('fecha_inicio')
+        fecha_fin_str = request.GET.get('fecha_fin')
+
+        if not fecha_inicio_str or not fecha_fin_str:
+            return redirect('certificado_trabajo_form', profesor_id=profesor_id)
+
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
+            fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d').date()
+        except ValueError:
+            return redirect('certificado_trabajo_form', profesor_id=profesor_id)
+
+        response = HttpResponse(content_type='application/pdf')
+        filename = f"certificado_trabajo_{profesor.username}_{timezone.now().strftime('%Y%m%d')}.pdf"
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+
+        doc = SimpleDocTemplate(
+            response,
+            pagesize=letter,
+            rightMargin=40,
+            leftMargin=40,
+            topMargin=40,
+            bottomMargin=40
+        )
+
+        styles = getSampleStyleSheet()
+        styles.add(ParagraphStyle(name='CenterText', alignment=TA_CENTER))
+        styles.add(ParagraphStyle(name='JustifyText', alignment=TA_JUSTIFY))
+        styles.add(ParagraphStyle(name='SmallCenterText', alignment=TA_CENTER, fontSize=8))
+        styles['Title'].alignment = TA_CENTER
+        styles['Title'].fontSize = 14
+        styles['Title'].fontName = 'Helvetica-Bold'
+
+        elements = []
+        logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
+        if os.path.exists(logo_path):
+            elements.append(Image(logo_path, width=1.5*inch, height=1.5*inch))
+            elements.append(Spacer(1, 15))
+
+        fecha_actual = timezone.now().date()
+        meses_es = {
+            'January': 'enero', 'February': 'febrero', 'March': 'marzo',
+            'April': 'abril', 'May': 'mayo', 'June': 'junio',
+            'July': 'julio', 'August': 'agosto', 'September': 'septiembre',
+            'October': 'octubre', 'November': 'noviembre', 'December': 'diciembre'
+        }
+        mes_actual_es = meses_es.get(fecha_actual.strftime('%B'), fecha_actual.strftime('%B'))
+
+        elements.append(Paragraph('<b>EL PRE ICFES VICTOR VALDEZ</b>', styles['Title']))
+        elements.append(Spacer(1, 10))
+        elements.append(Paragraph('<b>NIT - 9012725987</b>', styles['Title']))
+        elements.append(Spacer(1, 20))
+        elements.append(Paragraph('<b>CERTIFICA QUE</b>', styles['CenterText']))
+        elements.append(Spacer(1, 20))
+
+        mes_inicio_es = meses_es.get(fecha_inicio.strftime('%B'), fecha_inicio.strftime('%B'))
+        fecha_inicio_texto = f"{fecha_inicio.day} de {mes_inicio_es} de {fecha_inicio.year}"
+        mes_fin_es = meses_es.get(fecha_fin.strftime('%B'), fecha_fin.strftime('%B'))
+        fecha_fin_texto = f"{fecha_fin.day} de {mes_fin_es} de {fecha_fin.year}"
+
+        materias_profesor = Clase.objects.filter(
+            profesor=profesor,
+            estado='vista'
+        ).values_list('materia__nombre', flat=True).distinct()
+
+        materias_texto = "NO DISPONIBLE"
+        if materias_profesor:
+            materias_lista = list(materias_profesor)
+            if len(materias_lista) == 1:
+                materias_texto = materias_lista[0].upper()
+            elif len(materias_lista) == 2:
+                materias_texto = f"{materias_lista[0].upper()} Y {materias_lista[1].upper()}"
+            else:
+                materias_texto = ", ".join([m.upper() for m in materias_lista[:-1]]) + f" Y {materias_lista[-1].upper()}"
+
+        nombre_completo = profesor.get_full_name()
+        if not nombre_completo.strip():
+            nombre_completo = profesor.username
+
+        doc_tipo = profesor.get_tipo_documento_display() if hasattr(profesor, 'get_tipo_documento_display') else 'documento de identidad'
+        doc_num = profesor.numero_documento if profesor.numero_documento else 'No disponible'
+
+        texto_certificado1 = f"Que el(la) señor(a) <b>{nombre_completo}</b>, identificado(a) con {doc_tipo} N° <b>{doc_num}</b> se encuentra prestando su servicio como docente de horas cátedras en el área de <b>{materias_texto}</b>, desde el <b>{fecha_inicio_texto}</b> hasta el <b>{fecha_fin_texto}</b>."
+        elements.append(Paragraph(texto_certificado1, styles['JustifyText']))
+        elements.append(Spacer(1, 20))
+
+        texto_certificado2 = "Durante este tiempo, ha demostrado ser un profesional excepcional y comprometido con la institución. Su capacidad para enseñar y motivar a los estudiantes es destacable."
+        elements.append(Paragraph(texto_certificado2, styles['JustifyText']))
+        elements.append(Spacer(1, 30))
+
+        elements.append(Paragraph(
+            f"Para mayor constancia se firma y se sella a los ({fecha_actual.day}) días del mes de {mes_actual_es} de {fecha_actual.year}.",
+            styles['JustifyText']
+        ))
+        elements.append(Spacer(1, 40))
+
+        try:
+            coordinador = request.user
+            firma = Firma.objects.get(usuario=coordinador)
+            if firma.imagen and os.path.exists(firma.imagen.path):
+                firma_img = Image(firma.imagen.path)
+                firma_img.drawHeight = 0.6*inch
+                firma_img.drawWidth = 2.2*inch
+                elements.append(firma_img)
+                elements.append(Spacer(1, 5))
+            else:
+                elements.append(Paragraph("___________________________________________", styles['CenterText']))
+        except Exception:
+            elements.append(Paragraph("___________________________________________", styles['CenterText']))
+
+        nombre_completo_usuario = f"{request.user.first_name} {request.user.last_name}"
+        if not nombre_completo_usuario.strip():
+            nombre_completo_usuario = request.user.username
+
+        elements.append(Paragraph(f"<b>{nombre_completo_usuario}</b>", styles['CenterText']))
+        elements.append(Paragraph("<b>COORDINADOR(A) ACADÉMICO(A) PRE ICFES VICTOR VALDEZ</b>", styles['CenterText']))
+
+        telefono = request.user.telefono if request.user.telefono else ""
+        if telefono:
+            elements.append(Paragraph(f"Cel: {telefono}", styles['CenterText']))
+        elements.append(Spacer(1, 25))
+
+        elements.append(Paragraph("<b>VALDEZ Y ANDRADE SOLUCIONES S.A.S</b>", styles['SmallCenterText']))
+        elements.append(Paragraph("<b>NIT 901.272.598 - 7</b>", styles['SmallCenterText']))
+        elements.append(Spacer(1, 10))
+
+        elements.append(Paragraph("_______________________________________________________________", styles['CenterText']))
+        elements.append(Paragraph("<b>CRA. 60A # 29 - 47 BARRIO LOS ANGELES</b>", styles['CenterText']))
+
+        doc.build(elements)
+        return response
+
 

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle del Profesor{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-indigo-400">
+            👨‍🏫 {{ titulo|default:"Detalles del Profesor" }}
+        </h1>
+        <a href="{% url 'profesor_list' %}" class="py-2 px-4 border border-slate-600 rounded-lg text-sm font-semibold text-slate-300 hover:bg-slate-700 transition">
+            ← Volver a la Lista
+        </a>
+    </div>
+
+    <!-- Panel Principal de Información -->
+    <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 shadow-xl overflow-hidden">
+        <div class="p-6 border-b border-slate-700/70 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    {{ profesor.get_full_name|default:profesor.username }}
+                    {% if profesor.is_active %}
+                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">Activo</span>
+                    {% endif %}
+                </h3>
+                <p class="text-sm text-slate-400 mt-1">@{{ profesor.username }} | {{ profesor.email|default:"Sin correo electrónico" }}</p>
+            </div>
+
+            {% if puede_generar_certificado %}
+            <a href="{% url 'usuarios:certificado_trabajo_form' profesor.id %}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm rounded-lg shadow-md transition-all">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 01-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                📄 Generar Certificado de Trabajo
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-300">
+            <div class="space-y-4">
+                <div>
+                    <span class="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Tipo y N° Documento</span>
+                    <p class="text-base font-semibold text-white mt-0.5">{{ profesor.get_tipo_documento_display }} - {{ profesor.numero_documento|default:"No especificado" }}</p>
+                </div>
+                <div>
+                    <span class="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Teléfono de Contacto</span>
+                    <p class="text-base font-semibold text-white mt-0.5">{{ profesor.telefono|default:"No especificado" }}</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <span class="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Ubicación / Municipio</span>
+                    <p class="text-base font-semibold text-white mt-0.5">{{ profesor.municipio|default:"Global / Sin asignar" }}</p>
+                </div>
+                <div>
+                    <span class="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Acceso a Clases</span>
+                    <div class="mt-1">
+                        <a href="{% url 'profesor_clases' profesor.id %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/30 font-bold rounded-lg transition text-xs">
+                            📚 Ver Historial y Cronograma de Clases
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

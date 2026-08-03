@@ -128,3 +128,27 @@ class WhatsAppResetPasswordForm(forms.Form):
         if p1 and p2 and p1 != p2:
             self.add_error('confirm_password', 'Las contraseñas no coinciden.')
         return cleaned_data
+
+
+class CertificadoTrabajoForm(forms.Form):
+    fecha_inicio = forms.DateField(
+        label="Fecha de inicio",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'w-full p-2 border border-slate-700 bg-slate-900 rounded text-slate-200 focus:border-teal-500 outline-none'}),
+        required=True,
+        help_text="Fecha en que el profesor comenzó a trabajar en la institución."
+    )
+    fecha_fin = forms.DateField(
+        label="Fecha de finalización",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'w-full p-2 border border-slate-700 bg-slate-900 rounded text-slate-200 focus:border-teal-500 outline-none'}),
+        required=True,
+        help_text="Fecha en que el profesor finalizó o finalizará su periodo de trabajo."
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        fecha_inicio = cleaned_data.get('fecha_inicio')
+        fecha_fin = cleaned_data.get('fecha_fin')
+        if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
+            raise forms.ValidationError("La fecha de inicio debe ser anterior a la fecha de finalización.")
+        return cleaned_data
+

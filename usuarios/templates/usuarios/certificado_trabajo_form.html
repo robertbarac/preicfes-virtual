@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Generar Certificado de Trabajo{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-8 px-4">
+    <div class="bg-slate-800/90 rounded-2xl shadow-xl border border-slate-700/80 overflow-hidden">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-teal-950 px-6 py-4 border-b border-slate-700/80">
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <span>📄</span> Generar Certificado de Trabajo
+            </h2>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60">
+                <h3 class="text-sm font-semibold text-slate-300">Profesor Seleccionado:</h3>
+                <p class="text-lg font-bold text-teal-400 mt-0.5">{{ profesor.get_full_name|default:profesor.username }}</p>
+                <p class="text-xs text-slate-400">CC/TI: {{ profesor.numero_documento|default:"Sin documento" }}</p>
+            </div>
+
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+
+                <div>
+                    <label for="{{ form.fecha_inicio.id_for_label }}" class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                        {{ form.fecha_inicio.label }}
+                    </label>
+                    {{ form.fecha_inicio }}
+                    {% if form.fecha_inicio.help_text %}
+                    <p class="text-[11px] text-slate-400 mt-1">{{ form.fecha_inicio.help_text }}</p>
+                    {% endif %}
+                    {% if form.fecha_inicio.errors %}
+                    <p class="text-xs text-red-400 mt-1">{{ form.fecha_inicio.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.fecha_fin.id_for_label }}" class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                        {{ form.fecha_fin.label }}
+                    </label>
+                    {{ form.fecha_fin }}
+                    {% if form.fecha_fin.help_text %}
+                    <p class="text-[11px] text-slate-400 mt-1">{{ form.fecha_fin.help_text }}</p>
+                    {% endif %}
+                    {% if form.fecha_fin.errors %}
+                    <p class="text-xs text-red-400 mt-1">{{ form.fecha_fin.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="p-3 bg-red-900/40 border border-red-700/50 rounded-lg text-xs text-red-300">
+                    {{ form.non_field_errors.0 }}
+                </div>
+                {% endif %}
+
+                <div class="pt-4 border-t border-slate-700/80 flex items-center justify-between">
+                    <a href="{% url 'usuarios:profesor_detail' profesor.id %}" class="py-2 px-4 border border-slate-600 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="py-2.5 px-6 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-extrabold text-sm rounded-lg shadow-lg transition flex items-center gap-2">
+                        <span>📄</span> Generar Documento PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

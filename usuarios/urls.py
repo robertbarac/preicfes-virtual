@@ -13,4 +13,9 @@ urlpatterns = [
     path('reset/whatsapp/request/', views.WhatsAppResetRequestView.as_view(), name='whatsapp_reset_request'),
     path('reset/whatsapp/verify/', views.WhatsAppResetVerifyView.as_view(), name='whatsapp_reset_verify'),
     path('reset/whatsapp/new-password/', views.WhatsAppResetPasswordView.as_view(), name='whatsapp_reset_password'),
+
+    # Rutas de gestión de profesores y certificados de trabajo
+    path('profesores/<int:pk>/', views.ProfesorDetailView.as_view(), name='profesor_detail'),
+    path('profesores/<int:profesor_id>/certificado/', views.CertificadoTrabajoFormView.as_view(), name='certificado_trabajo_form'),
+    path('profesores/<int:profesor_id>/generar-certificado/', views.GenerarCertificadoTrabajoView.as_view(), name='generar_certificado_trabajo'),
 ]
