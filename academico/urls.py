@@ -28,6 +28,7 @@ urlpatterns = [
     path('alumnos/<int:pk>/editar/', AlumnoUpdateView.as_view(), name='alumno_editar'),
     path('grupos/', GrupoListView.as_view(), name='grupo_list'),
     path('grupos/<int:pk>/', GrupoDetailView.as_view(), name='grupo_detalle'),
+    path('grupos/<int:pk>/limbo/', views.mandar_grupo_limbo, name='mandar_grupo_limbo'),
     path(
         'profesores/<int:profesor_id>/clases/',
         ClasesProfesorListView.as_view(),

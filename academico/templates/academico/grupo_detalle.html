@@ -15,6 +15,16 @@
                class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-sm text-sm transition-colors">
                 📋 Calificar Diagnóstico (90P)
             </a>
+            {% if request.user.is_superuser or request.user.username == 'vvgomez' or request.user.username == 'claudia2019' %}
+                {% if not "LIMBO" in grupo.codigo.upper %}
+                <form method="post" action="{% url 'mandar_grupo_limbo' grupo.id %}" class="inline-block" onsubmit="return confirm('⚠️ ¿Estás seguro de que deseas enviar TODOS los alumnos de este grupo al Limbo?\n\nSe asignarán al grupo Limbo de su sede con estado Limbo.');">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-slate-900 hover:bg-black text-amber-300 border border-amber-500/40 font-extrabold rounded-lg shadow-md text-sm transition-all">
+                        🌀 Enviar Alumnos al Limbo
+                    </button>
+                </form>
+                {% endif %}
+            {% endif %}
         </div>
     </div>
 
