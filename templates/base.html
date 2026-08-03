@@ -101,6 +101,21 @@
             </div>
             {% endif %}
 
+            {% if user.is_staff or user.is_superuser %}
+            <div class="px-2 mb-4 lg:hidden">
+                <a href="{% url 'admin:index' %}" 
+                   target="_blank"
+                   class="w-full flex items-center justify-center gap-2 py-2 px-3 bg-gradient-to-r from-indigo-600 to-teal-600 hover:from-indigo-500 hover:to-teal-500 text-white text-xs font-extrabold rounded-xl shadow-md transition-all border border-indigo-400/30"
+                   title="Abrir Panel Administrativo Principal de Django">
+                    <svg class="w-4 h-4 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Django Admin ⚙️</span>
+                </a>
+            </div>
+            {% endif %}
+
             <!-- Menú de Navegación -->
             <nav class="mt-2 flex-1 px-2 space-y-2">
                 {% if user.is_authenticated %}
@@ -664,17 +679,44 @@
                 </div>
             </header>
 
-            <!-- Barra superior móvil (solo aparece en md e inferior) -->
-            <header class="bg-white shadow-sm lg:hidden border-b border-gray-200">
-                <div class="flex items-center justify-between px-4 py-3">
-                    <a href="/" class="text-gray-900 font-bold text-xl tracking-tight">PREICFES V.V.</a>
-                    <button @click="sidebarOpen = !sidebarOpen"
-                        class="text-gray-500 focus:outline-none focus:text-gray-700">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
+            <!-- Barra superior móvil (solo aparece en móviles y tablets: < lg) -->
+            <header class="bg-slate-900 border-b border-slate-800 px-3 sm:px-4 py-2.5 lg:hidden sticky top-0 z-30 shadow-md">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <button @click="sidebarOpen = !sidebarOpen"
+                            class="text-slate-300 hover:text-white p-1.5 rounded-lg bg-slate-800 border border-slate-700 focus:outline-none transition-all"
+                            title="Abrir Menú Principal">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <a href="/" class="text-white font-black text-base sm:text-lg tracking-tight flex items-center gap-1">
+                            <span class="bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">PREICFES</span>V.V.
+                        </a>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        {% if user.is_staff or user.is_superuser %}
+                        <a href="{% url 'admin:index' %}" 
+                           target="_blank"
+                           class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-indigo-600 to-teal-600 hover:from-indigo-500 hover:to-teal-500 text-white text-xs font-extrabold rounded-lg shadow-sm transition-all border border-indigo-400/30"
+                           title="Abrir Panel Administrativo Principal de Django">
+                            <svg class="w-3.5 h-3.5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span class="hidden sm:inline">Django Admin ⚙️</span>
+                            <span class="sm:hidden">Admin ⚙️</span>
+                        </a>
+                        {% endif %}
+
+                        {% if user.is_authenticated %}
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-teal-300 border border-slate-700">
+                            {% if user.es_docente %}Docente{% elif user.es_estudiante_virtual %}Virtual{% elif user.es_estudiante_presencial %}Presencial{% elif user.is_superuser %}Admin{% elif user.is_staff %}Staff{% else %}Usuario{% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
             </header>
 
