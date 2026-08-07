@@ -152,7 +152,7 @@ class PreguntaDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'pregunta'
 
     def get_queryset(self):
-        return super().get_queryset().select_related('tema', 'tema__materia', 'bloque_contexto').prefetch_related('opciones', 'imagenes')
+        return super().get_queryset().select_related('tema', 'tema__materia', 'bloque_contexto').prefetch_related('opciones', 'imagenes', 'bloque_contexto__imagenes')
 
 # ─── BloqueContexto CRUD ──────────────────────────────────────────────────────
 

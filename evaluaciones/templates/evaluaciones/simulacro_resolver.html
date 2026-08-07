@@ -85,7 +85,21 @@
                                 {% if pt.pregunta.bloque_contexto %}
                                 <div class="xl:w-1/2">
                                     <div class="bg-gray-50/50 border border-gray-200 p-6 rounded-xl text-[15px] text-gray-700 leading-relaxed max-h-[60vh] overflow-y-auto shadow-inner prose prose-indigo max-w-none">
-                                        {{ pt.pregunta.bloque_contexto.texto|safe }}
+                                        {% if pt.pregunta.bloque_contexto.texto %}
+                                            {{ pt.pregunta.bloque_contexto.texto|safe }}
+                                        {% endif %}
+                                        {% if pt.pregunta.bloque_contexto.imagenes.all %}
+                                            <div class="grid grid-cols-1 gap-4 {% if pt.pregunta.bloque_contexto.texto %}mt-4{% endif %}">
+                                                {% for img in pt.pregunta.bloque_contexto.imagenes.all %}
+                                                    <div class="bg-white border border-gray-200 rounded p-2 text-center shadow-sm">
+                                                        <img src="{{ img.imagen.url }}" alt="Imagen de contexto" class="max-w-full h-auto mx-auto rounded">
+                                                        {% if img.descripcion %}
+                                                            <p class="text-xs text-gray-500 mt-1 italic font-medium">{{ img.descripcion }}</p>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% endif %}

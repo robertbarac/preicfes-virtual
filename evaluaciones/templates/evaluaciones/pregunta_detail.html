@@ -68,8 +68,25 @@
             {% if pregunta.bloque_contexto %}
             <div class="lg:w-1/2">
                 <div class="bg-gray-50 border border-gray-200 p-6 rounded-lg text-sm text-gray-700 leading-relaxed prose max-w-none">
-                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Bloque de Contexto Vinculado</h3>
-                    {{ pregunta.bloque_contexto.texto|safe }}
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Bloque de Contexto Vinculado (ID: #{{ pregunta.bloque_contexto.id }})</h3>
+                    {% if pregunta.bloque_contexto.texto %}
+                        <div class="mb-4">
+                            {{ pregunta.bloque_contexto.texto|safe }}
+                        </div>
+                    {% endif %}
+
+                    {% if pregunta.bloque_contexto.imagenes.all %}
+                        <div class="grid grid-cols-1 gap-4 mt-4">
+                            {% for img in pregunta.bloque_contexto.imagenes.all %}
+                                <div class="bg-white border border-gray-200 rounded p-2 text-center shadow-sm">
+                                    <img src="{{ img.imagen.url }}" alt="Imagen de contexto" class="max-w-full h-auto mx-auto rounded">
+                                    {% if img.descripcion %}
+                                        <p class="text-xs text-gray-500 mt-1 italic font-medium">{{ img.descripcion }}</p>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}
