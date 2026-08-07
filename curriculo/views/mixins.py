@@ -97,11 +97,16 @@ class ProgramaVisibilidadMixin(UserPassesTestMixin):
         try:
             programa = self._resolver_programa()
             if not programa:
-                return False
+                return True
                 
             # Verificar acceso según rol/grupo
             if user.es_docente:
-                tiene_acceso = user.programas_docente.filter(id=programa.id).exists()
+                tiene_acceso = (
+                    user.has_perm('evaluaciones.view_taller') or
+                    user.has_perm('evaluaciones.change_taller') or
+                    user.programas_docente.filter(id=programa.id).exists() or
+                    user.clases.filter(materia__programas=programa).exists()
+                )
             else:
                 # Alumno: debe ser su programa asignado y tener suscripción activa
                 from suscripciones.models import Subscription

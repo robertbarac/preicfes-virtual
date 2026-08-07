@@ -48,7 +48,7 @@ class PreguntaAdmin(admin.ModelAdmin):
             )
         return queryset, use_distinct
 
-from .models.talleres import Taller, PreguntaTaller, AsignacionTallerGrupo
+from .models.talleres import Taller, PreguntaTaller, AsignacionTallerGrupo, IntentoTaller, RespuestaTaller
 
 @admin.register(AsignacionTallerGrupo)
 class AsignacionTallerGrupoAdmin(admin.ModelAdmin):
@@ -70,6 +70,19 @@ class TallerAdmin(admin.ModelAdmin):
     search_fields = ('titulo', 'descripcion')
     autocomplete_fields = ['tema']
     inlines = [PreguntaTallerInline]
+
+class RespuestaTallerInline(admin.TabularInline):
+    model = RespuestaTaller
+    extra = 0
+    readonly_fields = ('pregunta', 'opcion_seleccionada', 'es_correcta')
+
+@admin.register(IntentoTaller)
+class IntentoTallerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'usuario', 'taller', 'clase', 'puntaje_porcentaje', 'fecha_inicio', 'fecha_fin')
+    list_filter = ('taller', 'clase', 'fecha_inicio')
+    search_fields = ('usuario__username', 'usuario__first_name', 'usuario__last_name', 'taller__titulo')
+    readonly_fields = ('usuario', 'taller', 'clase', 'fecha_inicio', 'fecha_fin', 'puntaje_porcentaje')
+    inlines = [RespuestaTallerInline]
 
 # --- SIMULACROS ---
 

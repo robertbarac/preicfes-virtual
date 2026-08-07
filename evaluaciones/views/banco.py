@@ -185,13 +185,18 @@ class BloqueContextoListView(LoginRequiredMixin, BloqueListViewBase):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         from curriculo.models import Materia
+        from .mixins import es_personal_docente_o_staff
         context['materias'] = Materia.objects.all().order_by('nombre')
         context['q_val'] = self.request.GET.get('q', '')
         context['materia_val'] = self.request.GET.get('materia', '')
+        context['puede_crear'] = self.request.user.is_superuser or self.request.user.has_perm('evaluaciones.add_bloquecontexto')
+        context['puede_editar'] = self.request.user.is_superuser or self.request.user.has_perm('evaluaciones.change_bloquecontexto')
+        context['puede_eliminar'] = self.request.user.is_superuser or self.request.user.has_perm('evaluaciones.delete_bloquecontexto')
         return context
 
 
 class BloqueContextoCreateView(DocenteOStaffPermissionMixin, CreateView):
+    permission_required = 'add_bloquecontexto'
     model = BloqueContexto
     form_class = BloqueContextoForm
     template_name = 'evaluaciones/bloque_contexto_form.html'
@@ -219,6 +224,7 @@ class BloqueContextoCreateView(DocenteOStaffPermissionMixin, CreateView):
 
 
 class BloqueContextoUpdateView(DocenteOStaffPermissionMixin, UpdateView):
+    permission_required = 'change_bloquecontexto'
     model = BloqueContexto
     form_class = BloqueContextoForm
     template_name = 'evaluaciones/bloque_contexto_form.html'
@@ -247,6 +253,7 @@ class BloqueContextoUpdateView(DocenteOStaffPermissionMixin, UpdateView):
 
 
 class BloqueContextoDeleteView(DocenteOStaffPermissionMixin, DeleteView):
+    permission_required = 'delete_bloquecontexto'
     model = BloqueContexto
     template_name = 'evaluaciones/bloque_contexto_confirm_delete.html'
     success_url = reverse_lazy('evaluaciones:bloque_contexto_list')

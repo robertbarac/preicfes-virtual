@@ -75,6 +75,7 @@ class TallerDetailView(LoginRequiredMixin, ProgramaVisibilidadMixin, DetailView)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['puede_editar'] = es_personal_docente_o_staff(self.request.user)
         if self.request.user.is_authenticated:
             from ..models.talleres import IntentoTaller
             intentos = IntentoTaller.objects.filter(
@@ -82,7 +83,7 @@ class TallerDetailView(LoginRequiredMixin, ProgramaVisibilidadMixin, DetailView)
                 usuario=self.request.user
             ).order_by('-fecha_fin', '-fecha_inicio')
             context['intentos'] = intentos
-            context['puede_intentar'] = intentos.count() < self.object.intentos_permitidos
+            context['puede_intentar'] = (intentos.count() < self.object.intentos_permitidos) or context['puede_editar']
         else:
             context['intentos'] = []
             context['puede_intentar'] = False
@@ -449,4 +450,5 @@ class TallerListView(ListView):
         context['q_val'] = self.request.GET.get('q', '')
         context['materia_val'] = self.request.GET.get('materia', '')
         context['tema_val'] = self.request.GET.get('tema', '')
+        context['puede_editar'] = es_personal_docente_o_staff(self.request.user)
         return context

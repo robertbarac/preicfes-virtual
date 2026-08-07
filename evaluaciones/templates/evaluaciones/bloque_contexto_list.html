@@ -9,12 +9,14 @@
             <h1 class="text-3xl font-extrabold text-gray-800">Bloques de Contexto</h1>
             <p class="text-gray-500 mt-1">Textos e imágenes compartidas entre múltiples preguntas.</p>
         </div>
+        {% if puede_crear %}
         <div>
             <a href="{% url 'evaluaciones:bloque_contexto_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-lg shadow-sm inline-flex items-center transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 Nuevo Bloque
             </a>
         </div>
+        {% endif %}
     </div>
 
     {% if messages %}
@@ -61,7 +63,9 @@
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">Enunciado / Texto Base</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uso / Adjuntos</th>
+                    {% if puede_editar or puede_eliminar %}
                     <th scope="col" class="relative px-6 py-3"><span class="sr-only">Acciones</span></th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -80,10 +84,12 @@
                         <div class="text-xs text-blue-600 mt-0.5 font-medium">{{ bloque.imagenes.count }} imagen(es)</div>
                         {% endif %}
                     </td>
+                    {% if puede_editar or puede_eliminar %}
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                        <a href="{% url 'evaluaciones:bloque_contexto_update' bloque.id %}" class="text-indigo-600 hover:text-indigo-900">Editar</a>
-                        <a href="{% url 'evaluaciones:bloque_contexto_delete' bloque.id %}" class="text-red-600 hover:text-red-900">Eliminar</a>
+                        {% if puede_editar %}<a href="{% url 'evaluaciones:bloque_contexto_update' bloque.id %}" class="text-indigo-600 hover:text-indigo-900">Editar</a>{% endif %}
+                        {% if puede_eliminar %}<a href="{% url 'evaluaciones:bloque_contexto_delete' bloque.id %}" class="text-red-600 hover:text-red-900">Eliminar</a>{% endif %}
                     </td>
+                    {% endif %}
                 </tr>
                 {% empty %}
                 <tr>

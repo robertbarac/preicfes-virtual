@@ -4,7 +4,7 @@
 {% block content %}
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
     <h1 class="text-3xl font-bold text-gray-800">Talleres Interactivos</h1>
-    {% if user.is_staff or user.is_superuser or user.es_docente %}
+    {% if perms.evaluaciones.add_taller or user.is_superuser %}
     <a href="{% url 'evaluaciones:taller_create' %}" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded shadow whitespace-nowrap">
         + Nuevo Taller
     </a>
@@ -73,7 +73,7 @@
         
         <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 flex flex-wrap justify-end gap-2 text-sm">
             <a href="{% url 'evaluaciones:taller_detail' taller.pk %}" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-1 px-3 rounded shadow-sm">Ver Detalle</a>
-            {% if user.is_staff or user.is_superuser or user.es_docente %}
+            {% if perms.evaluaciones.change_taller or user.is_superuser %}
             <a href="{% url 'evaluaciones:taller_preguntas_manage' taller.pk %}" class="bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 font-medium py-1 px-3 rounded shadow-sm">Preguntas</a>
             <a href="{% url 'evaluaciones:taller_update' taller.pk %}" class="text-indigo-600 hover:text-indigo-900 border border-transparent font-medium py-1 px-2">Editar</a>
             {% endif %}
