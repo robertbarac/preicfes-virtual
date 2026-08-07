@@ -7,6 +7,7 @@ class TallerForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['modulo'].required = False
         self.fields['modulo'].empty_label = "Sin Módulo (Taller Presencial en Vivo)"
+        self.fields['tema'].empty_label = "--- Busca o selecciona un Tema ---"
 
     class Meta:
         model = Taller

@@ -68,6 +68,7 @@ class TallerAdmin(admin.ModelAdmin):
     list_display = ('titulo', 'modulo', 'tema', 'orden', 'intentos_permitidos')
     list_filter = ('modulo', 'tema')
     search_fields = ('titulo', 'descripcion')
+    autocomplete_fields = ['tema']
     inlines = [PreguntaTallerInline]
 
 # --- SIMULACROS ---
