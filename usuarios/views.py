@@ -1,7 +1,7 @@
 from django.views.generic import FormView
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.urls import reverse_lazy
-from django.shortcuts import render
+from django.urls import reverse_lazy, reverse
+from django.shortcuts import render, redirect, get_object_or_404
 from django import forms
 from django.contrib.auth import get_user_model
 import secrets
@@ -565,7 +565,10 @@ class CertificadoTrabajoFormView(UserPassesTestMixin, FormView):
         profesor_id = self.kwargs.get('profesor_id')
         fecha_inicio = form.cleaned_data['fecha_inicio']
         fecha_fin = form.cleaned_data['fecha_fin']
-        url = reverse('generar_certificado_trabajo', kwargs={'profesor_id': profesor_id})
+        try:
+            url = reverse('usuarios:generar_certificado_trabajo', kwargs={'profesor_id': profesor_id})
+        except Exception:
+            url = reverse('generar_certificado_trabajo', kwargs={'profesor_id': profesor_id})
         url += f'?fecha_inicio={fecha_inicio}&fecha_fin={fecha_fin}'
         return redirect(url)
 
@@ -599,13 +602,19 @@ class GenerarCertificadoTrabajoView(UserPassesTestMixin, View):
         fecha_fin_str = request.GET.get('fecha_fin')
 
         if not fecha_inicio_str or not fecha_fin_str:
-            return redirect('certificado_trabajo_form', profesor_id=profesor_id)
+            try:
+                return redirect('usuarios:certificado_trabajo_form', profesor_id=profesor_id)
+            except Exception:
+                return redirect('certificado_trabajo_form', profesor_id=profesor_id)
 
         try:
             fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
             fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d').date()
         except ValueError:
-            return redirect('certificado_trabajo_form', profesor_id=profesor_id)
+            try:
+                return redirect('usuarios:certificado_trabajo_form', profesor_id=profesor_id)
+            except Exception:
+                return redirect('certificado_trabajo_form', profesor_id=profesor_id)
 
         response = HttpResponse(content_type='application/pdf')
         filename = f"certificado_trabajo_{profesor.username}_{timezone.now().strftime('%Y%m%d')}.pdf"
