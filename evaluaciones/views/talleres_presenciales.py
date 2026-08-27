@@ -183,7 +183,13 @@ class TallerPresencialEjecutarView(LoginRequiredMixin, TemplateView):
         clase = get_object_or_404(Clase, pk=self.kwargs['clase_id'])
         taller = clase.taller
 
-        preguntas_taller = taller.preguntas_taller.select_related('pregunta').all()
+        preguntas_taller = taller.preguntas_taller.select_related(
+            'pregunta', 'pregunta__tema', 'pregunta__bloque_contexto'
+        ).prefetch_related(
+            'pregunta__opciones', 
+            'pregunta__imagenes', 
+            'pregunta__bloque_contexto__imagenes'
+        ).all()
         modo_vista_previa = self.request.user.is_superuser or self.request.user == clase.profesor
         
         intento = None
