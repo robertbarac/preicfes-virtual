@@ -74,7 +74,7 @@ SD_CONF = {
     'c3a_x_ini': 720, 'c3a_x_fin': 930,
 
     # Columna 3b (P73-90, 8 opciones)
-    'c3b_y_ini': 750, 'c3b_y_fin': 1430,
+    'c3b_y_ini': 790, 'c3b_y_fin': 1430,
     'c3b_x_ini': 720, 'c3b_x_fin': 1200,
 }
 
@@ -387,7 +387,7 @@ def hacer_tiras(img, modo, user=None):
             tira_c3 = tiras_out[2]
             h_c3, w_c3 = tira_c3.shape[:2]
             tira_c3a = tira_c3[:int(h_c3 * 0.42), :int(w_c3 * 0.55)]
-            tira_c3b = tira_c3[int(h_c3 * 0.38):, :]
+            tira_c3b = tira_c3[int(h_c3 * 0.40):, :]
             tiras_out = [tiras_out[0], tiras_out[1], tira_c3a, tira_c3b]
 
     # Retornar con las configuraciones según el modo
@@ -445,7 +445,8 @@ def encontrar_circulos_en_tira(tira, n_opciones=4):
             cx, cy = x + w//2, y + h//2
             es_duplicado = False
             for cand in candidatos:
-                if abs(cand['cx'] - cx) < 8 and abs(cand['cy'] - cy) < 8:
+                dist_c = max(abs(cand['cx'] - cx), abs(cand['cy'] - cy))
+                if dist_c < 14:
                     es_duplicado = True
                     # Al usar RETR_LIST, el mismo círculo se detecta por dentro y por fuera de su línea.
                     # Nos quedamos con el contorno de mayor área (el borde exterior).
@@ -453,6 +454,7 @@ def encontrar_circulos_en_tira(tira, n_opciones=4):
                         cand['c'] = c
                         cand['w'], cand['h'] = w, h
                         cand['x'], cand['y'] = x, y
+                        cand['cx'], cand['cy'] = cx, cy
                         cand['area'] = area
                     break
             if not es_duplicado:
@@ -471,7 +473,7 @@ def encontrar_circulos_en_tira(tira, n_opciones=4):
 
     validos = []
     for c in candidatos:
-        if (mw * 0.65 < c['w'] < mw * max_w_factor) and (mh * 0.65 < c['h'] < mh * max_h_factor):
+        if (mw * 0.70 < c['w'] < mw * max_w_factor) and (mh * 0.70 < c['h'] < mh * max_h_factor):
             validos.append(c['c'])
             cv2.rectangle(img_debug,
                           (c['x'], c['y']),
@@ -481,15 +483,19 @@ def encontrar_circulos_en_tira(tira, n_opciones=4):
     return imgThresh, validos, img_debug
 
 
-def evaluar_tira(contours, imgThresh, n_opciones):
+def evaluar_tira(contours, imgThresh, n_opciones, return_debug_img=False, tira_img=None):
     """
     Dado el conjunto de círculos detectados en UNA tira vertical de una sola
     columna de preguntas, determina la letra marcada en cada fila.
+    Si return_debug_img=True y se pasa tira_img, retorna (respuestas, img_respuestas)
+    donde img_respuestas muestra las burbujas evaluadas y resalta la opción elegida.
     """
     LETRAS = {4: ['A', 'B', 'C', 'D'], 8: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']}
     letras = LETRAS[n_opciones]
 
     if not contours:
+        if return_debug_img:
+            return [], (tira_img.copy() if tira_img is not None else None)
         return []
 
     burbujas = []
@@ -522,12 +528,17 @@ def evaluar_tira(contours, imgThresh, n_opciones):
         sp = (mx - mn) / (n_opciones - 1) if mx > mn else 1
         centros = [mn + sp * i for i in range(n_opciones)]
 
+    img_respuestas = tira_img.copy() if (return_debug_img and tira_img is not None) else None
+
     # Evaluar cada fila
     respuestas = []
-    for fila in filas:
+    for num_fila, fila in enumerate(filas, start=1):
         if len(fila) < 2:
             continue
-        opciones = []
+        
+        # Agrupar por opción única (idx) para que múltiples detecciones en la misma columna
+        # (ej. contorno exterior y trazo interior de lápiz) no compitan entre sí generando falsos 2X
+        opciones_dict = {}
         for b in fila:
             idx = min(range(n_opciones), key=lambda i: abs(b['cX'] - centros[i]))
             
@@ -537,30 +548,49 @@ def evaluar_tira(contours, imgThresh, n_opciones):
             m_y = int(b['h'] * 0.15)
             roi = imgThresh[b['y']+m_y : b['y']+b['h']-m_y, b['x']+m_x : b['x']+b['w']-m_x]
             
-            if roi.size > 0:
-                ratio = cv2.countNonZero(roi) / roi.size
-            else:
-                ratio = 0
-            opciones.append((idx, ratio))
+            ratio = cv2.countNonZero(roi) / roi.size if roi.size > 0 else 0
+            if idx not in opciones_dict or ratio > opciones_dict[idx][1]:
+                opciones_dict[idx] = (idx, ratio, b)
 
+        opciones = list(opciones_dict.values())
         # Ordenar opciones de la más oscura a la más clara
         opciones.sort(key=lambda x: x[1], reverse=True)
-        mejor_idx, mejor_ratio = opciones[0]
+        mejor_idx, mejor_ratio, mejor_b = opciones[0]
         segundo_ratio = opciones[1][1] if len(opciones) > 1 else 0
+        segundo_b = opciones[1][2] if len(opciones) > 1 else None
+
+        if img_respuestas is not None:
+            # Dibujar contorno tenue para todas las burbujas de la fila
+            for _, _, b_opt in opciones:
+                cv2.rectangle(img_respuestas, (b_opt['x'], b_opt['y']), (b_opt['x'] + b_opt['w'], b_opt['y'] + b_opt['h']), (210, 210, 210), 1)
 
         # Criterio de marcado:
         # 1. La opción más oscura debe superar el UMBRAL_MARCADO mínimo.
         # 2. Debe ser significativamente más oscura que la segunda opción (+10%).
         if mejor_ratio >= UMBRAL_MARCADO:
             if (mejor_ratio > segundo_ratio + 0.10):
-                respuestas.append(letras[mejor_idx] if mejor_idx < len(letras) else '?')
+                letra = letras[mejor_idx] if mejor_idx < len(letras) else '?'
+                respuestas.append(letra)
+                if img_respuestas is not None:
+                    # Marcar la opción detectada con borde rojo llamativo y poner la letra en el margen izquierdo
+                    cv2.rectangle(img_respuestas, (mejor_b['x'], mejor_b['y']), (mejor_b['x'] + mejor_b['w'], mejor_b['y'] + mejor_b['h']), (0, 0, 255), 3)
+                    cv2.putText(img_respuestas, f"{letra}", (2, mejor_b['cY'] + 5), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 220), 2)
             else:
                 # Si hay dos muy parecidas de oscuras, es una doble marca
                 respuestas.append('Z')
+                if img_respuestas is not None:
+                    cv2.rectangle(img_respuestas, (mejor_b['x'], mejor_b['y']), (mejor_b['x'] + mejor_b['w'], mejor_b['y'] + mejor_b['h']), (0, 165, 255), 2)
+                    if segundo_b:
+                        cv2.rectangle(img_respuestas, (segundo_b['x'], segundo_b['y']), (segundo_b['x'] + segundo_b['w'], segundo_b['y'] + segundo_b['h']), (0, 165, 255), 2)
+                    cv2.putText(img_respuestas, "2X", (2, mejor_b['cY'] + 5), cv2.FONT_HERSHEY_SIMPLEX, 0.40, (0, 165, 255), 2)
         else:
             # Si ninguna supera el umbral, está en blanco
             respuestas.append('Z')
+            if img_respuestas is not None:
+                cv2.putText(img_respuestas, "-", (2, mejor_b['cY'] + 5), cv2.FONT_HERSHEY_SIMPLEX, 0.40, (140, 140, 140), 1)
 
+    if return_debug_img:
+        return respuestas, img_respuestas
     return respuestas
 
 
@@ -589,20 +619,27 @@ def procesar_imagen(image_path, modo, debug=False, user=None):
     secuencia = []
     for num, (tira_img, n_opciones, etiqueta) in enumerate(tiras, start=1):
         imgThresh, circulos, debug_img = encontrar_circulos_en_tira(tira_img, n_opciones)
-        respuestas = evaluar_tira(circulos, imgThresh, n_opciones)
+        if debug:
+            respuestas, img_respuestas = evaluar_tira(circulos, imgThresh, n_opciones, return_debug_img=True, tira_img=tira_img)
+        else:
+            respuestas = evaluar_tira(circulos, imgThresh, n_opciones)
         secuencia.extend(respuestas)
 
         if debug:
-            # Guardar el recorte limpio (para verificar que los cortes son correctos)
+            # 1. Guardar el recorte limpio (para verificar que los cortes son correctos)
             nombre_corte = f"{base}_corte{num}.jpg"
             cv2.imwrite(os.path.join(debug_dir, nombre_corte), tira_img)
 
-            # Guardar el recorte con los círculos detectados marcados en verde
+            # 2. Guardar el recorte con los círculos detectados marcados en verde
             nombre_deteccion = f"{base}_corte{num}_deteccion.jpg"
             cv2.imwrite(os.path.join(debug_dir, nombre_deteccion), debug_img)
 
+            # 3. Guardar el recorte con las respuestas finales marcadas en rojo
+            nombre_respuestas = f"{base}_corte{num}_respuestas.jpg"
+            cv2.imwrite(os.path.join(debug_dir, nombre_respuestas), img_respuestas)
+
             print(f"  [{etiqueta}] {len(circulos)} círculos → {len(respuestas)} respuestas: {''.join(respuestas)}")
-            print(f"    Guardado: {nombre_corte}  |  {nombre_deteccion}")
+            print(f"    Guardado: {nombre_corte}  |  {nombre_deteccion}  |  {nombre_respuestas}")
 
     return secuencia
 
@@ -725,17 +762,17 @@ def extraer_tiras_diagnostico(path_imagen, user=None):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Uso: python3 procesar_simulacro.py <S1|S2> <imagen.jpg>")
+        print("Uso: python3 procesar_simulacro.py <S1|S2|SD> <imagen.jpg>")
         sys.exit(1)
 
     modo   = sys.argv[1].upper()
     imagen = sys.argv[2]
 
-    if modo not in ('S1', 'S2'):
-        print("Error: modo debe ser S1 o S2")
+    if modo not in ('S1', 'S2', 'SD'):
+        print("Error: modo debe ser S1, S2 o SD")
         sys.exit(1)
 
-    TOTAL = {'S1': 120, 'S2': 134}
+    TOTAL = {'S1': 120, 'S2': 134, 'SD': 90}
 
     print(f"\n{'='*60}")
     print(f"  MODO: {modo}  |  Imagen: {imagen}")
