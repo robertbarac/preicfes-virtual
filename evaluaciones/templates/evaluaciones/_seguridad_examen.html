@@ -1,0 +1,356 @@
+{% load static %}
+
+<!-- ==========================================================================
+     MÓDULO DE SEGURIDAD ACADÉMICA Y PROTECCIÓN CONTRA COPIA / CAPTURAS
+     PreICFES Víctor Valdez — Diseñado para Móviles (Android/iOS), Tablets y PC
+     ========================================================================== -->
+
+<!-- Capa 1: Marca de agua forense transparente repetida en diagonal -->
+<div id="seguridad-watermark" 
+     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 25; background-repeat: repeat; opacity: 0.95;">
+</div>
+
+<!-- Capa 2: Cortina protectora instantánea cuando se pierde el foco (recortes o cambio de app) -->
+<div id="seguridad-curtain" 
+     style="display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 999999; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); align-items: center; justify-content: center; text-align: center; padding: 1.5rem;">
+    <div style="max-width: 24rem; margin: auto; color: #f8fafc; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;">
+        <div style="width: 4.5rem; height: 4.5rem; border-radius: 9999px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto; font-size: 2.25rem;">
+            🔒
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 900; letter-spacing: 0.05em; color: #ffffff; margin-bottom: 0.5rem; text-transform: uppercase;">
+            Modo Protegido Activo
+        </h3>
+        <p style="font-size: 0.875rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 1rem;">
+            Por seguridad académica, el contenido se oculta al salir de la pestaña o activar herramientas de captura.
+        </p>
+        <div style="display: inline-block; padding: 0.5rem 1rem; border-radius: 0.75rem; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fcd34d; font-size: 0.75rem; font-weight: 700;">
+            ⚠️ Regresa a la evaluación para continuar
+        </div>
+    </div>
+</div>
+
+<!-- Capa 3: Toast flotante de advertencia al regresar de otra app o pestaña -->
+<div id="seguridad-toast" 
+     style="display: none; position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999998; max-width: 22rem; background: #0f172a; border: 1px solid #f59e0b; border-radius: 1rem; padding: 0.875rem 1.25rem; color: #ffffff; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); font-family: ui-sans-serif, system-ui, sans-serif; transition: all 0.3s ease;">
+    <div style="display: flex; items-center: center; gap: 0.75rem;">
+        <span style="font-size: 1.5rem; line-height: 1;">⚠️</span>
+        <div>
+            <p style="font-size: 0.75rem; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">
+                Aviso de Seguridad
+            </p>
+            <p id="seguridad-toast-msg" style="font-size: 0.75rem; color: #e2e8f0; margin: 0.25rem 0 0 0; line-height: 1.3;">
+                Has salido de la evaluación. Esta acción queda registrada para el docente.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ─── 1. Bloqueo universal de selección de texto y llamada de menú en móviles ─── */
+body, form, .seguridad-examen, .prose, label, p, span, h1, h2, h3, h4, div {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important; /* Desactiva menú contextual en Safari iOS / Chrome Android */
+}
+
+/* Permitir que los inputs de radio funcionen sin ningún impedimento */
+input[type="radio"], input[type="submit"], button {
+    cursor: pointer !important;
+}
+
+/* ─── 2. Bloqueo de arrastre y descarga de imágenes ─── */
+img {
+    -webkit-user-drag: none !important;
+    user-drag: none !important;
+    pointer-events: none !important; /* Impide arrastre y menú 'Guardar como' */
+}
+
+/* ─── 3. Bloqueo de impresión (Ctrl+P / Menú Imprimir) ─── */
+@media print {
+    html, body {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        overflow: hidden !important;
+    }
+}
+</style>
+
+<script>
+(function() {
+    // Datos del alumno para la marca de agua
+    const estudianteNombre = "{{ request.user.get_full_name|default:request.user.username|escapejs }}";
+    const estudianteDoc = "{{ request.user.numero_documento|default:request.user.username|escapejs }}";
+    const logoUrl = "{% static 'images/logo.png' %}";
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // 1. GENERACIÓN DE LA MARCA DE AGUA DINÁMICA CON LOGO Y DATOS FORENSES
+    // ─────────────────────────────────────────────────────────────────────────────
+    function generarMarcaAgua() {
+        const canvas = document.createElement('canvas');
+        const patternWidth = 380;
+        const patternHeight = 240;
+        canvas.width = patternWidth;
+        canvas.height = patternHeight;
+        const ctx = canvas.getContext('2d');
+
+        function renderPattern(logoImg) {
+            ctx.clearRect(0, 0, patternWidth, patternHeight);
+            ctx.save();
+
+            // Rotar en diagonal -25 grados
+            ctx.translate(patternWidth / 2, patternHeight / 2);
+            ctx.rotate(-25 * Math.PI / 180);
+
+            // 1. Dibujar Logo sutil si cargó
+            if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+                ctx.globalAlpha = 0.045; // Muy tenue para no estorbar lectura
+                const logoSize = 42;
+                ctx.drawImage(logoImg, -logoSize / 2, -55, logoSize, logoSize);
+            }
+
+            // 2. Dibujar Texto Forense
+            ctx.globalAlpha = 0.055; // Nivel de opacidad calibrado
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#0f172a';
+
+            ctx.font = 'bold 13px ui-sans-serif, system-ui, sans-serif';
+            ctx.fillText('PreICFES Víctor Valdez', 0, 8);
+
+            ctx.font = 'bold 12px ui-sans-serif, system-ui, sans-serif';
+            ctx.fillText(estudianteNombre, 0, 26);
+
+            ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
+            ctx.fillText('Doc: ' + estudianteDoc, 0, 42);
+
+            ctx.restore();
+
+            const dataUrl = canvas.toDataURL('image/png');
+            const overlay = document.getElementById('seguridad-watermark');
+            if (overlay) {
+                overlay.style.backgroundImage = 'url(' + dataUrl + ')';
+            }
+        }
+
+        // Render inicial con texto
+        renderPattern(null);
+
+        // Cargar logo e integrar al patrón
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function() {
+            renderPattern(img);
+        };
+        img.src = logoUrl;
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', generarMarcaAgua);
+    } else {
+        generarMarcaAgua();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // 2. BLOQUEO DE EVENTOS DEL NAVEGADOR (CLIC DERECHO, COPIAR, ARRASTRAR)
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Bloquear menú contextual (clic derecho y toque largo en móvil)
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    }, { capture: true });
+
+    // Bloquear copia, corte y selección forzada
+    document.addEventListener('copy', function(e) {
+        e.preventDefault();
+        if (e.clipboardData) {
+            e.clipboardData.setData('text/plain', '');
+        }
+        mostrarToast('Copia de texto no permitida durante la evaluación.');
+        return false;
+    }, { capture: true });
+
+    document.addEventListener('cut', function(e) {
+        e.preventDefault();
+        return false;
+    }, { capture: true });
+
+    document.addEventListener('dragstart', function(e) {
+        e.preventDefault();
+        return false;
+    }, { capture: true });
+
+    document.addEventListener('selectstart', function(e) {
+        // Permitir interacción solo con radio buttons
+        if (e.target && e.target.tagName !== 'INPUT') {
+            e.preventDefault();
+            return false;
+        }
+    }, { capture: true });
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // 3. BLOQUEO DE ATAJOS DE TECLADO (Ctrl+P, Ctrl+C, Ctrl+U, F12, PrintScreen, etc.)
+    // ─────────────────────────────────────────────────────────────────────────────
+    document.addEventListener('keydown', function(e) {
+        const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+        const key = e.key ? e.key.toLowerCase() : '';
+        const keyCode = e.keyCode || e.which;
+
+        // PrintScreen (Captura de pantalla en teclado físico)
+        if (e.key === 'PrintScreen' || keyCode === 44) {
+            e.preventDefault();
+            activarCortinaInstantanea();
+            limpiarPortapapeles();
+            mostrarToast('Captura de pantalla no permitida.');
+            return false;
+        }
+
+        if (isCtrlOrCmd) {
+            // Ctrl+P (Imprimir)
+            if (key === 'p' || keyCode === 80) {
+                e.preventDefault();
+                e.stopPropagation();
+                mostrarToast('Impresión o exportación a PDF no permitida.');
+                return false;
+            }
+            // Ctrl+S (Guardar página)
+            if (key === 's' || keyCode === 83) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+U (Ver código fuente)
+            if (key === 'u' || keyCode === 85) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+C (Copiar)
+            if (key === 'c' || keyCode === 67) {
+                e.preventDefault();
+                limpiarPortapapeles();
+                mostrarToast('Copia de texto desactivada.');
+                return false;
+            }
+            // Ctrl+A (Seleccionar todo)
+            if (key === 'a' || keyCode === 65) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C (DevTools)
+            if (e.shiftKey && (key === 'i' || key === 'j' || key === 'c' || keyCode === 73 || keyCode === 74 || keyCode === 67)) {
+                e.preventDefault();
+                return false;
+            }
+        }
+
+        // F12 (DevTools)
+        if (e.key === 'F12' || keyCode === 123) {
+            e.preventDefault();
+            return false;
+        }
+    }, { capture: true });
+
+    function limpiarPortapapeles() {
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText('');
+            }
+        } catch (err) {}
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // 4. DETECCIÓN DE CAMBIO DE APP / PESTAÑA / RECORTES (visibilitychange & blur)
+    // ─────────────────────────────────────────────────────────────────────────────
+    let salidasCount = 0;
+    let blurTimer = null;
+    let estaOculto = false;
+
+    const curtain = document.getElementById('seguridad-curtain');
+    const toast = document.getElementById('seguridad-toast');
+    const toastMsg = document.getElementById('seguridad-toast-msg');
+
+    function activarCortinaInstantanea() {
+        if (curtain) {
+            curtain.style.display = 'flex';
+        }
+        estaOculto = true;
+    }
+
+    function desactivarCortina() {
+        if (curtain) {
+            curtain.style.display = 'none';
+        }
+    }
+
+    function manejarSalida() {
+        activarCortinaInstantanea();
+    }
+
+    function manejarRegreso() {
+        if (estaOculto) {
+            estaOculto = false;
+            desactivarCortina();
+            salidasCount++;
+            mostrarToast('Has salido de la evaluación (' + salidasCount + ' ' + (salidasCount === 1 ? 'vez' : 'veces') + '). Esta acción queda registrada para el docente.');
+        }
+    }
+
+    // Cambio de pestaña o minimizar ventana (muy fiable en móviles Android/iOS y PC)
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            manejarSalida();
+        } else {
+            manejarRegreso();
+        }
+    });
+
+    // Pérdida de foco de la ventana (disparado al usar Win+Shift+S, Alt+Tab, barra de notificaciones)
+    window.addEventListener('blur', function() {
+        // Pequeño retardo de 120ms para evitar falsos positivos al hacer clic en inputs nativos
+        blurTimer = setTimeout(function() {
+            manejarSalida();
+        }, 120);
+    });
+
+    window.addEventListener('focus', function() {
+        if (blurTimer) {
+            clearTimeout(blurTimer);
+            blurTimer = null;
+        }
+        manejarRegreso();
+    });
+
+    let toastTimer = null;
+    function mostrarToast(mensaje) {
+        if (!toast || !toastMsg) return;
+        toastMsg.textContent = mensaje;
+        toast.style.display = 'block';
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px)';
+            setTimeout(function() {
+                toast.style.display = 'none';
+            }, 300);
+        }, 4000);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // 5. PROTECCIÓN CONTRA MANIPULACIÓN DEL DOM (MUTATION OBSERVER)
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Si un usuario abre consola e intenta eliminar o esconder la marca de agua:
+    if (window.MutationObserver) {
+        const observer = new MutationObserver(function(mutations) {
+            const watermarkEl = document.getElementById('seguridad-watermark');
+            if (!watermarkEl || watermarkEl.style.display === 'none' || watermarkEl.style.visibility === 'hidden') {
+                generarMarcaAgua();
+                activarCortinaInstantanea();
+            }
+        });
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+    }
+})();
+</script>

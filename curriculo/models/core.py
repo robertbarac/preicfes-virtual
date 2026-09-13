@@ -164,6 +164,8 @@ def crear_registros_asistencia(sender, instance, created, **kwargs):
     Cuando se crea una ClaseVirtual, matricular a todos los alumnos 
     con asistencia False por defecto.
     """
+    if kwargs.get('raw'):
+        return
     if created:
         # Extraer a todos los usuarios con rol de estudiante o virtual
         programa_id = instance.modulo.ciclo_id and instance.modulo.ciclo.programa_id

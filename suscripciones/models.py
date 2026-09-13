@@ -52,6 +52,8 @@ def auto_inscribir_preicfes(sender, instance, created, **kwargs):
     Asigna automáticamente el programa PreICFES al usuario cuando
     se crea su primera suscripción (si no tiene programa).
     """
+    if kwargs.get('raw'):
+        return
     if created:
         user = instance.user
         from curriculo.models import Programa

@@ -177,3 +177,10 @@ cython_debug/
 
 # Django filesystem cache
 .django_cache/
+
+# Prototipos y tests de OpenCV
+cv_prototypes/
+simulacros/cv_prototypes/
+simulacros/imagenes_muestra/
+simulacros/recortes/
+imagenes_muestra/
