@@ -444,10 +444,16 @@ class TallerPDFView(LoginRequiredMixin, DetailView):
         preguntas_taller = taller.preguntas_taller.select_related(
             'pregunta', 'pregunta__tema', 'pregunta__bloque_contexto'
         ).prefetch_related('pregunta__opciones', 'pregunta__bloque_contexto__imagenes').all()
+        letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+        for pt in preguntas_taller:
+            for idx, op in enumerate(pt.pregunta.opciones.all()):
+                op.letra = letras[idx] if idx < len(letras) else str(idx + 1)
+
         context['preguntas'] = preguntas_taller
         context['grupos'] = agrupar_por_bloque(preguntas_taller, get_pregunta=lambda pt: pt.pregunta)
         context['incluir_solucionario'] = self.request.GET.get('solucionario') == '1'
         return context
+
 
 
 from django.views.generic import ListView
