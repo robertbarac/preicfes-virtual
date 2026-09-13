@@ -1,6 +1,17 @@
 {% load static %}
 {% if request.user.es_estudiante and not request.user.is_staff and not request.user.is_superuser and not request.user.es_docente or request.GET.simular_estudiante %}
 
+{% if request.GET.simular_estudiante %}
+<!-- Botón flotante para Docentes: Salir del Modo Simulación con un solo clic -->
+<div style="position: fixed; bottom: 1.5rem; left: 1.5rem; z-index: 1000000; pointer-events: auto;">
+    <a href="?" 
+       id="btn-salir-simulacion"
+       style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.15rem; background: #dc2626; color: #ffffff; font-weight: 800; font-size: 0.75rem; border-radius: 9999px; box-shadow: 0 10px 25px -3px rgba(220, 38, 38, 0.6); text-decoration: none; border: 2px solid rgba(255, 255, 255, 0.9); font-family: ui-sans-serif, system-ui, sans-serif; cursor: pointer; transition: transform 0.2s ease;">
+        <span>🛑 Salir de Simulación</span>
+    </a>
+</div>
+{% endif %}
+
 <!-- Capa 1: Marca de agua forense transparente repetida en diagonal -->
 <div id="seguridad-watermark" 
      style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 25; background-repeat: repeat; opacity: 0.95;">
