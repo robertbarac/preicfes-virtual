@@ -1,9 +1,5 @@
 {% load static %}
-
-<!-- ==========================================================================
-     MÓDULO DE SEGURIDAD ACADÉMICA Y PROTECCIÓN CONTRA COPIA / CAPTURAS
-     PreICFES Víctor Valdez — Diseñado para Móviles (Android/iOS), Tablets y PC
-     ========================================================================== -->
+{% if request.user.es_estudiante and not request.user.is_staff and not request.user.is_superuser and not request.user.es_docente or request.GET.simular_estudiante %}
 
 <!-- Capa 1: Marca de agua forense transparente repetida en diagonal -->
 <div id="seguridad-watermark" 
@@ -354,3 +350,15 @@ img {
     }
 })();
 </script>
+{% else %}
+<!-- Indicador para Docentes y Administradores: Restricciones desactivadas -->
+<div class="max-w-4xl mx-auto mb-4 px-4 py-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 text-xs font-medium flex flex-wrap items-center justify-between gap-2 shadow-sm">
+    <span class="flex items-center gap-1.5">
+        <span>🛡️</span>
+        <span><strong>Modo Docente / Staff:</strong> Restricciones antimachete y marca de agua desactivadas para tu usuario.</span>
+    </span>
+    <a href="?simular_estudiante=1" class="inline-flex items-center px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-bold transition text-[11px]">
+        👁️ Probar como Estudiante
+    </a>
+</div>
+{% endif %}
