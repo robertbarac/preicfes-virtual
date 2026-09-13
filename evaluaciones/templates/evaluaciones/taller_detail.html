@@ -138,6 +138,9 @@
         
         <div class="flex flex-wrap gap-3 w-full sm:w-auto mt-4 sm:mt-0">
             {% if user.is_superuser or user.is_staff or user.es_docente or perms.evaluaciones.view_taller %}
+            <a href="{% url 'evaluaciones:taller_pdf' taller.pk %}" target="_blank" class="w-full sm:w-auto text-center bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 font-semibold py-2 px-4 rounded-lg shadow-sm text-sm transition-all inline-flex items-center justify-center gap-1.5">
+                <span>📥 Descargar / Imprimir PDF</span>
+            </a>
             <a href="{% url 'evaluaciones:taller_lectura' taller.pk %}" class="w-full sm:w-auto text-center bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 font-medium py-2 px-4 rounded-lg shadow-sm text-sm transition-all">
                 📖 Ver Taller (Lectura)
             </a>
@@ -145,6 +148,7 @@
                 📋 Solucionario
             </a>
             {% endif %}
+
 
             {% if perms.evaluaciones.change_taller or user.is_superuser %}
             <a href="{% url 'evaluaciones:taller_update' taller.pk %}" class="w-full sm:w-auto text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-sm text-sm transition-all focus:ring-2 focus:ring-offset-1 focus:ring-green-500">

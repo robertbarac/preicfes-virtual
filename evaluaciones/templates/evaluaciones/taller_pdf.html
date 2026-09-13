@@ -1,0 +1,622 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller en PDF: {{ taller.titulo }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #1e293b;
+            background-color: #f1f5f9;
+            line-height: 1.5;
+            font-size: 13px;
+        }
+
+        /* Barra de Control Flotante (Solo visible en pantalla) */
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 0.85rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border-bottom: 2px solid #3b82f6;
+        }
+
+        .toolbar-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: #334155;
+            color: #f8fafc;
+            border-color: #475569;
+        }
+
+        .btn-outline:hover {
+            background: #475569;
+            color: #ffffff;
+        }
+
+        /* Hoja de Impresión */
+        .page-container {
+            max-width: 850px;
+            margin: 2rem auto;
+            background: #ffffff;
+            padding: 2.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            border-radius: 0.75rem;
+        }
+
+        /* Encabezado Institucional */
+        .exam-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
+            gap: 1.5rem;
+        }
+
+        .header-logo {
+            max-height: 65px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .header-info {
+            flex: 1;
+            text-align: center;
+        }
+
+        .institution-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+            text-transform: uppercase;
+        }
+
+        .taller-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #2563eb;
+            margin-top: 0.25rem;
+        }
+
+        .taller-meta {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 600;
+            margin-top: 0.2rem;
+            text-transform: uppercase;
+        }
+
+        /* Ficha del Estudiante */
+        .student-box {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 0.75rem;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.75rem;
+            font-size: 0.8rem;
+        }
+
+        .student-field {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .student-field strong {
+            color: #334155;
+            font-weight: 700;
+        }
+
+        .student-field .line {
+            flex: 1;
+            border-bottom: 1px dotted #94a3b8;
+            height: 12px;
+        }
+
+        /* Bloque de Contexto */
+        .context-block {
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            border-radius: 0.35rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            page-break-inside: avoid;
+        }
+
+        .context-header {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            color: #1e3a8a;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .context-text {
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .context-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            justify-content: center;
+        }
+
+        .context-images img {
+            max-height: 220px;
+            max-width: 100%;
+            border-radius: 0.35rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Preguntas */
+        .pregunta-card {
+            margin-bottom: 1.75rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px dashed #cbd5e1;
+            page-break-inside: avoid;
+        }
+
+        .pregunta-card:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .pregunta-header {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .pregunta-number {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 0.8rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 0.35rem;
+            display: inline-block;
+        }
+
+        .pregunta-tema {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .enunciado {
+            font-size: 0.92rem;
+            color: #0f172a;
+            font-weight: 500;
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
+
+        .enunciado img {
+            max-width: 100%;
+            max-height: 240px;
+            height: auto;
+            border-radius: 0.35rem;
+            margin: 0.5rem 0;
+            display: block;
+        }
+
+        .pregunta-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin: 0.75rem 0;
+            justify-content: center;
+        }
+
+        .pregunta-images img {
+            max-height: 220px;
+            max-width: 100%;
+            border-radius: 0.35rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Opciones */
+        .opciones-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.45rem;
+            margin-top: 0.75rem;
+            padding-left: 0.5rem;
+        }
+
+        .opcion-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            font-size: 0.88rem;
+            color: #1e293b;
+        }
+
+        .opcion-letter {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 1.5px solid #64748b;
+            color: #0f172a;
+            font-weight: 800;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: #ffffff;
+            margin-top: 0.1rem;
+        }
+
+        .opcion-content {
+            flex: 1;
+        }
+
+        .opcion-content img {
+            max-width: 160px;
+            max-height: 120px;
+            border-radius: 0.25rem;
+            border: 1px solid #e2e8f0;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        /* Tabla de Respuestas / Solucionario */
+        .solucionario-box {
+            margin-top: 2.5rem;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border: 2px solid #0f172a;
+            border-radius: 0.5rem;
+            page-break-inside: avoid;
+        }
+
+        .solucionario-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #0f172a;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+            text-align: center;
+            letter-spacing: 0.05em;
+        }
+
+        .solucionario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+            gap: 0.5rem;
+            text-align: center;
+        }
+
+        .sol-cell {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            border-radius: 0.35rem;
+            padding: 0.35rem 0.2rem;
+        }
+
+        .sol-num {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748b;
+        }
+
+        .sol-letter {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #16a34a;
+        }
+
+        /* Reglas estrictas para IMPRESIÓN y GUARDADO EN PDF */
+        @media print {
+            .no-print, .toolbar {
+                display: none !important;
+            }
+
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 10.5pt;
+            }
+
+            .page-container {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+
+            .exam-header {
+                border-bottom: 2pt solid #000000 !important;
+            }
+
+            .institution-title, .taller-title {
+                color: #000000 !important;
+            }
+
+            .student-box {
+                background: #ffffff !important;
+                border: 1pt solid #666666 !important;
+            }
+
+            .context-block {
+                background: #f8fafc !important;
+                border-left: 3pt solid #000000 !important;
+            }
+
+            .pregunta-number {
+                background: #000000 !important;
+                color: #ffffff !important;
+            }
+
+            .pregunta-card {
+                page-break-inside: avoid !important;
+                border-bottom: 1pt dashed #999999 !important;
+            }
+
+            .opcion-letter {
+                border-color: #000000 !important;
+                color: #000000 !important;
+            }
+
+            .solucionario-box {
+                border: 1.5pt solid #000000 !important;
+                background: #ffffff !important;
+            }
+
+            @page {
+                size: letter;
+                margin: 1.4cm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra de Herramientas para el Docente -->
+    <aside class="toolbar no-print" aria-label="Herramientas del Taller">
+        <div class="toolbar-title">
+            <span>📄</span>
+            <span>Vista de Impresión y PDF: <strong>{{ taller.titulo }}</strong></span>
+        </div>
+        <div class="toolbar-actions">
+            <button onclick="window.print()" class="btn btn-primary">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                <span>Descargar / Imprimir en PDF</span>
+            </button>
+            <button onclick="toggleSolucionario()" id="btn-toggle-sol" class="btn btn-outline">
+                <span>📋 {% if incluir_solucionario %}Ocultar Clave{% else %}Ver Clave de Respuestas{% endif %}</span>
+            </button>
+            <a href="{% url 'evaluaciones:taller_detail' taller.pk %}" class="btn btn-outline">
+                <span>← Volver al Taller</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Contenido del Cuadernillo -->
+    <main class="page-container">
+        
+        <!-- Encabezado Institucional -->
+        <header class="exam-header">
+            <img src="{% static 'images/logo.png' %}" alt="Logo Institución" class="header-logo" onerror="this.style.display='none'">
+            <div class="header-info">
+                <h2 class="institution-title">Preuniversitario y Preicfes Valor & Arte</h2>
+                <h1 class="taller-title">{{ taller.titulo }}</h1>
+                <p class="taller-meta">
+                    {{ taller.modulo.nombre|default:"Estructura Curricular" }}
+                    {% if taller.tema %} &bull; {{ taller.tema.nombre }} {% endif %}
+                    &bull; {{ preguntas.count }} Preguntas
+                </p>
+            </div>
+        </header>
+
+        <!-- Ficha de Datos del Estudiante (Para impresión en físico) -->
+        <div class="student-box">
+            <div class="student-field">
+                <strong>Estudiante:</strong>
+                <span class="line"></span>
+            </div>
+            <div class="student-field">
+                <strong>Grupo/Salón:</strong>
+                <span class="line"></span>
+            </div>
+            <div class="student-field">
+                <strong>Fecha:</strong>
+                <span class="line"></span>
+            </div>
+        </div>
+
+        {% if taller.descripcion %}
+        <div style="font-size: 0.85rem; color: #475569; margin-bottom: 1.5rem; font-style: italic; border-left: 3px solid #cbd5e1; padding-left: 0.75rem;">
+            {{ taller.descripcion|linebreaks }}
+        </div>
+        {% endif %}
+
+        <!-- Listado de Preguntas agrupadas por Bloque de Contexto -->
+        <div class="preguntas-container">
+            {% for grupo in grupos %}
+                
+                {% if grupo.bloque %}
+                <section class="context-block">
+                    <div class="context-header">
+                        <span>📖</span>
+                        <span>{{ grupo.bloque.titulo|default:"Información de Contexto" }}</span>
+                    </div>
+                    {% if grupo.bloque.texto %}
+                    <div class="context-text">
+                        {{ grupo.bloque.texto|safe }}
+                    </div>
+                    {% endif %}
+                    {% if grupo.bloque.imagenes.all %}
+                    <div class="context-images">
+                        {% for c_img in grupo.bloque.imagenes.all %}
+                            <img src="{{ c_img.imagen.url }}" alt="Imagen de contexto">
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </section>
+                {% endif %}
+
+                {% for pt in grupo.items %}
+                <article class="pregunta-card" id="p-{{ pt.numero_global }}">
+                    <div class="pregunta-header">
+                        <span class="pregunta-number">{{ pt.numero_global }}</span>
+                        {% if pt.pregunta.tema %}
+                        <span class="pregunta-tema">{{ pt.pregunta.tema.nombre }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="enunciado">
+                        {{ pt.pregunta.enunciado|safe }}
+                    </div>
+
+                    {% if pt.pregunta.imagenes.all %}
+                    <div class="pregunta-images">
+                        {% for img in pt.pregunta.imagenes.all %}
+                            <img src="{{ img.imagen.url }}" alt="Ilustración pregunta {{ pt.numero_global }}">
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Opciones de Respuesta -->
+                    <div class="opciones-grid">
+                        {% for opcion in pt.pregunta.opciones.all %}
+                        <div class="opcion-item">
+                            <div class="opcion-letter">
+                                {% if forloop.counter == 1 %}A{% elif forloop.counter == 2 %}B{% elif forloop.counter == 3 %}C{% elif forloop.counter == 4 %}D{% elif forloop.counter == 5 %}E{% else %}{{ forloop.counter }}{% endif %}
+                            </div>
+                            <div class="opcion-content">
+                                {% if opcion.texto %}
+                                    <span>{{ opcion.texto|safe }}</span>
+                                {% endif %}
+                                {% if opcion.imagen %}
+                                    <img src="{{ opcion.imagen.url }}" alt="Opción imagen">
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </article>
+                {% endfor %}
+
+            {% empty %}
+                <div style="text-align: center; padding: 3rem; color: #64748b;">
+                    Este taller no contiene preguntas registradas actualmente.
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Clave de Respuestas (Solucionario al final) -->
+        <section id="solucionario-seccion" class="solucionario-box" style="display: {% if incluir_solucionario %}block{% else %}none{% endif %};">
+            <h3 class="solucionario-title">📋 Clave de Respuestas Oficial (Uso Docente)</h3>
+            <div class="solucionario-grid">
+                {% for grupo in grupos %}
+                    {% for pt in grupo.items %}
+                        <div class="sol-cell">
+                            <div class="sol-num">Preg. {{ pt.numero_global }}</div>
+                            <div class="sol-letter">
+                                {% for op in pt.pregunta.opciones.all %}
+                                    {% if op.es_correcta %}
+                                        {% if forloop.counter == 1 %}A{% elif forloop.counter == 2 %}B{% elif forloop.counter == 3 %}C{% elif forloop.counter == 4 %}D{% elif forloop.counter == 5 %}E{% else %}{{ forloop.counter }}{% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        function toggleSolucionario() {
+            const sec = document.getElementById('solucionario-seccion');
+            const btn = document.getElementById('btn-toggle-sol');
+            if (sec.style.display === 'none' || sec.style.display === '') {
+                sec.style.display = 'block';
+                btn.innerHTML = '<span>📋 Ocultar Clave</span>';
+                sec.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                sec.style.display = 'none';
+                btn.innerHTML = '<span>📋 Ver Clave de Respuestas</span>';
+            }
+        }
+    </script>
+</body>
+</html>

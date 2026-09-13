@@ -1,5 +1,5 @@
 from django.urls import path
-from .views.talleres import TallerCreateView, TallerUpdateView, TallerDetailView, TallerPreguntaManageView, TallerResolverView, TallerIntentoDetailView, TallerSolucionView, TallerLecturaView, TallerListView
+from .views.talleres import TallerCreateView, TallerUpdateView, TallerDetailView, TallerPreguntaManageView, TallerResolverView, TallerIntentoDetailView, TallerSolucionView, TallerLecturaView, TallerPDFView, TallerListView
 from .views.simulacros import (
     SimulacroCreateView, SimulacroUpdateView, SimulacroDetailView, SimulacroListView,
     VentanaSimulacroCreateView, SimulacroResolverView, SimulacroEnviarView, SimulacroResultadoView
@@ -39,6 +39,7 @@ urlpatterns = [
     path('talleres/intentos/<int:pk>/', TallerIntentoDetailView.as_view(), name='taller_intento_detail'),
     path('talleres/<int:pk>/solucionario/', TallerSolucionView.as_view(), name='taller_solucion'),
     path('talleres/<int:pk>/lectura/', TallerLecturaView.as_view(), name='taller_lectura'),
+    path('talleres/<int:pk>/pdf/', TallerPDFView.as_view(), name='taller_pdf'),
     
     # Simulacros
     path('simulacros/', SimulacroListView.as_view(), name='simulacro_list'),

@@ -419,6 +419,37 @@ class TallerLecturaView(LoginRequiredMixin, DetailView):
         context['grupos'] = agrupar_por_bloque(preguntas_lectura, get_pregunta=lambda pt: pt.pregunta)
         return context
 
+class TallerPDFView(LoginRequiredMixin, DetailView):
+    """
+    Vista de descarga e impresión en formato PDF del taller.
+    Exclusiva para personal docente, directivos o administradores (no estudiantes).
+    """
+    model = Taller
+    template_name = 'evaluaciones/taller_pdf.html'
+    context_object_name = 'taller'
+
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        if not user.is_authenticated:
+            return redirect('usuarios:login')
+        # Restricción estricta: Bloqueado para cuentas de estudiante
+        if user.es_estudiante and not (user.is_staff or user.is_superuser or user.es_docente):
+            messages.error(request, 'La descarga e impresión en PDF del taller está reservada exclusivamente para el equipo docente y directivo.')
+            return redirect('evaluaciones:taller_detail', pk=kwargs.get('pk'))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        taller = self.object
+        preguntas_taller = taller.preguntas_taller.select_related(
+            'pregunta', 'pregunta__tema', 'pregunta__bloque_contexto'
+        ).prefetch_related('pregunta__opciones', 'pregunta__bloque_contexto__imagenes').all()
+        context['preguntas'] = preguntas_taller
+        context['grupos'] = agrupar_por_bloque(preguntas_taller, get_pregunta=lambda pt: pt.pregunta)
+        context['incluir_solucionario'] = self.request.GET.get('solucionario') == '1'
+        return context
+
+
 from django.views.generic import ListView
 from curriculo.models import Materia, Tema
 

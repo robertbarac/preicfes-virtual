@@ -19,9 +19,14 @@
                 </p>
             </div>
             
-            <a href="{% url 'profesor_clases' clase.profesor.id %}" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl border border-slate-700 text-slate-300 hover:text-white transition">
-                ← Volver a Mis Clases
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="{% url 'evaluaciones:taller_pdf' taller.pk %}" target="_blank" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-xs font-black rounded-xl text-white shadow transition inline-flex items-center gap-1.5">
+                    <span>📥 Descargar Taller en PDF</span>
+                </a>
+                <a href="{% url 'profesor_clases' clase.profesor.id %}" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl border border-slate-700 text-slate-300 hover:text-white transition">
+                    ← Volver a Mis Clases
+                </a>
+            </div>
         </div>
     </div>
 
