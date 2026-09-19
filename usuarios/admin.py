@@ -56,9 +56,15 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'email', 'tipo_documento', 'numero_documento', 'telefono', 'departamento', 'municipio', 'sede'),
+            'fields': (
+                'username', 'first_name', 'last_name', 'email',
+                'tipo_documento', 'numero_documento', 'telefono',
+                'departamento', 'municipio', 'sede',
+                'password1', 'password2',
+            ),
         }),
     )
+
     filter_horizontal = ('groups', 'user_permissions', 'programas_docente')
 
     def get_grupo(self, obj):
