@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static humanize %}
+{% load static humanize l10n %}
 
 {% block title %}Informe Diario{% endblock %}
 
@@ -124,17 +124,18 @@
             <div>
                 <form method="post" action="{% url 'cartera:generar_informe_pdf' %}" id="pdfForm" target="_blank">
                     {% csrf_token %}
-                    <input type="hidden" name="recaudo_efectivo" value="{{ recaudo_efectivo }}">
-                    <input type="hidden" name="recaudo_transferencia" value="{{ recaudo_transferencia }}">
-                    <input type="hidden" name="recaudo_datáfono" value="{{ recaudo_datáfono }}">
-                    <input type="hidden" name="recaudo_no_especificado" value="{{ recaudo_no_especificado }}">
-                    <input type="hidden" name="total_recaudado" value="{{ total_recaudado }}">
-                    <input type="hidden" name="objetivo_mes" value="{{ objetivo_mes }}">
-                    <input type="hidden" name="porcentaje_cumplimiento" value="{{ porcentaje_cumplimiento|floatformat:2 }}">
-                    <input type="hidden" name="valor_cartera" value="{{ valor_cartera }}">
-                    <input type="hidden" name="cobrado" value="{{ cobrado }}">
-                    <input type="hidden" name="falta_cobrar" value="{{ falta_cobrar }}">
-                    <input type="hidden" name="recaudado_mes" value="{{ recaudado_mes }}">
+                    <input type="hidden" name="recaudo_efectivo" value="{{ recaudo_efectivo|unlocalize }}">
+                    <input type="hidden" name="recaudo_transferencia" value="{{ recaudo_transferencia|unlocalize }}">
+                    <input type="hidden" name="recaudo_datáfono" value="{{ recaudo_datáfono|unlocalize }}">
+                    <input type="hidden" name="recaudo_no_especificado" value="{{ recaudo_no_especificado|unlocalize }}">
+                    <input type="hidden" name="total_recaudado" value="{{ total_recaudado|unlocalize }}">
+                    <input type="hidden" name="objetivo_mes" value="{{ objetivo_mes|unlocalize }}">
+                    <input type="hidden" name="porcentaje_cumplimiento" value="{{ porcentaje_cumplimiento|floatformat:2|unlocalize }}">
+                    <input type="hidden" name="valor_cartera" value="{{ valor_cartera|unlocalize }}">
+                    <input type="hidden" name="cobrado" value="{{ cobrado|unlocalize }}">
+                    <input type="hidden" name="falta_cobrar" value="{{ falta_cobrar|unlocalize }}">
+                    <input type="hidden" name="recaudado_mes" value="{{ recaudado_mes|unlocalize }}">
+
                     
                     <div class="mb-4">
                         <label for="efectivo_sedes" class="block font-medium">Efectivo en sedes:</label>
