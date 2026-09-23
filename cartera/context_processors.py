@@ -17,9 +17,10 @@ def alertas_cartera(request):
 
     user = request.user
     
-    # Alumnos activos sin Deuda o con Deuda pero sin Cuotas generadas
+    # Alumnos activos sin Deuda o con Deuda pero sin Cuotas generadas (excluyendo becados)
     alumnos_sin_cartera_qs = Alumno.objects.filter(
-        estado='activo'
+        estado='activo',
+        es_becado=False
     ).filter(
         Q(deuda__isnull=True) | Q(deuda__cuotas__isnull=True)
     ).distinct().select_related('grupo_actual', 'municipio')

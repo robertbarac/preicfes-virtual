@@ -22,7 +22,8 @@ class AlumnosSinCarteraListView(LoginRequiredMixin, UserPassesTestMixin, ListVie
 
     def get_queryset(self):
         return Alumno.objects.filter(
-            estado='activo'
+            estado='activo',
+            es_becado=False
         ).filter(
             Q(deuda__isnull=True) | Q(deuda__cuotas__isnull=True)
         ).distinct().select_related('grupo_actual', 'municipio', 'deuda', 'vendedor').order_by('-fecha_ingreso', 'primer_apellido')

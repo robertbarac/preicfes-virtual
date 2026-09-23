@@ -14,7 +14,8 @@ class Command(BaseCommand):
         self.stdout.write(self.style.MIGRATE_HEADING('🔍 Iniciando revisión automatizada de cartera pendiente...'))
 
         alumnos_sin_cartera = Alumno.objects.filter(
-            estado='activo'
+            estado='activo',
+            es_becado=False
         ).filter(
             Q(deuda__isnull=True) | Q(deuda__cuotas__isnull=True)
         ).distinct().select_related('grupo_actual', 'municipio')
