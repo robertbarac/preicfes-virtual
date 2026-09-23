@@ -737,3 +737,36 @@ class GenerarCertificadoTrabajoView(UserPassesTestMixin, View):
         return response
 
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import View
+from .forms import FotoPerfilForm
+
+class MiPerfilView(LoginRequiredMixin, View):
+    template_name = 'usuarios/perfil.html'
+
+    def get(self, request):
+        form = FotoPerfilForm(instance=request.user)
+        return render(request, self.template_name, {
+            'form': form,
+            'usuario': request.user
+        })
+
+    def post(self, request):
+        if 'eliminar_foto' in request.POST:
+            if request.user.foto_perfil:
+                request.user.foto_perfil.delete(save=True)
+                messages.success(request, "Foto de perfil eliminada correctamente.")
+            return redirect('usuarios:perfil')
+
+        form = FotoPerfilForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Foto de perfil actualizada correctamente.")
+            return redirect('usuarios:perfil')
+        return render(request, self.template_name, {
+            'form': form,
+            'usuario': request.user
+        })
+
+
+

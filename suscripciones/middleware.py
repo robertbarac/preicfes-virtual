@@ -20,6 +20,7 @@ class SubscriptionCheckMiddleware:
             reverse('logout'),
             reverse('password_change'),
             reverse('password_change_done'),
+            reverse('usuarios:perfil'),
             '/', # Landing page
             '/admin/', # Django admin panel
         ]

@@ -152,3 +152,16 @@ class CertificadoTrabajoForm(forms.Form):
             raise forms.ValidationError("La fecha de inicio debe ser anterior a la fecha de finalización.")
         return cleaned_data
 
+
+class FotoPerfilForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['foto_perfil']
+        widgets = {
+            'foto_perfil': forms.FileInput(attrs={
+                'class': 'block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer transition',
+                'accept': 'image/*'
+            })
+        }
+
+

@@ -7,9 +7,9 @@ def configuracion_global(request):
     if tema is None:
         try:
             config = ConfiguracionPlataforma.objects.first()
-            tema = config.tema_menu if config else 'teal'
+            tema = config.tema_menu if config else 'campus'
         except Exception:
-            tema = 'teal'
+            tema = 'campus'
         cache.set('tema_menu_global', tema, 3600)  # Cachear 1 hora
     return {'TEMA_MENU': tema}
 

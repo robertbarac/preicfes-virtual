@@ -58,6 +58,14 @@ class User(AbstractUser):
     departamento = models.ForeignKey('ubicaciones.Departamento', on_delete=models.SET_NULL, related_name='usuarios', blank=True, null=True)
     sede = models.ForeignKey('ubicaciones.Sede', on_delete=models.SET_NULL, related_name='usuarios', blank=True, null=True)
 
+    foto_perfil = models.ImageField(
+        upload_to='perfiles/',
+        blank=True,
+        null=True,
+        verbose_name='Foto de perfil',
+        help_text='Foto o avatar del perfil'
+    )
+
     @property
     def is_observador(self):
         return self.groups.filter(name__in=['Observador', 'ObservadorColegio']).exists()
@@ -150,6 +158,7 @@ class WhatsAppResetCode(models.Model):
 
 class ConfiguracionPlataforma(models.Model):
     THEME_CHOICES = (
+        ('campus',        'GV Valdez Campus (Azul Moderno #155EEF)'),
         ('teal',          'Original (Oscuro-Teal)'),
         ('gold',          'Proyecto 500 (Negro-Dorado)'),
         ('christmas',     'Navidad (Rojo-Verde)'),
@@ -159,7 +168,7 @@ class ConfiguracionPlataforma(models.Model):
     tema_menu = models.CharField(
         max_length=20, 
         choices=THEME_CHOICES, 
-        default='teal', 
+        default='campus', 
         help_text="Paleta de colores para el menú lateral."
     )
     

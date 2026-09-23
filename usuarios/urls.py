@@ -18,4 +18,7 @@ urlpatterns = [
     path('profesores/<int:pk>/', views.ProfesorDetailView.as_view(), name='profesor_detail'),
     path('profesores/<int:profesor_id>/certificado/', views.CertificadoTrabajoFormView.as_view(), name='certificado_trabajo_form'),
     path('profesores/<int:profesor_id>/generar-certificado/', views.GenerarCertificadoTrabajoView.as_view(), name='generar_certificado_trabajo'),
+
+    # Perfil de usuario (Foto y datos de solo lectura)
+    path('perfil/', views.MiPerfilView.as_view(), name='perfil'),
 ]
