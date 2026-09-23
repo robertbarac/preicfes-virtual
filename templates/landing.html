@@ -1,38 +1,40 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Inicio | PreICFES Virtual Victor Valdez{% endblock %}
+{% block title %}Inicio | GV Valdez Campus{% endblock %}
 
 {% block content %}
 <div class="px-0 sm:px-4 lg:px-8">
     
-    <!-- Hero Section -->
-    <div class="relative bg-white overflow-hidden rounded-3xl shadow-xl flex flex-col md:flex-row mb-16 border border-gray-100">
-        <div class="w-full md:w-1/2 p-10 lg:p-16 flex flex-col justify-center">
-            <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-teal-100 text-teal-800 w-max mb-6">
-                <span class="flex w-2 h-2 bg-teal-500 rounded-full mr-2"></span>
-                Inscripciones Abiertas 2026
+    <!-- Banner Panorámico Principal (Mockup GV VALDEZ CAMPUS) -->
+    <div class="relative w-full overflow-hidden rounded-3xl shadow-xl mb-8 border border-slate-200/80 bg-white">
+        <img src="{% static 'images/banner_home_estudiantes.png' %}" 
+             alt="Tu esfuerzo hoy, es tu éxito mañana - GV Valdez Campus" 
+             class="w-full h-auto object-cover block">
+    </div>
+
+    <!-- Hero / Bienvenida Section -->
+    <div class="bg-white rounded-3xl p-8 sm:p-12 shadow-md border border-slate-100 mb-16 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100 mb-4">
+                <span>🎯</span> Inscripciones Abiertas &bull; Ciclo Saber 11
             </div>
-            <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6">
-                Asegura tu futuro universitario con <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-indigo-600">PreICFES Virtual Victor Valdez</span>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-4">
+                Asegura tu mejor puntaje con <span class="bg-gradient-to-r from-[#04194E] via-[#155EEF] to-[#3566CF] bg-clip-text text-transparent">GV Valdez Campus</span>
             </h1>
-            <p class="text-lg text-gray-600 mb-8 max-w-lg leading-relaxed">
-                Nuestra plataforma te brinda acceso a cientos de simulacros ICFES oficiales, clases interactivas y talleres en un entorno digital flexible. Estudia a tu propio ritmo y vence la prueba Saber 11.
+            <p class="text-base sm:text-lg text-slate-600 leading-relaxed">
+                Nuestra plataforma te brinda acceso a talleres virtuales tipo ICFES, simulacros oficiales con calificación en tiempo real y clases grabadas. Estudia a tu propio ritmo y supera tu meta.
             </p>
-            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <a href="{% url 'login' %}" class="inline-flex justify-center items-center px-8 py-3.5 border border-transparent text-base font-bold rounded-lg shadow-md text-white bg-indigo-600 hover:bg-indigo-700 transition duration-300">
-                    Iniciar Sesión
-                </a>
-                <a href="#programa" class="inline-flex justify-center items-center px-8 py-3.5 border border-gray-300 shadow-sm text-base font-bold rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition duration-300">
-                    Ver el Programa
-                </a>
-            </div>
         </div>
-        <div class="w-full md:w-1/2 relative bg-gray-100 min-h-[300px]">
-            <!-- Insertando la imagen generada por IA (hero_estudiantes.png) -->
-            <img src="{% static 'images/hero_estudiantes.png' %}" alt="Estudiantes felices preparándose" class="absolute inset-0 w-full h-full object-cover">
-            <!-- Capa sutil de gradiente para que el texto de la izquierda respire -->
-            <div class="absolute inset-0 bg-gradient-to-r from-white via-white/40 to-transparent w-3/4"></div>
+        <div class="flex flex-col sm:flex-row md:flex-col gap-3.5 w-full md:w-auto flex-shrink-0">
+            <a href="{% url 'login' %}" 
+               class="inline-flex justify-center items-center px-8 py-4 text-base font-extrabold rounded-2xl shadow-lg text-white bg-gradient-to-r from-[#04194E] to-[#155EEF] hover:from-[#03133D] hover:to-[#0C46B6] transition-all transform hover:-translate-y-0.5">
+                Iniciar Sesión &rarr;
+            </a>
+            <a href="#programa" 
+               class="inline-flex justify-center items-center px-8 py-3.5 text-sm font-bold rounded-2xl text-slate-700 bg-slate-100 hover:bg-slate-200 transition">
+                Ver Contenidos & Herramientas
+            </a>
         </div>
     </div>
 
