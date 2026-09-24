@@ -7,6 +7,7 @@ from academico.models import Alumno, Asistencia, Nota, Inasistencia
 from simulacros.models import ResultadoSimulacro, ResultadoSimulacroDiagnostico
 from cartera.models import Deuda, Cuota
 from evaluaciones.models.simulacros import IntentoSimulacro
+from evaluaciones.models.talleres import IntentoTaller
 
 
 class ConsultaEstudianteView(View):
@@ -42,7 +43,7 @@ class ConsultaEstudianteView(View):
 
             context['alumno'] = alumno
 
-            # 1. Asistencias
+            # 1. Asistencias a Clases
             asistencias_qs = Asistencia.objects.filter(
                 alumno=alumno
             ).select_related('clase', 'clase__materia').order_by('-clase__fecha')
@@ -104,21 +105,28 @@ class ConsultaEstudianteView(View):
                 'simulacro'
             ).order_by('-fecha_realizacion')
 
-            # 5. Simulacros Virtuales (si tiene usuario)
+            # 5. Simulacros Virtuales y Talleres (si tiene usuario vinculado)
             simulacros_virtuales = []
+            intentos_talleres = []
             if alumno.usuario:
                 simulacros_virtuales = IntentoSimulacro.objects.filter(
                     usuario=alumno.usuario,
                     fecha_fin__isnull=False
                 ).select_related('simulacro').order_by('-fecha_fin')
 
+                intentos_talleres = IntentoTaller.objects.filter(
+                    usuario=alumno.usuario,
+                    fecha_fin__isnull=False
+                ).select_related('taller', 'taller__modulo', 'clase', 'clase__materia').order_by('-fecha_fin')
+
             context.update({
                 'simulacros_fisicos': simulacros_fisicos,
                 'simulacros_diagnosticos': simulacros_diagnosticos,
                 'simulacros_virtuales': simulacros_virtuales,
+                'intentos_talleres': intentos_talleres,
             })
 
-            # 6. Cartera y Cuotas
+            # 6. Cartera y Cuotas (Solo visualización / Lectura)
             try:
                 deuda = alumno.deuda
                 cuotas = list(deuda.cuotas.all().order_by('fecha_vencimiento'))

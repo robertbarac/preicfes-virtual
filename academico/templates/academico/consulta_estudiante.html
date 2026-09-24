@@ -25,7 +25,7 @@
           Historial Académico y Financiero
         </h1>
         <p class="text-sm sm:text-base text-blue-100/90 mb-6">
-          Ingresa el número de documento de identidad del estudiante para consultar su registro de notas, asistencias, resultados de simulacros y estado de cuotas.
+          Ingresa el número de documento de identidad del estudiante para consultar en tiempo real su registro de talleres, asistencias, notas, simulacros y estado de cuotas.
         </p>
 
         <!-- Formulario de búsqueda -->
@@ -79,24 +79,34 @@
 
     <!-- Pantalla Inicial cuando no se ha consultado -->
     {% if not busqueda_realizada %}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
       <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-center">
-        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4 font-bold text-xl">
+        <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-4 font-bold text-xl">
           📝
         </div>
-        <h3 class="font-bold text-slate-800 text-base mb-2">Notas y Clases</h3>
+        <h3 class="font-bold text-slate-800 text-base mb-2">Talleres</h3>
         <p class="text-xs text-slate-500 leading-relaxed">
-          Consulta las calificaciones obtenidas en cada clase presencial y el promedio acumulado por materia.
+          Consulta las actividades y talleres prácticos realizados por el estudiante y sus porcentajes de acierto.
         </p>
       </div>
 
       <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-center">
-        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 font-bold text-xl">
+        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4 font-bold text-xl">
+          📅
+        </div>
+        <h3 class="font-bold text-slate-800 text-base mb-2">Asistencias</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Revisa el cumplimiento de clases presenciales, faltas y justificaciones registradas.
+        </p>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-center">
+        <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-4 font-bold text-xl">
           🎯
         </div>
         <h3 class="font-bold text-slate-800 text-base mb-2">Simulacros ICFES</h3>
         <p class="text-xs text-slate-500 leading-relaxed">
-          Revisa tus puntajes globales, desglose por áreas diagnósticas y descarga los reportes oficiales en PDF.
+          Puntajes globales y detallados por áreas de simulacros presenciales y diagnósticos.
         </p>
       </div>
 
@@ -104,9 +114,9 @@
         <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 font-bold text-xl">
           💳
         </div>
-        <h3 class="font-bold text-slate-800 text-base mb-2">Cartera y Cuotas</h3>
+        <h3 class="font-bold text-slate-800 text-base mb-2">Cartera & Cuotas</h3>
         <p class="text-xs text-slate-500 leading-relaxed">
-          Conoce en tiempo real el estado de tus cuotas, fechas de vencimiento, abonos y saldos pendientes.
+          Consulta informativa de cuotas emitidas, pagadas, fechas de vencimiento y saldos al día.
         </p>
       </div>
     </div>
@@ -114,7 +124,7 @@
 
     <!-- RESULTADOS DEL ESTUDIANTE ENCONTRADO -->
     {% if alumno %}
-    <div class="space-y-6 animate-fade-in" x-data="{ activeTab: 'notas' }">
+    <div class="space-y-6 animate-fade-in" x-data="{ activeTab: 'talleres' }">
 
       <!-- Ficha de Datos del Alumno -->
       <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-md">
@@ -157,18 +167,18 @@
           </div>
         </div>
 
-        <!-- Métricas Rápidas -->
+        <!-- Métricas Rápidas (Solo Visualización) -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
           <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-            <span class="text-xs font-semibold text-slate-400 block mb-1">Total Asistencias</span>
-            <span class="text-xl sm:text-2xl font-black text-slate-800">{{ asistencias_presente }} <span class="text-xs font-normal text-slate-400">/ {{ total_asistencias }}</span></span>
-            <span class="text-[11px] font-bold text-emerald-600 block mt-1">{{ porcentaje_asistencia }}% cumplimiento</span>
+            <span class="text-xs font-semibold text-slate-400 block mb-1">Talleres Realizados</span>
+            <span class="text-xl sm:text-2xl font-black text-teal-700">{{ intentos_talleres|length }}</span>
+            <span class="text-[11px] font-medium text-slate-500 block mt-1">Actividades de refuerzo</span>
           </div>
 
           <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-            <span class="text-xs font-semibold text-slate-400 block mb-1">Notas Registradas</span>
-            <span class="text-xl sm:text-2xl font-black text-slate-800">{{ notas.count }}</span>
-            <span class="text-[11px] font-medium text-slate-500 block mt-1">Clases presenciales</span>
+            <span class="text-xs font-semibold text-slate-400 block mb-1">Asistencias</span>
+            <span class="text-xl sm:text-2xl font-black text-slate-800">{{ asistencias_presente }} <span class="text-xs font-normal text-slate-400">/ {{ total_asistencias }}</span></span>
+            <span class="text-[11px] font-bold text-emerald-600 block mt-1">{{ porcentaje_asistencia }}% cumplimiento</span>
           </div>
 
           <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
@@ -189,15 +199,15 @@
         </div>
       </div>
 
-      <!-- Navegación de Pestañas -->
+      <!-- Navegación de Pestañas (Solo Ver) -->
       <div class="flex items-center gap-2 border-b border-slate-200 overflow-x-auto pb-1">
         <button
-          @click="activeTab = 'notas'"
-          :class="activeTab === 'notas' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
+          @click="activeTab = 'talleres'"
+          :class="activeTab === 'talleres' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
           class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2"
         >
-          <span>📚 Calificaciones de Clase</span>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ notas.count }}</span>
+          <span>📝 Talleres</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ intentos_talleres|length }}</span>
         </button>
 
         <button
@@ -205,17 +215,8 @@
           :class="activeTab === 'asistencias' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
           class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2"
         >
-          <span>📅 Historial de Asistencia</span>
+          <span>📅 Asistencias</span>
           <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ total_asistencias }}</span>
-        </button>
-
-        <button
-          @click="activeTab = 'simulacros'"
-          :class="activeTab === 'simulacros' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
-          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2"
-        >
-          <span>🎯 Simulacros ICFES</span>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ simulacros_fisicos.count|add:simulacros_diagnosticos.count }}</span>
         </button>
 
         <button
@@ -226,70 +227,80 @@
           <span>💳 Cartera y Cuotas</span>
           <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ cuotas|length }}</span>
         </button>
+
+        <button
+          @click="activeTab = 'simulacros'"
+          :class="activeTab === 'simulacros' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
+          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2"
+        >
+          <span>🎯 Simulacros</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ simulacros_fisicos.count|add:simulacros_diagnosticos.count }}</span>
+        </button>
+
+        <button
+          @click="activeTab = 'notas'"
+          :class="activeTab === 'notas' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
+          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2"
+        >
+          <span>📚 Notas de Clase</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ notas.count }}</span>
+        </button>
       </div>
 
-      <!-- CONTENIDO PESTAÑA 1: NOTAS -->
-      <div x-show="activeTab === 'notas'" class="space-y-6">
-        <!-- Promedios por Materia -->
-        {% if promedios_materias %}
-        <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
-          <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <span>📊</span> Promedio Acumulado por Materia
-          </h3>
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {% for pm in promedios_materias %}
-            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-              <div>
-                <p class="text-xs text-slate-500 font-medium truncate max-w-[120px]">{{ pm.clase__materia__nombre }}</p>
-                <p class="text-lg font-black text-slate-800">{{ pm.promedio|floatformat:"1" }}</p>
-              </div>
-              <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
-                ★
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- Listado Detallado de Notas -->
+      <!-- PESTAÑA: TALLERES (Solo Ver) -->
+      <div x-show="activeTab === 'talleres'" class="space-y-6">
         <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
-            <h3 class="font-bold text-slate-800 text-sm sm:text-base">Detalle de Calificaciones por Clase</h3>
-            <span class="text-xs text-slate-400 font-medium">{{ notas.count }} registros</span>
+            <h3 class="font-bold text-slate-800 text-sm sm:text-base">Historial de Talleres de Refuerzo</h3>
+            <span class="text-xs text-slate-400 font-medium">{{ intentos_talleres|length }} registrados</span>
           </div>
 
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
               <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider font-semibold border-b border-slate-100">
                 <tr>
-                  <th class="py-3.5 px-6">Materia</th>
-                  <th class="py-3.5 px-6">Fecha de Clase</th>
-                  <th class="py-3.5 px-6 text-center">Calificación</th>
+                  <th class="py-3.5 px-6">Taller</th>
+                  <th class="py-3.5 px-6">Módulo / Materia</th>
+                  <th class="py-3.5 px-6">Fecha Finalización</th>
+                  <th class="py-3.5 px-6 text-center">Puntaje</th>
+                  <th class="py-3.5 px-6 text-center">Nivel</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                {% for n in notas %}
+                {% for it in intentos_talleres %}
                 <tr class="hover:bg-slate-50/70 transition">
                   <td class="py-4 px-6 font-bold text-slate-800">
-                    {{ n.clase.materia.nombre }}
+                    {{ it.taller.titulo }}
                   </td>
                   <td class="py-4 px-6 text-slate-600 font-medium">
-                    {{ n.clase.fecha|date:"d/m/Y"|default:n.clase.fecha }}
+                    {% if it.taller.modulo %}{{ it.taller.modulo.nombre }}{% elif it.clase %}{{ it.clase.materia.nombre }}{% else %}Refuerzo General{% endif %}
+                  </td>
+                  <td class="py-4 px-6 text-slate-500 text-xs">
+                    {{ it.fecha_fin|date:"d/m/Y H:i"|default:"Finalizado" }}
+                  </td>
+                  <td class="py-4 px-6 text-center font-black text-teal-600 text-base">
+                    {{ it.puntaje_porcentaje|floatformat:1 }}%
                   </td>
                   <td class="py-4 px-6 text-center">
-                    <span class="inline-flex items-center px-3 py-1 rounded-xl text-sm font-black 
-                      {% if n.nota >= 70 %}bg-emerald-100 text-emerald-800 border border-emerald-200
-                      {% elif n.nota >= 50 %}bg-amber-100 text-amber-800 border border-amber-200
-                      {% else %}bg-rose-100 text-rose-800 border border-rose-200{% endif %}">
-                      {{ n.nota|floatformat:"1" }}
+                    {% if it.puntaje_porcentaje >= 70 %}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      Excelente
                     </span>
+                    {% elif it.puntaje_porcentaje >= 50 %}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                      Aceptable
+                    </span>
+                    {% else %}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                      Por Reforzar
+                    </span>
+                    {% endif %}
                   </td>
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="3" class="py-8 text-center text-slate-400 text-sm">
-                    No hay calificaciones registradas para este estudiante.
+                  <td colspan="5" class="py-8 text-center text-slate-400 text-sm">
+                    No se han registrado intentos de talleres para este estudiante en la plataforma.
                   </td>
                 </tr>
                 {% endfor %}
@@ -299,7 +310,7 @@
         </div>
       </div>
 
-      <!-- CONTENIDO PESTAÑA 2: ASISTENCIAS -->
+      <!-- PESTAÑA: ASISTENCIAS (Solo Ver) -->
       <div x-show="activeTab === 'asistencias'" class="space-y-6">
         <!-- Resumen de Asistencia -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -334,7 +345,7 @@
           </div>
         </div>
 
-        <!-- Tabla Detallada de Asistencias -->
+        <!-- Tabla Detallada de Asistencias (Solo lectura) -->
         <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
             <h3 class="font-bold text-slate-800 text-sm sm:text-base">Historial de Clases y Asistencia</h3>
@@ -392,7 +403,125 @@
         </div>
       </div>
 
-      <!-- CONTENIDO PESTAÑA 3: SIMULACROS -->
+      <!-- PESTAÑA: CARTERA Y CUOTAS (Solo Ver) -->
+      <div x-show="activeTab === 'cartera'" class="space-y-6">
+
+        <!-- Resumen Financiero -->
+        {% if deuda %}
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div>
+              <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Estado de Cuenta</span>
+              <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+                {% if deuda.saldo_pendiente <= 0 %}
+                <span class="text-emerald-600">Paz y Salvo</span>
+                {% elif deuda.estado == 'vencida' %}
+                <span class="text-rose-600">Cuenta con Vencimiento</span>
+                {% else %}
+                <span class="text-blue-600">Al Día con Cuotas Pendientes</span>
+                {% endif %}
+              </h3>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider
+                {% if deuda.saldo_pendiente <= 0 %}bg-emerald-100 text-emerald-800 border border-emerald-200
+                {% elif deuda.estado == 'vencida' %}bg-rose-100 text-rose-800 border border-rose-200
+                {% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
+                {{ deuda.get_estado_display|default:deuda.estado }}
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <span class="text-xs font-medium text-slate-400 block mb-1">Monto Total Contratado</span>
+              <span class="text-2xl font-black text-slate-800">${{ deuda.monto_total|floatformat:0 }}</span>
+            </div>
+
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <span class="text-xs font-medium text-slate-400 block mb-1">Total Abonado</span>
+              <span class="text-2xl font-black text-emerald-600">${{ deuda.monto_pagado|floatformat:0 }}</span>
+            </div>
+
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <span class="text-xs font-medium text-slate-400 block mb-1">Saldo Pendiente</span>
+              <span class="text-2xl font-black {% if deuda.saldo_pendiente > 0 %}text-rose-600{% else %}text-slate-800{% endif %}">
+                ${{ deuda.saldo_pendiente|floatformat:0 }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla de Cuotas (Solo Ver: sin botones de edición, creación ni borrado) -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+            <h3 class="font-bold text-slate-800 text-sm sm:text-base">Desglose de Cuotas y Vencimientos</h3>
+            <span class="text-xs text-slate-400 font-medium">{{ cuotas|length }} cuotas</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider font-semibold border-b border-slate-100">
+                <tr>
+                  <th class="py-3.5 px-6"># Cuota</th>
+                  <th class="py-3.5 px-6">Vencimiento</th>
+                  <th class="py-3.5 px-6 text-right">Valor Cuota</th>
+                  <th class="py-3.5 px-6 text-right">Abonado</th>
+                  <th class="py-3.5 px-6 text-right">Saldo</th>
+                  <th class="py-3.5 px-6 text-center">Estado</th>
+                  <th class="py-3.5 px-6 text-center">Fecha Pago</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                {% for c in cuotas %}
+                <tr class="hover:bg-slate-50/70 transition">
+                  <td class="py-4 px-6 font-bold text-slate-700">Cuota {{ forloop.counter }}</td>
+                  <td class="py-4 px-6 text-slate-700 font-medium">{{ c.fecha_vencimiento|date:"d/m/Y" }}</td>
+                  <td class="py-4 px-6 text-right font-bold text-slate-800">${{ c.monto|floatformat:0 }}</td>
+                  <td class="py-4 px-6 text-right font-semibold text-emerald-600">${{ c.monto_abonado|floatformat:0 }}</td>
+                  <td class="py-4 px-6 text-right font-black {% if c.saldo_restante > 0 %}text-rose-600{% else %}text-slate-400{% endif %}">
+                    ${{ c.saldo_restante|floatformat:0 }}
+                  </td>
+                  <td class="py-4 px-6 text-center">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {{ c.badge_color }}">
+                      {{ c.estado_calculado }}
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 text-center text-xs text-slate-500">
+                    {% if c.fecha_pago %}{{ c.fecha_pago|date:"d/m/Y" }}{% else %}<span class="text-slate-300">—</span>{% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="7" class="py-8 text-center text-slate-400 text-sm">
+                    No hay cuotas registradas para este estudiante.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {% else %}
+        <div class="bg-white rounded-3xl p-8 border border-slate-200 text-center">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-xl">
+            ✨
+          </div>
+          <h4 class="font-bold text-slate-800 text-base mb-1">Sin registros de deuda pendientes</h4>
+          <p class="text-xs text-slate-500">
+            {% if alumno.es_becado %}
+            Este estudiante cuenta con una beca activa otorgada por la institución.
+            {% else %}
+            El estudiante se encuentra sin deudas registradas o su plan no requiere cobro de cuotas.
+            {% endif %}
+          </p>
+        </div>
+        {% endif %}
+
+      </div>
+
+      <!-- PESTAÑA: SIMULACROS (Solo Ver) -->
       <div x-show="activeTab === 'simulacros'" class="space-y-8">
 
         <!-- 1. Simulacros Presenciales Estándar (OMR) -->
@@ -528,7 +657,7 @@
         </div>
         {% endif %}
 
-        <!-- 3. Simulacros Virtuales (si los tuviese) -->
+        <!-- 3. Simulacros Virtuales -->
         {% if simulacros_virtuales %}
         <div class="space-y-4">
           <div class="flex items-center justify-between">
@@ -548,7 +677,6 @@
                     <th class="py-3.5 px-6">Simulacro Virtual</th>
                     <th class="py-3.5 px-6">Fecha Finalización</th>
                     <th class="py-3.5 px-6 text-center">Puntaje Global</th>
-                    <th class="py-3.5 px-6 text-center">Detalle</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -561,11 +689,6 @@
                         {{ iv.puntaje_global|floatformat:1 }} / 500
                       </span>
                     </td>
-                    <td class="py-4 px-6 text-center">
-                      <a href="{% url 'evaluaciones:simulacro_resultado' iv.simulacro.id %}" class="text-xs font-bold text-blue-600 hover:underline">
-                        Ver Informe &gt;
-                      </a>
-                    </td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -577,98 +700,68 @@
 
       </div>
 
-      <!-- CONTENIDO PESTAÑA 4: CARTERA Y CUOTAS -->
-      <div x-show="activeTab === 'cartera'" class="space-y-6">
-
-        <!-- Resumen Financiero -->
-        {% if deuda %}
-        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-            <div>
-              <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Estado de Cuenta</span>
-              <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
-                {% if deuda.saldo_pendiente <= 0 %}
-                <span class="text-emerald-600">Paz y Salvo</span>
-                {% elif deuda.estado == 'vencida' %}
-                <span class="text-rose-600">Cuenta con Vencimiento</span>
-                {% else %}
-                <span class="text-blue-600">Al Día con Cuotas Pendientes</span>
-                {% endif %}
-              </h3>
+      <!-- PESTAÑA: NOTAS DE CLASE (Solo Ver) -->
+      <div x-show="activeTab === 'notas'" class="space-y-6">
+        <!-- Promedios por Materia -->
+        {% if promedios_materias %}
+        <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
+          <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <span>📊</span> Promedio Acumulado por Materia
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {% for pm in promedios_materias %}
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+              <div>
+                <p class="text-xs text-slate-500 font-medium truncate max-w-[120px]">{{ pm.clase__materia__nombre }}</p>
+                <p class="text-lg font-black text-slate-800">{{ pm.promedio|floatformat:"1" }}</p>
+              </div>
+              <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
+                ★
+              </div>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider
-                {% if deuda.saldo_pendiente <= 0 %}bg-emerald-100 text-emerald-800 border border-emerald-200
-                {% elif deuda.estado == 'vencida' %}bg-rose-100 text-rose-800 border border-rose-200
-                {% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
-                {{ deuda.get_estado_display|default:deuda.estado }}
-              </span>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
-            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-              <span class="text-xs font-medium text-slate-400 block mb-1">Monto Total Contratado</span>
-              <span class="text-2xl font-black text-slate-800">${{ deuda.monto_total|floatformat:0 }}</span>
-            </div>
-
-            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-              <span class="text-xs font-medium text-slate-400 block mb-1">Total Abonado</span>
-              <span class="text-2xl font-black text-emerald-600">${{ deuda.monto_pagado|floatformat:0 }}</span>
-            </div>
-
-            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-              <span class="text-xs font-medium text-slate-400 block mb-1">Saldo Pendiente</span>
-              <span class="text-2xl font-black {% if deuda.saldo_pendiente > 0 %}text-rose-600{% else %}text-slate-800{% endif %}">
-                ${{ deuda.saldo_pendiente|floatformat:0 }}
-              </span>
-            </div>
+            {% endfor %}
           </div>
         </div>
+        {% endif %}
 
-        <!-- Tabla de Cuotas -->
+        <!-- Listado Detallado de Notas -->
         <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
-            <h3 class="font-bold text-slate-800 text-sm sm:text-base">Desglose de Cuotas y Vencimientos</h3>
-            <span class="text-xs text-slate-400 font-medium">{{ cuotas|length }} cuotas</span>
+            <h3 class="font-bold text-slate-800 text-sm sm:text-base">Detalle de Calificaciones por Clase</h3>
+            <span class="text-xs text-slate-400 font-medium">{{ notas.count }} registros</span>
           </div>
 
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
               <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider font-semibold border-b border-slate-100">
                 <tr>
-                  <th class="py-3.5 px-6"># Cuota</th>
-                  <th class="py-3.5 px-6">Vencimiento</th>
-                  <th class="py-3.5 px-6 text-right">Valor Cuota</th>
-                  <th class="py-3.5 px-6 text-right">Abonado</th>
-                  <th class="py-3.5 px-6 text-right">Saldo</th>
-                  <th class="py-3.5 px-6 text-center">Estado</th>
-                  <th class="py-3.5 px-6 text-center">Fecha Pago</th>
+                  <th class="py-3.5 px-6">Materia</th>
+                  <th class="py-3.5 px-6">Fecha de Clase</th>
+                  <th class="py-3.5 px-6 text-center">Calificación</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                {% for c in cuotas %}
+                {% for n in notas %}
                 <tr class="hover:bg-slate-50/70 transition">
-                  <td class="py-4 px-6 font-bold text-slate-700">Cuota {{ forloop.counter }}</td>
-                  <td class="py-4 px-6 text-slate-700 font-medium">{{ c.fecha_vencimiento|date:"d/m/Y" }}</td>
-                  <td class="py-4 px-6 text-right font-bold text-slate-800">${{ c.monto|floatformat:0 }}</td>
-                  <td class="py-4 px-6 text-right font-semibold text-emerald-600">${{ c.monto_abonado|floatformat:0 }}</td>
-                  <td class="py-4 px-6 text-right font-black {% if c.saldo_restante > 0 %}text-rose-600{% else %}text-slate-400{% endif %}">
-                    ${{ c.saldo_restante|floatformat:0 }}
+                  <td class="py-4 px-6 font-bold text-slate-800">
+                    {{ n.clase.materia.nombre }}
+                  </td>
+                  <td class="py-4 px-6 text-slate-600 font-medium">
+                    {{ n.clase.fecha|date:"d/m/Y"|default:n.clase.fecha }}
                   </td>
                   <td class="py-4 px-6 text-center">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {{ c.badge_color }}">
-                      {{ c.estado_calculado }}
+                    <span class="inline-flex items-center px-3 py-1 rounded-xl text-sm font-black 
+                      {% if n.nota >= 70 %}bg-emerald-100 text-emerald-800 border border-emerald-200
+                      {% elif n.nota >= 50 %}bg-amber-100 text-amber-800 border border-amber-200
+                      {% else %}bg-rose-100 text-rose-800 border border-rose-200{% endif %}">
+                      {{ n.nota|floatformat:"1" }}
                     </span>
-                  </td>
-                  <td class="py-4 px-6 text-center text-xs text-slate-500">
-                    {% if c.fecha_pago %}{{ c.fecha_pago|date:"d/m/Y" }}{% else %}<span class="text-slate-300">—</span>{% endif %}
                   </td>
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="7" class="py-8 text-center text-slate-400 text-sm">
-                    No hay cuotas registradas para este estudiante.
+                  <td colspan="3" class="py-8 text-center text-slate-400 text-sm">
+                    No hay calificaciones registradas para este estudiante.
                   </td>
                 </tr>
                 {% endfor %}
@@ -676,23 +769,6 @@
             </table>
           </div>
         </div>
-
-        {% else %}
-        <div class="bg-white rounded-3xl p-8 border border-slate-200 text-center">
-          <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-xl">
-            ✨
-          </div>
-          <h4 class="font-bold text-slate-800 text-base mb-1">Sin registros de deuda pendientes</h4>
-          <p class="text-xs text-slate-500">
-            {% if alumno.es_becado %}
-            Este estudiante cuenta con una beca activa otorgada por la institución.
-            {% else %}
-            El estudiante se encuentra sin deudas registradas o su plan no requiere cobro de cuotas.
-            {% endif %}
-          </p>
-        </div>
-        {% endif %}
-
       </div>
 
     </div>
