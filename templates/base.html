@@ -793,63 +793,6 @@
                     </div>
                     {% endif %}
 
-                    <!-- CAMPANA DE NOTIFICACIONES (Mockup GV VALDEZ) -->
-                    <div class="relative" x-data="{ notifOpen: false }">
-                        <button
-                          @click="notifOpen = !notifOpen"
-                          type="button"
-                          class="relative rounded-full bg-white/10 hover:bg-white/20 p-2 text-white transition focus:outline-none ring-1 ring-white/15 shadow-sm"
-                          title="Notificaciones de la Plataforma"
-                        >
-                          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-                          </svg>
-                          <span class="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white shadow ring-2 ring-[#173B8A]">
-                            3
-                          </span>
-                        </button>
-
-                        <!-- Dropdown Notificaciones Estudiante (Estilo Mockup) -->
-                        <div
-                          x-show="notifOpen"
-                          @click.away="notifOpen = false"
-                          x-transition
-                          x-cloak
-                          class="absolute right-0 mt-2.5 w-80 rounded-2xl bg-white text-slate-800 shadow-2xl border border-slate-100 py-2.5 z-50 overflow-hidden"
-                        >
-                          <div class="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
-                            <div class="flex items-center gap-1.5">
-                              <span class="text-amber-500 text-sm">🔔</span>
-                              <span class="text-xs font-black uppercase tracking-wider text-slate-900">Notificaciones</span>
-                            </div>
-                            <span class="text-[11px] font-bold text-blue-600 hover:underline cursor-pointer">Ver todas &gt;</span>
-                          </div>
-
-                          <div class="max-h-64 overflow-y-auto divide-y divide-slate-100 text-xs">
-                            <div class="p-3 hover:bg-slate-50 transition flex items-start gap-2.5">
-                              <span class="text-base flex-shrink-0">🔥</span>
-                              <div class="flex-1">
-                                <p class="font-bold text-slate-800">¡Llevas 12 días consecutivos estudiando!</p>
-                                <span class="text-[10px] text-slate-400">Hace 2 h</span>
-                              </div>
-                            </div>
-                            <div class="p-3 hover:bg-slate-50 transition flex items-start gap-2.5">
-                              <span class="text-base flex-shrink-0">📅</span>
-                              <div class="flex-1">
-                                <p class="font-bold text-slate-800">Tienes una nueva clase disponible: Matemáticas</p>
-                                <span class="text-[10px] text-slate-400">Hace 4 h</span>
-                              </div>
-                            </div>
-                            <div class="p-3 hover:bg-slate-50 transition flex items-start gap-2.5">
-                              <span class="text-base flex-shrink-0">🎯</span>
-                              <div class="flex-1">
-                                <p class="font-bold text-slate-800">Estás a 53 puntos de tu meta.</p>
-                                <span class="text-[10px] text-slate-400">Hace 6 h</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                    </div>
 
                     <!-- BOTÓN DJANGO ADMIN (Staff y Superuser) -->
                     {% if user.is_staff or user.is_superuser %}
@@ -921,6 +864,19 @@
                             </div>
                         </div>
                     </div>
+                    {% else %}
+                    <div class="flex items-center gap-2">
+                        <a href="{% url 'consulta_publica' %}" 
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black rounded-xl transition shadow-sm"
+                           title="Consultar notas y asistencias con número de documento">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <span>Consultar Estudiante</span>
+                        </a>
+                        <a href="{% url 'login' %}" 
+                           class="inline-flex items-center gap-1 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition border border-white/20 shadow-sm">
+                            <span>Iniciar Sesión</span>
+                        </a>
+                    </div>
                     {% endif %}
                 </div>
             </header>
@@ -944,52 +900,6 @@
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <!-- CAMPANA MÓVIL -->
-                        <div class="relative" x-data="{ notifMobileOpen: false }">
-                            <button
-                              @click="notifMobileOpen = !notifMobileOpen"
-                              type="button"
-                              class="relative rounded-full bg-white/10 hover:bg-white/20 p-1.5 text-white transition focus:outline-none border border-white/20 shadow-sm"
-                              title="Notificaciones"
-                            >
-                              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-                              </svg>
-                              <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow ring-1 ring-[#173B8A]">
-                                3
-                              </span>
-                            </button>
-
-                            <!-- Desplegable Móvil -->
-                            <div
-                              x-show="notifMobileOpen"
-                              @click.away="notifMobileOpen = false"
-                              class="absolute right-0 mt-2 w-72 sm:w-80 rounded-2xl bg-white text-slate-800 border border-slate-100 py-2.5 shadow-2xl z-50"
-                              x-transition
-                              x-cloak
-                            >
-                              <div class="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
-                                <span class="text-xs font-bold uppercase tracking-wider text-slate-900">🔔 Notificaciones</span>
-                                <span class="text-[10px] text-blue-600 font-bold">Ver todas &gt;</span>
-                              </div>
-                              <div class="divide-y divide-slate-100 text-xs">
-                                <div class="p-3 hover:bg-slate-50 transition flex items-start gap-2">
-                                  <span>🔥</span>
-                                  <div>
-                                    <p class="font-bold text-slate-800">¡Llevas 12 días consecutivos estudiando!</p>
-                                    <span class="text-[10px] text-slate-400">Hace 2 h</span>
-                                  </div>
-                                </div>
-                                <div class="p-3 hover:bg-slate-50 transition flex items-start gap-2">
-                                  <span>📅</span>
-                                  <div>
-                                    <p class="font-bold text-slate-800">Tienes una nueva clase: Matemáticas</p>
-                                    <span class="text-[10px] text-slate-400">Hace 4 h</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                        </div>
 
                         {% if user.is_staff or user.is_superuser %}
                         <a href="{% url 'admin:index' %}" 
@@ -1011,6 +921,15 @@
                                     </span>
                                 {% endif %}
                             </div>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'consulta_publica' %}" 
+                           class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold rounded-xl shadow-sm">
+                            <span>🔍 Consultar</span>
+                        </a>
+                        <a href="{% url 'login' %}" 
+                           class="inline-flex items-center px-2 py-1 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl border border-white/20">
+                            <span>Ingresar</span>
                         </a>
                         {% endif %}
                     </div>

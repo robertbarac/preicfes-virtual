@@ -21,9 +21,11 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from django.contrib.auth import views as auth_views
 from usuarios.views import LandingView
+from academico.views import ConsultaEstudianteView
 
 urlpatterns = [
     path('', LandingView.as_view(), name='home'),
+    path('consulta/', ConsultaEstudianteView.as_view(), name='consulta_publica'),
     path('admin/', admin.site.urls),
     path(
         'accounts/password_reset/',

@@ -15,4 +15,4 @@ from .retirar_alumno import retirar_alumno
 from .mandar_limbo import mandar_limbo, mandar_grupo_limbo
 from .alumnos_retirados_list import AlumnosRetiradosListView
 from .inasistencia_create import registrar_o_editar_inasistencia
-# ... (todas las views que necesites)
+from .consulta_estudiante import ConsultaEstudianteView

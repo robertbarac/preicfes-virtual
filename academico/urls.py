@@ -3,7 +3,8 @@ from .views import (
     AlumnosListView, AlumnoDetailView, AlumnoCreateView, AlumnoUpdateView,
     ClasesProfesorListView, GenerarCertificadosSimulacroView, GenerarConstanciaPreICFESView, GrupoDetailView, 
     GrupoListView, ClaseListView, ClaseDetailView,
-    RegistroAsistenciaNotaView, registrar_o_editar_inasistencia
+    RegistroAsistenciaNotaView, registrar_o_editar_inasistencia,
+    ConsultaEstudianteView
 )
 from . import views
 from usuarios.views import (
@@ -16,6 +17,7 @@ from usuarios.views import (
 from evaluaciones.views.talleres_presenciales import MisClasesPresencialesView, TallerPresencialEjecutarView, ClaseTallerControlView
 
 urlpatterns = [
+    path('consulta/', ConsultaEstudianteView.as_view(), name='consulta_estudiante'),
     path('mis-clases-presenciales/', MisClasesPresencialesView.as_view(), name='mis_clases_presenciales'),
     path('clase-presencial/<int:clase_id>/taller/', TallerPresencialEjecutarView.as_view(), name='taller_presencial_ejecutar'),
     path('clase-presencial/<int:clase_id>/taller-control/', ClaseTallerControlView.as_view(), name='clase_taller_control'),

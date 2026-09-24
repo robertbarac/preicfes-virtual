@@ -26,13 +26,17 @@
                 Nuestra plataforma te brinda acceso a talleres virtuales tipo ICFES, simulacros oficiales con calificación en tiempo real y clases grabadas. Estudia a tu propio ritmo y supera tu meta.
             </p>
         </div>
-        <div class="flex flex-col sm:flex-row md:flex-col gap-3.5 w-full md:w-auto flex-shrink-0">
+        <div class="flex flex-col sm:flex-row md:flex-col gap-3 w-full md:w-auto flex-shrink-0">
+            <a href="{% url 'consulta_publica' %}" 
+               class="inline-flex justify-center items-center px-7 py-3.5 text-sm sm:text-base font-black rounded-2xl shadow-lg text-slate-950 bg-amber-400 hover:bg-amber-300 transition-all transform hover:-translate-y-0.5 text-center">
+                🔍 Consultar Estudiante &rarr;
+            </a>
             <a href="{% url 'login' %}" 
-               class="inline-flex justify-center items-center px-8 py-4 text-base font-extrabold rounded-2xl shadow-lg text-white bg-gradient-to-r from-[#04194E] to-[#155EEF] hover:from-[#03133D] hover:to-[#0C46B6] transition-all transform hover:-translate-y-0.5">
-                Iniciar Sesión &rarr;
+               class="inline-flex justify-center items-center px-7 py-3 text-sm font-bold rounded-2xl text-white bg-gradient-to-r from-[#04194E] to-[#155EEF] hover:from-[#03133D] hover:to-[#0C46B6] transition-all text-center">
+                Ingresar al Campus &rarr;
             </a>
             <a href="#programa" 
-               class="inline-flex justify-center items-center px-8 py-3.5 text-sm font-bold rounded-2xl text-slate-700 bg-slate-100 hover:bg-slate-200 transition">
+               class="inline-flex justify-center items-center px-7 py-2.5 text-xs font-semibold rounded-2xl text-slate-600 bg-slate-100 hover:bg-slate-200 transition text-center">
                 Ver Contenidos & Herramientas
             </a>
         </div>

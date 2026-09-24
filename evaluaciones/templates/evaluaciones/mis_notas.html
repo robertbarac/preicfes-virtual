@@ -1,132 +1,372 @@
 {% extends 'base.html' %}
 
-{% block title %}Mis Notas — Boletín Consolidado{% endblock %}
+{% block title %}Mis Logros & Calificaciones | GV Valdez Campus{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+<div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 space-y-6">
 
-    <!-- Encabezado -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-700/60 pb-6 gap-4">
-        <div>
-            <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-cyan-400 to-indigo-400">
-                📊 Mis Notas
-            </h1>
-            <p class="text-slate-400 text-sm mt-1">
-                Boletín unificado de calificaciones presenciales y evaluaciones virtuales de {{ user.get_full_name|default:user.username }}
-            </p>
+    <!-- Encabezado con estética GV VALDEZ CAMPUS -->
+    <div class="rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden"
+         style="background: linear-gradient(135deg, #04194E 0%, #155EEF 60%, #2563EB 100%);">
+        <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur border border-white/20 text-white text-xs font-bold uppercase tracking-wider mb-2">
+                    <span>🏆</span> Boletín Integral del Estudiante
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                    Historial de Logros: <span class="text-[#FFD233]">{{ user.get_full_name|default:user.username }}</span>
+                </h1>
+                <p class="text-blue-100 text-xs sm:text-sm mt-1 max-w-2xl font-medium">
+                    Consulta el detalle de tus clases presenciales, asistencias registradas, resultados de simulacros y estado de cuenta.
+                </p>
+            </div>
+            <div class="flex-shrink-0 flex items-center gap-2">
+                <span class="px-4 py-2 text-xs font-extrabold rounded-2xl bg-white/15 backdrop-blur border border-white/25 text-white shadow-md">
+                    Modalidad: {% if user.es_estudiante_virtual %}🌐 Virtual{% elif alumno %}🏫 Presencial{% else %}Estudiante{% endif %}
+                </span>
+            </div>
         </div>
-        <div class="flex items-center gap-2">
-            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-slate-800 text-teal-300 border border-teal-500/30">
-                Modalidad: {% if user.es_docente %}Docente{% elif user.es_estudiante_virtual %}Virtual{% else %}Presencial{% endif %}
+    </div>
+
+    {% if alumno %}
+    <!-- Ficha Resumen Alumno Presencial -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+        <div>
+            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Identificación</span>
+            <strong class="text-slate-900 font-extrabold text-sm font-mono">{{ alumno.identificacion }}</strong>
+        </div>
+        <div>
+            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Grupo & Sede</span>
+            <strong class="text-slate-900 font-bold text-sm">{{ alumno.grupo_actual.codigo|default:"Sin grupo" }}</strong>
+            <span class="text-slate-500 block text-[11px]">{{ alumno.grupo_actual.salon.sede.nombre|default:"" }}</span>
+        </div>
+        <div>
+            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Municipio</span>
+            <strong class="text-slate-900 font-bold text-sm">{{ alumno.municipio.nombre }}</strong>
+        </div>
+        <div>
+            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Programa</span>
+            <span class="inline-block px-2.5 py-0.5 mt-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                {{ alumno.get_tipo_programa_display }}
             </span>
         </div>
     </div>
+    {% endif %}
 
-    <!-- 1. NOTAS PRESENCIALES Y ÓPTICAS -->
-    {% if is_presencial or is_superuser or user.is_staff %}
-    <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-6 shadow-xl space-y-4">
-        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-            <span>🏫</span> Calificaciones de Clases Presenciales
-        </h2>
+    <!-- 1. NOTAS DE CLASES PRESENCIALES -->
+    {% if is_presencial or notas_presenciales.exists %}
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 class="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                <span>📚</span> Calificaciones de Clases Presenciales
+            </h2>
+            <span class="text-xs text-slate-400 font-semibold">{{ notas_presenciales.count }} calificaciones</span>
+        </div>
+
         {% if notas_presenciales %}
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-slate-300">
-                <thead class="bg-slate-900/60 text-slate-400 uppercase text-xs">
-                    <tr>
+            <table class="min-w-full divide-y divide-slate-100 text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 font-extrabold uppercase text-[10px] tracking-wider text-left">
                         <th class="px-4 py-3">Fecha</th>
                         <th class="px-4 py-3">Materia</th>
                         <th class="px-4 py-3">Grupo</th>
-                        <th class="px-4 py-3">Calificación</th>
+                        <th class="px-4 py-3 text-center">Calificación</th>
                         <th class="px-4 py-3">Observaciones</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-700/50">
+                <tbody class="divide-y divide-slate-100 text-slate-700">
                     {% for n in notas_presenciales %}
-                    <tr class="hover:bg-slate-700/30 transition">
-                        <td class="px-4 py-3 text-slate-400">{{ n.clase.fecha|date:"d/m/Y" }}</td>
-                        <td class="px-4 py-3 font-semibold text-white">{{ n.clase.materia.nombre }}</td>
-                        <td class="px-4 py-3 text-teal-400">{{ n.clase.grupo }}</td>
-                        <td class="px-4 py-3 font-bold text-emerald-400">{{ n.nota }}</td>
-                        <td class="px-4 py-3 text-slate-400">{{ n.observacion|default:"-" }}</td>
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-4 py-3 font-semibold text-slate-500">{{ n.clase.fecha|date:"d/m/Y" }}</td>
+                        <td class="px-4 py-3 font-bold text-slate-900">{{ n.clase.materia.nombre }}</td>
+                        <td class="px-4 py-3 text-blue-600 font-semibold">{{ n.clase.grupo }}</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-block px-2.5 py-1 rounded-xl text-xs font-black {% if n.nota >= 7.0 %}bg-emerald-50 text-emerald-700 border border-emerald-200{% elif n.nota >= 5.0 %}bg-amber-50 text-amber-700 border border-amber-200{% else %}bg-rose-50 text-rose-700 border border-rose-200{% endif %}">
+                                {{ n.nota }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-slate-500">{{ n.observacion|default:"-" }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% else %}
-        <p class="text-slate-400 text-sm italic">No registras calificaciones presenciales guardadas.</p>
-        {% endif %}
-    </div>
-
-    <!-- SIMULACROS FÍSICOS ÓPTICOS -->
-    <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-6 shadow-xl space-y-4">
-        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-            <span>📝</span> Simulacros Presenciales (Físicos)
-        </h2>
-        {% if simulacros_fisicos %}
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-slate-300">
-                <thead class="bg-slate-900/60 text-slate-400 uppercase text-xs">
-                    <tr>
-                        <th class="px-4 py-3">Fecha</th>
-                        <th class="px-4 py-3">Simulacro</th>
-                        <th class="px-4 py-3 text-center">Global</th>
-                        <th class="px-4 py-3 text-center">Matemáticas</th>
-                        <th class="px-4 py-3 text-center">Lectura</th>
-                        <th class="px-4 py-3 text-center">Sociales</th>
-                        <th class="px-4 py-3 text-center">Ciencias</th>
-                        <th class="px-4 py-3 text-center">Inglés</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-700/50">
-                    {% for sf in simulacros_fisicos %}
-                    <tr class="hover:bg-slate-700/30 transition">
-                        <td class="px-4 py-3 text-slate-400">{{ sf.fecha_realizacion|date:"d/m/Y" }}</td>
-                        <td class="px-4 py-3 font-semibold text-white">{{ sf.simulacro.nombre }}</td>
-                        <td class="px-4 py-3 text-center font-extrabold text-teal-300">{{ sf.puntaje_global }}</td>
-                        <td class="px-4 py-3 text-center">{{ sf.puntaje_matematicas }}</td>
-                        <td class="px-4 py-3 text-center">{{ sf.puntaje_lectura }}</td>
-                        <td class="px-4 py-3 text-center">{{ sf.puntaje_sociales }}</td>
-                        <td class="px-4 py-3 text-center">{{ sf.puntaje_ciencias }}</td>
-                        <td class="px-4 py-3 text-center">{{ sf.puntaje_ingles }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="p-6 text-center text-slate-400 text-xs bg-slate-50 rounded-xl">
+            Aún no registras calificaciones de clases presenciales evaluadas.
         </div>
-        {% else %}
-        <p class="text-slate-400 text-sm italic">No registras simulacros físicos/ópticos procesados.</p>
         {% endif %}
     </div>
     {% endif %}
 
-    <!-- 2. EVALUACIONES VIRTUALES (TALLERES) -->
-    <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-6 shadow-xl space-y-4">
-        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-            <span>💻</span> Talleres Evaluativos Virtuales
-        </h2>
+    <!-- 2. ASISTENCIA A CLASES -->
+    {% if is_presencial or asistencias.exists %}
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
+            <h2 class="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                <span>🗓️</span> Registro de Asistencias a Clases
+            </h2>
+            <div class="flex items-center gap-3 text-xs">
+                <span class="font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    {{ asistencias_presente }} Asistidas
+                </span>
+                <span class="font-bold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                    {{ asistencias_faltas }} Faltas
+                </span>
+            </div>
+        </div>
+
+        {% if asistencias %}
+        <div class="overflow-x-auto max-h-80 overflow-y-auto">
+            <table class="min-w-full divide-y divide-slate-100 text-xs">
+                <thead class="sticky top-0 bg-white">
+                    <tr class="bg-slate-50 text-slate-500 font-extrabold uppercase text-[10px] tracking-wider text-left">
+                        <th class="px-4 py-3">Fecha</th>
+                        <th class="px-4 py-3">Materia</th>
+                        <th class="px-4 py-3">Horario</th>
+                        <th class="px-4 py-3 text-center">Estado</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for a in asistencias %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-4 py-3 font-semibold text-slate-500">{{ a.clase.fecha|date:"d/m/Y" }}</td>
+                        <td class="px-4 py-3 font-bold text-slate-900">{{ a.clase.materia.nombre }}</td>
+                        <td class="px-4 py-3 text-slate-500">{{ a.clase.get_horario_display }}</td>
+                        <td class="px-4 py-3 text-center">
+                            {% if a.asistio %}
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                ✅ Asistió
+                            </span>
+                            {% else %}
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-black bg-rose-50 text-rose-700 border border-rose-200">
+                                ❌ Inasistencia
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-6 text-center text-slate-400 text-xs bg-slate-50 rounded-xl">
+            Aún no se han registrado asistencias en tu ficha.
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- 3. SIMULACROS PRESENCIALES Y DIAGNÓSTICOS -->
+    {% if is_presencial or simulacros_fisicos.exists or simulacros_diagnosticos.exists %}
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-6">
+        <div>
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                <h2 class="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                    <span>🎯</span> Resultados de Simulacros Presenciales
+                </h2>
+                <span class="text-xs text-slate-400 font-semibold">Evaluaciones Tipo ICFES</span>
+            </div>
+
+            <!-- Simulacros Estándar (2 sesiones) -->
+            {% if simulacros_fisicos %}
+            <div class="overflow-x-auto mb-6">
+                <h3 class="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2">Simulacros Oficiales</h3>
+                <table class="min-w-full divide-y divide-slate-100 text-xs">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 font-extrabold uppercase text-[10px] tracking-wider text-left">
+                            <th class="px-4 py-3">Fecha</th>
+                            <th class="px-4 py-3">Simulacro</th>
+                            <th class="px-4 py-3 text-center">Global</th>
+                            <th class="px-4 py-3 text-center">Matemáticas</th>
+                            <th class="px-4 py-3 text-center">Lectura</th>
+                            <th class="px-4 py-3 text-center">Sociales</th>
+                            <th class="px-4 py-3 text-center">Naturales</th>
+                            <th class="px-4 py-3 text-center">Inglés</th>
+                            <th class="px-4 py-3 text-center">Informe</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                        {% for sf in simulacros_fisicos %}
+                        <tr class="hover:bg-slate-50/80 transition">
+                            <td class="px-4 py-3 text-slate-500 font-semibold">{{ sf.fecha_realizacion|date:"d/m/Y" }}</td>
+                            <td class="px-4 py-3 font-extrabold text-slate-900">{{ sf.simulacro.nombre }}</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-blue-50 text-blue-700 border border-blue-200">
+                                    {{ sf.puntaje_global|floatformat:0 }} pts
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-center font-bold text-slate-700">{{ sf.puntaje_matematicas|floatformat:0 }}</td>
+                            <td class="px-4 py-3 text-center font-bold text-slate-700">{{ sf.puntaje_lectura|floatformat:0 }}</td>
+                            <td class="px-4 py-3 text-center font-bold text-slate-700">{{ sf.puntaje_sociales|floatformat:0 }}</td>
+                            <td class="px-4 py-3 text-center font-bold text-slate-700">{{ sf.puntaje_naturales|floatformat:0 }}</td>
+                            <td class="px-4 py-3 text-center font-bold text-slate-700">{{ sf.puntaje_ingles|floatformat:0 }}</td>
+                            <td class="px-4 py-3 text-center">
+                                <a href="{% url 'simulacros:descargar_resultado_individual_pdf' sf.pk %}" 
+                                   target="_blank" 
+                                   class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[10px] transition shadow-sm inline-block">
+                                    📄 Ver PDF
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <!-- Simulacros Diagnósticos -->
+            {% if simulacros_diagnosticos %}
+            <div class="overflow-x-auto">
+                <h3 class="text-xs font-bold text-purple-700 uppercase tracking-wider mb-2">Simulacros Diagnósticos</h3>
+                <table class="min-w-full divide-y divide-slate-100 text-xs">
+                    <thead>
+                        <tr class="bg-purple-50/50 text-purple-800 font-extrabold uppercase text-[10px] tracking-wider text-left">
+                            <th class="px-4 py-3">Fecha</th>
+                            <th class="px-4 py-3">Diagnóstico</th>
+                            <th class="px-4 py-3 text-center">Puntaje Global</th>
+                            <th class="px-4 py-3 text-center">Matemáticas</th>
+                            <th class="px-4 py-3 text-center">Lectura</th>
+                            <th class="px-4 py-3 text-center">Sociales</th>
+                            <th class="px-4 py-3 text-center">Naturales</th>
+                            <th class="px-4 py-3 text-center">Inglés</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                        {% for sd in simulacros_diagnosticos %}
+                        <tr class="hover:bg-purple-50/20 transition">
+                            <td class="px-4 py-3 text-slate-500 font-semibold">{{ sd.fecha_realizacion|date:"d/m/Y" }}</td>
+                            <td class="px-4 py-3 font-extrabold text-slate-900">{{ sd.simulacro.nombre }}</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-purple-100 text-purple-800 border border-purple-200">
+                                    {{ sd.puntaje_global|floatformat:0 }} pts
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-center font-bold">{{ sd.puntaje_matematicas|floatformat:0 }}</td>
+                            <td class="px-4 py-3 text-center font-bold">{{ sd.puntaje_lectura|floatformat:0 }}</td>
+                            <td class="px-4 py-3 text-center font-bold">{{ sd.puntaje_sociales|floatformat:0 }}</td>
+                            <td class="px-4 py-3 text-center font-bold">{{ sd.puntaje_naturales|floatformat:0 }}</td>
+                            <td class="px-4 py-3 text-center font-bold">{{ sd.puntaje_ingles|floatformat:0 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            {% if not simulacros_fisicos and not simulacros_diagnosticos %}
+            <div class="p-6 text-center text-slate-400 text-xs bg-slate-50 rounded-xl">
+                Aún no tienes resultados de simulacros presenciales o diagnósticos procesados.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 4. ESTADO DE CARTERA Y CUOTAS (Solo modalidad presencial con ficha) -->
+    {% if alumno and deuda %}
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
+            <h2 class="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                <span>💳</span> Estado de Cartera & Cuotas Asociadas
+            </h2>
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-500">Saldo pendiente:</span>
+                <span class="text-sm font-black text-rose-600">${{ deuda.saldo_pendiente|floatformat:0 }}</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs mb-2">
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span class="text-slate-400 block text-[10px] font-bold uppercase">Valor Total</span>
+                <strong class="text-slate-800 text-sm font-black">${{ deuda.valor_total|floatformat:0 }}</strong>
+            </div>
+            <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                <span class="text-emerald-600 block text-[10px] font-bold uppercase">Estado Deuda</span>
+                <strong class="text-emerald-800 text-sm font-black capitalize">{{ deuda.get_estado_display }}</strong>
+            </div>
+            <div class="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                <span class="text-blue-600 block text-[10px] font-bold uppercase">Total Cuotas</span>
+                <strong class="text-blue-800 text-sm font-black">{{ cuotas.count }} cuotas</strong>
+            </div>
+        </div>
+
+        {% if cuotas %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-100 text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 font-extrabold uppercase text-[10px] tracking-wider text-left">
+                        <th class="px-4 py-3"># Cuota</th>
+                        <th class="px-4 py-3">Vencimiento</th>
+                        <th class="px-4 py-3 text-right">Valor Cuota</th>
+                        <th class="px-4 py-3 text-right">Abonado</th>
+                        <th class="px-4 py-3 text-center">Estado</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for c in cuotas %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-4 py-3 font-bold text-slate-800">Cuota {{ c.numero_cuota|default:forloop.counter }}</td>
+                        <td class="px-4 py-3 font-semibold text-slate-500">{{ c.fecha_vencimiento|date:"d/m/Y" }}</td>
+                        <td class="px-4 py-3 text-right font-extrabold text-slate-900">${{ c.monto|floatformat:0 }}</td>
+                        <td class="px-4 py-3 text-right font-bold text-emerald-600">${{ c.monto_abonado|floatformat:0 }}</td>
+                        <td class="px-4 py-3 text-center">
+                            {% if c.monto_abonado >= c.monto %}
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                ✅ Pagada
+                            </span>
+                            {% elif c.monto_abonado > 0 %}
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200">
+                                ⏳ Parcial
+                            </span>
+                            {% else %}
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 border border-slate-200">
+                                Emitida
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- 5. EVALUACIONES VIRTUALES (Talleres y Simulacros Virtuales) -->
+    {% if intentos_talleres.exists or intentos_simulacros_virtuales.exists or is_virtual %}
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-6">
+        <div class="border-b border-slate-100 pb-3">
+            <h2 class="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                <span>💻</span> Evaluaciones & Simulacros Virtuales
+            </h2>
+        </div>
+
         {% if intentos_talleres %}
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-slate-300">
-                <thead class="bg-slate-900/60 text-slate-400 uppercase text-xs">
-                    <tr>
+            <h3 class="text-xs font-bold text-teal-700 uppercase tracking-wider mb-2">Talleres Virtuales</h3>
+            <table class="min-w-full divide-y divide-slate-100 text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 font-extrabold uppercase text-[10px] tracking-wider text-left">
                         <th class="px-4 py-3">Fecha</th>
                         <th class="px-4 py-3">Módulo</th>
                         <th class="px-4 py-3">Taller</th>
-                        <th class="px-4 py-3 text-center">Puntaje (%)</th>
-                        <th class="px-4 py-3 text-right">Acción</th>
+                        <th class="px-4 py-3 text-center">Puntaje</th>
+                        <th class="px-4 py-3 text-right">Detalle</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-700/50">
+                <tbody class="divide-y divide-slate-100 text-slate-700">
                     {% for it in intentos_talleres %}
-                    <tr class="hover:bg-slate-700/30 transition">
-                        <td class="px-4 py-3 text-slate-400">{{ it.fecha_fin|date:"d/m/Y H:i" }}</td>
-                        <td class="px-4 py-3 text-slate-300">{{ it.taller.modulo.nombre }}</td>
-                        <td class="px-4 py-3 font-semibold text-white">{{ it.taller.titulo }}</td>
-                        <td class="px-4 py-3 text-center font-bold text-cyan-400">{{ it.puntaje_porcentaje|floatformat:1 }}%</td>
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-4 py-3 text-slate-500 font-semibold">{{ it.fecha_fin|date:"d/m/Y H:i" }}</td>
+                        <td class="px-4 py-3 text-slate-500">{{ it.taller.modulo.nombre }}</td>
+                        <td class="px-4 py-3 font-bold text-slate-900">{{ it.taller.titulo }}</td>
+                        <td class="px-4 py-3 text-center font-extrabold text-teal-600">{{ it.puntaje_porcentaje|floatformat:1 }}%</td>
                         <td class="px-4 py-3 text-right">
-                            <a href="{% url 'evaluaciones:taller_intento_detail' it.id %}" class="text-xs text-teal-400 hover:text-teal-300 underline">
-                                Detalle
+                            <a href="{% url 'evaluaciones:taller_intento_detail' it.id %}" class="text-blue-600 font-bold hover:underline">
+                                Ver &gt;
                             </a>
                         </td>
                     </tr>
@@ -134,37 +374,29 @@
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <p class="text-slate-400 text-sm italic">No registras talleres virtuales completados.</p>
         {% endif %}
-    </div>
 
-    <!-- 3. SIMULACROS VIRTUALES -->
-    {% if is_virtual or is_superuser or user.is_staff %}
-    <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-6 shadow-xl space-y-4">
-        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-            <span>🌐</span> Simulacros Virtuales Globales
-        </h2>
         {% if intentos_simulacros_virtuales %}
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-slate-300">
-                <thead class="bg-slate-900/60 text-slate-400 uppercase text-xs">
-                    <tr>
+        <div class="overflow-x-auto pt-2">
+            <h3 class="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-2">Simulacros Virtuales Realizados</h3>
+            <table class="min-w-full divide-y divide-slate-100 text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 font-extrabold uppercase text-[10px] tracking-wider text-left">
                         <th class="px-4 py-3">Fecha</th>
-                        <th class="px-4 py-3">Simulacro Virtual</th>
+                        <th class="px-4 py-3">Simulacro</th>
                         <th class="px-4 py-3 text-center">Puntaje Global</th>
-                        <th class="px-4 py-3 text-right">Acción</th>
+                        <th class="px-4 py-3 text-right">Informe</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-700/50">
+                <tbody class="divide-y divide-slate-100 text-slate-700">
                     {% for isv in intentos_simulacros_virtuales %}
-                    <tr class="hover:bg-slate-700/30 transition">
-                        <td class="px-4 py-3 text-slate-400">{{ isv.fecha_fin|date:"d/m/Y H:i" }}</td>
-                        <td class="px-4 py-3 font-semibold text-white">{{ isv.simulacro.nombre }}</td>
-                        <td class="px-4 py-3 text-center font-bold text-indigo-400">{{ isv.puntaje_global|floatformat:1 }}</td>
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-4 py-3 text-slate-500 font-semibold">{{ isv.fecha_fin|date:"d/m/Y H:i" }}</td>
+                        <td class="px-4 py-3 font-extrabold text-slate-900">{{ isv.simulacro.titulo }}</td>
+                        <td class="px-4 py-3 text-center font-black text-indigo-600">{{ isv.puntaje_global|floatformat:0 }} pts</td>
                         <td class="px-4 py-3 text-right">
-                            <a href="{% url 'evaluaciones:simulacro_resultado' isv.id %}" class="text-xs text-indigo-400 hover:text-indigo-300 underline">
-                                Resultados
+                            <a href="{% url 'evaluaciones:simulacro_resultado' isv.id %}" class="text-indigo-600 font-bold hover:underline">
+                                Ver Resultado &gt;
                             </a>
                         </td>
                     </tr>
@@ -172,8 +404,6 @@
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <p class="text-slate-400 text-sm italic">No registras simulacros virtuales completados.</p>
         {% endif %}
     </div>
     {% endif %}

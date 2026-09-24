@@ -19,7 +19,7 @@ def mis_programas(request):
     Expone globalmente en las plantillas los programas a los que el usuario
     está asignado según su rol (estudiante o profesor).
     """
-    if not request.user or not request.user.is_authenticated:
+    if not getattr(request, 'user', None) or not request.user.is_authenticated:
         return {}
     
     user = request.user

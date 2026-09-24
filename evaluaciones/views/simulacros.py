@@ -46,8 +46,11 @@ class SimulacroAccessMixin(UserPassesTestMixin):
                 return user.programas_docente.filter(id=programa.id).exists()
             return True
             
-        # Estudiantes
+        # Estudiantes: Exclusivo para modalidad virtual (VirtualStudent)
         if user.es_docente or user.es_personal_gestion:
+            return False
+
+        if not getattr(user, 'es_estudiante_virtual', False):
             return False
             
         from suscripciones.models import Subscription
@@ -73,6 +76,10 @@ class SimulacroAccessMixin(UserPassesTestMixin):
         return True
 
     def handle_no_permission(self):
+        user = self.request.user
+        if user.is_authenticated and not getattr(user, 'es_estudiante_virtual', False) and not user.is_staff and not user.is_superuser:
+            messages.error(self.request, "Los simulacros virtuales son exclusivos para estudiantes de modalidad virtual. En tu sección de Mis Logros puedes consultar tus notas y simulacros presenciales.")
+            return redirect('evaluaciones:mis_notas')
         messages.error(self.request, "No tienes permiso para acceder a esta área. Los simulacros son exclusivos para estudiantes virtuales en módulos activos.")
         return redirect('curriculo:programa_list')
 
@@ -146,7 +153,11 @@ class SimulacroListView(LoginRequiredMixin, SimulacroAccessMixin, ListView):
             qs = qs.filter(titulo__icontains=q)
             
         # Filtro de visibilidad según rol
-        if not self.request.user.is_staff:
+        if not self.request.user.is_staff and not self.request.user.is_superuser:
+            # Los estudiantes presenciales no ven simulacros virtuales para realizar
+            if not getattr(self.request.user, 'es_estudiante_virtual', False):
+                return qs.none()
+
             # Los estudiantes solo ven los que están publicados
             qs = qs.filter(estado='publicado')
             
