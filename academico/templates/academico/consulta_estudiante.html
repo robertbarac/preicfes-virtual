@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Consulta de Estudiante | PreICFES GV Valdez{% endblock %}
+{% block title %}Consulta de Estudiante | GV Valdez Campus{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-slate-50/60" x-data="{ activeTab: 'talleres_virtuales' }">
   <div class="max-w-6xl mx-auto space-y-6">
 
     <!-- Encabezado y Barra de Búsqueda -->
@@ -20,36 +20,28 @@
           </svg>
           Portal de Consulta Pública
         </div>
-
-        <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">
+        <h1 class="text-2xl sm:text-4xl font-black tracking-tight text-white mb-2">
           Historial Académico y Financiero
         </h1>
         <p class="text-sm sm:text-base text-blue-100/90 mb-6">
-          Ingresa el número de documento de identidad del estudiante para consultar en tiempo real su registro de talleres, asistencias, notas, simulacros y estado de cuotas.
+          Ingresa el número de documento de identidad del estudiante para consultar en tiempo real su registro académico, talleres, asistencias, simulacros y estado de cuotas.
         </p>
 
         <!-- Formulario de búsqueda -->
-        <form method="get" action="" class="flex flex-col sm:flex-row gap-3 items-stretch">
+        <form method="GET" action="{% url 'consulta_publica' %}" class="flex flex-col sm:flex-row gap-3">
           <div class="relative flex-1">
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
             </div>
-            <input
-              type="text"
-              name="identificacion"
-              value="{{ identificacion }}"
-              required
+            <input type="text" name="identificacion" value="{{ identificacion }}" required
               placeholder="Ej: 1045236890 (sin puntos ni espacios)"
               class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white text-slate-900 placeholder-slate-400 font-medium text-sm sm:text-base shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-300 transition"
-              autocomplete="off"
-            />
+              autocomplete="off" />
           </div>
-          <button
-            type="submit"
-            class="px-7 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm sm:text-base shadow-lg hover:shadow-amber-500/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2 flex-shrink-0"
-          >
+          <button type="submit"
+            class="px-7 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm sm:text-base shadow-lg hover:shadow-amber-500/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2 flex-shrink-0">
             <span>Consultar</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
@@ -59,45 +51,41 @@
       </div>
     </div>
 
-    <!-- Mensaje de Error si no se encontró -->
+    <!-- Mensaje de Error / No Encontrado -->
     {% if error_mensaje %}
-    <div class="rounded-2xl bg-rose-50 border border-rose-200 p-6 flex items-start gap-4 shadow-sm animate-fade-in">
+    <div class="rounded-2xl bg-rose-50 border border-rose-200 p-6 flex items-start gap-4 shadow-sm">
       <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
         </svg>
       </div>
       <div>
-        <h3 class="text-base font-bold text-rose-900">Estudiante no encontrado</h3>
+        <h3 class="font-bold text-rose-900 text-base">Estudiante no encontrado</h3>
         <p class="text-sm text-rose-700 mt-1">{{ error_mensaje }}</p>
         <p class="text-xs text-rose-600/80 mt-2">
-          Verifica que el número ingresado no contenga puntos, guiones ni espacios. Si el estudiante fue registrado recientemente, comunícate con la secretaría académica.
+          Verifica que el número ingresado no contenga caracteres incorrectos. Si el estudiante fue registrado recientemente, comunícate con la coordinación académica.
         </p>
       </div>
     </div>
     {% endif %}
 
-    <!-- Pantalla Inicial cuando no se ha consultado -->
+    <!-- Si no se ha realizado búsqueda, mostrar tarjetas informativas -->
     {% if not busqueda_realizada %}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
       <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-center">
         <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-4 font-bold text-xl">
-          📝
+          💻
         </div>
-        <h3 class="font-bold text-slate-800 text-base mb-2">Talleres</h3>
-        <p class="text-xs text-slate-500 leading-relaxed">
-          Consulta las actividades y talleres prácticos realizados por el estudiante y sus porcentajes de acierto.
-        </p>
+        <h3 class="font-bold text-slate-800 text-base mb-2">Talleres Virtuales</h3>
+        <p class="text-xs text-slate-500">Consulta los talleres y actividades de refuerzo desarrollados en la plataforma.</p>
       </div>
 
       <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-center">
         <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4 font-bold text-xl">
-          📅
+          🏫
         </div>
-        <h3 class="font-bold text-slate-800 text-base mb-2">Asistencias</h3>
-        <p class="text-xs text-slate-500 leading-relaxed">
-          Revisa el cumplimiento de clases presenciales, faltas y justificaciones registradas.
-        </p>
+        <h3 class="font-bold text-slate-800 text-base mb-2">Clases Presenciales</h3>
+        <p class="text-xs text-slate-500">Registro de asistencias y talleres interactivos para estudiantes presenciales.</p>
       </div>
 
       <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-center">
@@ -105,9 +93,7 @@
           🎯
         </div>
         <h3 class="font-bold text-slate-800 text-base mb-2">Simulacros ICFES</h3>
-        <p class="text-xs text-slate-500 leading-relaxed">
-          Puntajes globales y detallados por áreas de simulacros presenciales y diagnósticos.
-        </p>
+        <p class="text-xs text-slate-500">Puntajes globales y por componente, con descarga oficial de informes.</p>
       </div>
 
       <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-center">
@@ -115,18 +101,16 @@
           💳
         </div>
         <h3 class="font-bold text-slate-800 text-base mb-2">Cartera & Cuotas</h3>
-        <p class="text-xs text-slate-500 leading-relaxed">
-          Consulta informativa de cuotas emitidas, pagadas, fechas de vencimiento y saldos al día.
-        </p>
+        <p class="text-xs text-slate-500">Estado de cuenta transparente con fechas de vencimiento y abonos aplicados.</p>
       </div>
     </div>
     {% endif %}
 
-    <!-- RESULTADOS DEL ESTUDIANTE ENCONTRADO -->
+    <!-- CONTENIDO DEL ESTUDIANTE ENCONTRADO -->
     {% if alumno %}
-    <div class="space-y-6 animate-fade-in" x-data="{ activeTab: 'talleres' }">
+    <div class="space-y-6">
 
-      <!-- Ficha de Datos del Alumno -->
+      <!-- Ficha del Alumno -->
       <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-md">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
           <div class="flex items-start gap-4">
@@ -147,9 +131,9 @@
               <p class="text-xs sm:text-sm text-slate-500 mt-1 flex items-center gap-3 flex-wrap font-medium">
                 <span><strong class="text-slate-700">Documento:</strong> {{ alumno.tipo_identificacion }} {{ alumno.identificacion }}</span>
                 <span>•</span>
-                <span><strong class="text-slate-700">Grupo:</strong> {{ alumno.grupo_actual.codigo }}</span>
+                <span><strong class="text-slate-700">Grupo:</strong> {{ alumno.grupo_actual.codigo|default:"Plataforma Virtual" }}</span>
                 <span>•</span>
-                <span><strong class="text-slate-700">Municipio:</strong> {{ alumno.municipio.nombre }}</span>
+                <span><strong class="text-slate-700">Municipio:</strong> {{ alumno.municipio.nombre|default:"Nacional" }}</span>
               </p>
             </div>
           </div>
@@ -168,24 +152,32 @@
         </div>
 
         <!-- Métricas Rápidas (Solo Visualización) -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
+        <div class="grid grid-cols-2 {% if es_presencial %}sm:grid-cols-4{% else %}sm:grid-cols-3{% endif %} gap-4 pt-6">
           <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-            <span class="text-xs font-semibold text-slate-400 block mb-1">Talleres Realizados</span>
+            <span class="text-xs font-semibold text-slate-400 block mb-1">Talleres Virtuales</span>
             <span class="text-xl sm:text-2xl font-black text-teal-700">{{ intentos_talleres|length }}</span>
             <span class="text-[11px] font-medium text-slate-500 block mt-1">Actividades de refuerzo</span>
           </div>
 
+          {% if es_presencial %}
           <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-            <span class="text-xs font-semibold text-slate-400 block mb-1">Asistencias</span>
+            <span class="text-xs font-semibold text-slate-400 block mb-1">Asistencias a Clases</span>
             <span class="text-xl sm:text-2xl font-black text-slate-800">{{ asistencias_presente }} <span class="text-xs font-normal text-slate-400">/ {{ total_asistencias }}</span></span>
             <span class="text-[11px] font-bold text-emerald-600 block mt-1">{{ porcentaje_asistencia }}% cumplimiento</span>
           </div>
 
           <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-            <span class="text-xs font-semibold text-slate-400 block mb-1">Simulacros ICFES</span>
+            <span class="text-xs font-semibold text-slate-400 block mb-1">Simulacros Presenciales</span>
             <span class="text-xl sm:text-2xl font-black text-blue-700">{{ simulacros_fisicos.count|add:simulacros_diagnosticos.count }}</span>
-            <span class="text-[11px] font-medium text-slate-500 block mt-1">Presentados</span>
+            <span class="text-[11px] font-medium text-slate-500 block mt-1">Evaluaciones ICFES</span>
           </div>
+          {% else %}
+          <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+            <span class="text-xs font-semibold text-slate-400 block mb-1">Simulacros Virtuales</span>
+            <span class="text-xl sm:text-2xl font-black text-blue-700">{{ simulacros_virtuales|length }}</span>
+            <span class="text-[11px] font-medium text-slate-500 block mt-1">Presentados en plataforma</span>
+          </div>
+          {% endif %}
 
           <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
             <span class="text-xs font-semibold text-slate-400 block mb-1">Saldo Cartera</span>
@@ -201,57 +193,59 @@
 
       <!-- Navegación de Pestañas (Solo Ver) -->
       <div class="flex items-center gap-2 border-b border-slate-200 overflow-x-auto pb-1">
-        <button
-          @click="activeTab = 'talleres'"
-          :class="activeTab === 'talleres' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
-          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2"
-        >
-          <span>📝 Talleres</span>
+        <!-- Pestaña 1: Talleres Virtuales (Ambos) -->
+        <button @click="activeTab = 'talleres_virtuales'"
+          :class="activeTab === 'talleres_virtuales' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
+          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2">
+          <span>💻 Talleres Virtuales</span>
           <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ intentos_talleres|length }}</span>
         </button>
 
-        <button
-          @click="activeTab = 'asistencias'"
-          :class="activeTab === 'asistencias' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
-          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2"
-        >
-          <span>📅 Asistencias</span>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ total_asistencias }}</span>
+        {% if es_presencial %}
+        <!-- Pestaña 2: Clases Presenciales (Unifica Asistencias y Talleres Presenciales Interactivos) -->
+        <button @click="activeTab = 'clases_presenciales'"
+          :class="activeTab === 'clases_presenciales' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
+          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2">
+          <span>🏫 Clases Presenciales</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ clases_historial|length }} clases</span>
         </button>
 
-        <button
-          @click="activeTab = 'cartera'"
+        <!-- Pestaña 3: Simulacros Presenciales -->
+        <button @click="activeTab = 'simulacros_presenciales'"
+          :class="activeTab === 'simulacros_presenciales' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
+          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2">
+          <span>🎯 Simulacros Presenciales</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ simulacros_fisicos.count|add:simulacros_diagnosticos.count }}</span>
+        </button>
+        {% endif %}
+
+        {% if es_virtual %}
+        <!-- Pestaña 2 para Virtual: Simulacros Virtuales -->
+        <button @click="activeTab = 'simulacros_virtuales'"
+          :class="activeTab === 'simulacros_virtuales' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
+          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2">
+          <span>🎯 Simulacros Virtuales</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ simulacros_virtuales|length }}</span>
+        </button>
+        {% endif %}
+
+        <!-- Pestaña Cartera y Cuotas (Ambos) -->
+        <button @click="activeTab = 'cartera'"
           :class="activeTab === 'cartera' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
-          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2"
-        >
+          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2">
           <span>💳 Cartera y Cuotas</span>
           <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ cuotas|length }}</span>
         </button>
-
-        <button
-          @click="activeTab = 'simulacros'"
-          :class="activeTab === 'simulacros' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
-          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2"
-        >
-          <span>🎯 Simulacros</span>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ simulacros_fisicos.count|add:simulacros_diagnosticos.count }}</span>
-        </button>
-
-        <button
-          @click="activeTab = 'notas'"
-          :class="activeTab === 'notas' ? 'border-[#155EEF] text-[#155EEF] bg-blue-50/60 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
-          class="px-5 py-3 rounded-t-2xl border-b-2 text-sm sm:text-base transition whitespace-nowrap flex items-center gap-2"
-        >
-          <span>📚 Notas de Clase</span>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">{{ notas.count }}</span>
-        </button>
       </div>
 
-      <!-- PESTAÑA: TALLERES (Solo Ver) -->
-      <div x-show="activeTab === 'talleres'" class="space-y-6">
+      <!-- PESTAÑA: TALLERES VIRTUALES (Ambos tipos de estudiantes) -->
+      <div x-show="activeTab === 'talleres_virtuales'" class="space-y-6">
         <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
-            <h3 class="font-bold text-slate-800 text-sm sm:text-base">Historial de Talleres de Refuerzo</h3>
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm sm:text-base">Historial de Talleres Virtuales (PreICFES Virtual)</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Talleres interactivos y actividades de refuerzo desarrollados en la plataforma virtual.</p>
+            </div>
             <span class="text-xs text-slate-400 font-medium">{{ intentos_talleres|length }} registrados</span>
           </div>
 
@@ -273,7 +267,7 @@
                     {{ it.taller.titulo }}
                   </td>
                   <td class="py-4 px-6 text-slate-600 font-medium">
-                    {% if it.taller.modulo %}{{ it.taller.modulo.nombre }}{% elif it.clase %}{{ it.clase.materia.nombre }}{% else %}Refuerzo General{% endif %}
+                    {% if it.taller.modulo %}{{ it.taller.modulo.nombre }}{% elif it.clase and it.clase.materia %}{{ it.clase.materia.nombre }}{% elif it.taller.tema %}{{ it.taller.tema.nombre }}{% else %}Refuerzo General{% endif %}
                   </td>
                   <td class="py-4 px-6 text-slate-500 text-xs">
                     {{ it.fecha_fin|date:"d/m/Y H:i"|default:"Finalizado" }}
@@ -299,8 +293,8 @@
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="5" class="py-8 text-center text-slate-400 text-sm">
-                    No se han registrado intentos de talleres para este estudiante en la plataforma.
+                  <td colspan="5" class="py-12 text-center text-slate-400">
+                    <p class="text-sm font-medium">No se registran intentos de talleres virtuales completados.</p>
                   </td>
                 </tr>
                 {% endfor %}
@@ -310,16 +304,18 @@
         </div>
       </div>
 
-      <!-- PESTAÑA: ASISTENCIAS (Solo Ver) -->
-      <div x-show="activeTab === 'asistencias'" class="space-y-6">
-        <!-- Resumen de Asistencia -->
+      {% if es_presencial %}
+      <!-- PESTAÑA: CLASES PRESENCIALES (Tabla Única: Asistencia y Taller Presencial Interactivo asociados a la Clase) -->
+      <div x-show="activeTab === 'clases_presenciales'" class="space-y-6">
+
+        <!-- Resumen General de Asistencia -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex items-center gap-4">
             <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold">
               ✓
             </div>
             <div>
-              <p class="text-xs text-slate-400 font-medium">Clases Asistidas</p>
+              <p class="text-xs font-semibold text-slate-400 uppercase">Clases Asistidas</p>
               <p class="text-2xl font-black text-slate-800">{{ asistencias_presente }}</p>
             </div>
           </div>
@@ -329,7 +325,7 @@
               ✕
             </div>
             <div>
-              <p class="text-xs text-slate-400 font-medium">Inasistencias</p>
+              <p class="text-xs font-semibold text-slate-400 uppercase">Inasistencias</p>
               <p class="text-2xl font-black text-slate-800">{{ asistencias_faltas }}</p>
             </div>
           </div>
@@ -339,17 +335,40 @@
               %
             </div>
             <div>
-              <p class="text-xs text-slate-400 font-medium">Porcentaje Total</p>
-              <p class="text-2xl font-black text-blue-700">{{ porcentaje_asistencia }}%</p>
+              <p class="text-xs font-semibold text-slate-400 uppercase">Porcentaje Cumplimiento</p>
+              <p class="text-2xl font-black text-[#155EEF]">{{ porcentaje_asistencia }}%</p>
             </div>
           </div>
         </div>
 
-        <!-- Tabla Detallada de Asistencias (Solo lectura) -->
+        <!-- Promedios por Materia (Talleres Presenciales Interactivos) -->
+        {% if promedios_materias %}
+        <div class="space-y-2">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Promedios por Materia en Talleres Presenciales Interactivos</p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            {% for pm in promedios_materias %}
+            <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center justify-between">
+              <div>
+                <p class="text-xs text-slate-500 font-medium truncate max-w-[120px]">{{ pm.clase__materia__nombre }}</p>
+                <p class="text-lg font-black text-slate-800">{{ pm.promedio|floatformat:"1" }}</p>
+              </div>
+              <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
+                ★
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- TABLA ÚNICA DE CLASES PRESENCIALES -->
         <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
-            <h3 class="font-bold text-slate-800 text-sm sm:text-base">Historial de Clases y Asistencia</h3>
-            <span class="text-xs text-slate-400 font-medium">{{ total_asistencias }} registros</span>
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm sm:text-base">Historial de Clases y Talleres Presenciales Interactivos</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Control de asistencia y calificaciones de talleres interactivos vinculados a cada clase presencial.</p>
+            </div>
+            <span class="text-xs text-slate-400 font-medium">{{ clases_historial|length }} clases registradas</span>
           </div>
 
           <div class="overflow-x-auto">
@@ -358,143 +377,67 @@
                 <tr>
                   <th class="py-3.5 px-6">Clase / Materia</th>
                   <th class="py-3.5 px-6">Fecha</th>
-                  <th class="py-3.5 px-6">Horario</th>
-                  <th class="py-3.5 px-6 text-center">Estado</th>
+                  <th class="py-3.5 px-6">Docente</th>
+                  <th class="py-3.5 px-6 text-center">Asistencia</th>
+                  <th class="py-3.5 px-6 text-center">Taller Presencial Interactivo (Nota)</th>
+                  <th class="py-3.5 px-6">Observación</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                {% for a in asistencias %}
+                {% for c in clases_historial %}
                 <tr class="hover:bg-slate-50/70 transition">
                   <td class="py-4 px-6 font-bold text-slate-800">
-                    {{ a.clase.materia.nombre }}
+                    {{ c.materia.nombre }}
                   </td>
-                  <td class="py-4 px-6 text-slate-600 font-medium">
-                    {{ a.clase.fecha|date:"d/m/Y"|default:a.clase.fecha }}
+                  <td class="py-4 px-6 text-slate-600 font-medium whitespace-nowrap">
+                    {{ c.fecha|date:"d/m/Y" }}
                   </td>
                   <td class="py-4 px-6 text-slate-500 text-xs">
-                    {{ a.clase.get_horario_display }}
+                    {{ c.profesor.get_full_name|default:"Docente Titular" }}
                   </td>
-                  <td class="py-4 px-6 text-center">
-                    {% if a.asistio %}
+                  <td class="py-4 px-6 text-center whitespace-nowrap">
+                    {% if c.asistio %}
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                       <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Presente
                     </span>
-                    {% elif a.tiene_justificacion %}
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200" title="{{ a.motivo_justificacion }}">
+                    {% elif c.tiene_justificacion %}
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200" title="{{ c.motivo_justificacion }}">
                       <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Justificada
                     </span>
-                    {% else %}
+                    {% elif c.tiene_asistencia %}
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
                       <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Ausente
                     </span>
+                    {% else %}
+                    <span class="text-slate-400 text-xs">—</span>
+                    {% endif %}
+                  </td>
+                  <td class="py-4 px-6 text-center whitespace-nowrap">
+                    {% if c.nota is not None %}
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black {% if c.nota >= 3.0 %}bg-blue-100 text-blue-800 border border-blue-200{% else %}bg-rose-100 text-rose-800 border border-rose-200{% endif %}">
+                      {{ c.nota|floatformat:1 }}
+                      <span class="text-[10px] font-semibold {% if c.nota >= 3.0 %}text-blue-600{% else %}text-rose-600{% endif %}">
+                        {% if c.nota >= 3.0 %}Aprobado{% else %}Por Mejorar{% endif %}
+                      </span>
+                    </span>
+                    {% else %}
+                    <span class="text-slate-300 text-xs font-medium">Sin calificar</span>
+                    {% endif %}
+                  </td>
+                  <td class="py-4 px-6 text-xs text-slate-500">
+                    {% if c.motivo_justificacion %}
+                      {{ c.motivo_justificacion }}
+                    {% elif c.tiene_asistencia and not c.asistio and not c.tiene_justificacion %}
+                      <span class="text-rose-500 font-medium">Inasistencia sin justificar</span>
+                    {% else %}
+                      <span class="text-slate-300">—</span>
                     {% endif %}
                   </td>
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="4" class="py-8 text-center text-slate-400 text-sm">
-                    No hay registros de asistencia para este estudiante.
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- PESTAÑA: CARTERA Y CUOTAS (Solo Ver) -->
-      <div x-show="activeTab === 'cartera'" class="space-y-6">
-
-        <!-- Resumen Financiero -->
-        {% if deuda %}
-        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-            <div>
-              <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Estado de Cuenta</span>
-              <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
-                {% if deuda.saldo_pendiente <= 0 %}
-                <span class="text-emerald-600">Paz y Salvo</span>
-                {% elif deuda.estado == 'vencida' %}
-                <span class="text-rose-600">Cuenta con Vencimiento</span>
-                {% else %}
-                <span class="text-blue-600">Al Día con Cuotas Pendientes</span>
-                {% endif %}
-              </h3>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider
-                {% if deuda.saldo_pendiente <= 0 %}bg-emerald-100 text-emerald-800 border border-emerald-200
-                {% elif deuda.estado == 'vencida' %}bg-rose-100 text-rose-800 border border-rose-200
-                {% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
-                {{ deuda.get_estado_display|default:deuda.estado }}
-              </span>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
-            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-              <span class="text-xs font-medium text-slate-400 block mb-1">Monto Total Contratado</span>
-              <span class="text-2xl font-black text-slate-800">${{ deuda.monto_total|floatformat:0 }}</span>
-            </div>
-
-            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-              <span class="text-xs font-medium text-slate-400 block mb-1">Total Abonado</span>
-              <span class="text-2xl font-black text-emerald-600">${{ deuda.monto_pagado|floatformat:0 }}</span>
-            </div>
-
-            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-              <span class="text-xs font-medium text-slate-400 block mb-1">Saldo Pendiente</span>
-              <span class="text-2xl font-black {% if deuda.saldo_pendiente > 0 %}text-rose-600{% else %}text-slate-800{% endif %}">
-                ${{ deuda.saldo_pendiente|floatformat:0 }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tabla de Cuotas (Solo Ver: sin botones de edición, creación ni borrado) -->
-        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
-            <h3 class="font-bold text-slate-800 text-sm sm:text-base">Desglose de Cuotas y Vencimientos</h3>
-            <span class="text-xs text-slate-400 font-medium">{{ cuotas|length }} cuotas</span>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-              <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider font-semibold border-b border-slate-100">
-                <tr>
-                  <th class="py-3.5 px-6"># Cuota</th>
-                  <th class="py-3.5 px-6">Vencimiento</th>
-                  <th class="py-3.5 px-6 text-right">Valor Cuota</th>
-                  <th class="py-3.5 px-6 text-right">Abonado</th>
-                  <th class="py-3.5 px-6 text-right">Saldo</th>
-                  <th class="py-3.5 px-6 text-center">Estado</th>
-                  <th class="py-3.5 px-6 text-center">Fecha Pago</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100">
-                {% for c in cuotas %}
-                <tr class="hover:bg-slate-50/70 transition">
-                  <td class="py-4 px-6 font-bold text-slate-700">Cuota {{ forloop.counter }}</td>
-                  <td class="py-4 px-6 text-slate-700 font-medium">{{ c.fecha_vencimiento|date:"d/m/Y" }}</td>
-                  <td class="py-4 px-6 text-right font-bold text-slate-800">${{ c.monto|floatformat:0 }}</td>
-                  <td class="py-4 px-6 text-right font-semibold text-emerald-600">${{ c.monto_abonado|floatformat:0 }}</td>
-                  <td class="py-4 px-6 text-right font-black {% if c.saldo_restante > 0 %}text-rose-600{% else %}text-slate-400{% endif %}">
-                    ${{ c.saldo_restante|floatformat:0 }}
-                  </td>
-                  <td class="py-4 px-6 text-center">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {{ c.badge_color }}">
-                      {{ c.estado_calculado }}
-                    </span>
-                  </td>
-                  <td class="py-4 px-6 text-center text-xs text-slate-500">
-                    {% if c.fecha_pago %}{{ c.fecha_pago|date:"d/m/Y" }}{% else %}<span class="text-slate-300">—</span>{% endif %}
-                  </td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="7" class="py-8 text-center text-slate-400 text-sm">
-                    No hay cuotas registradas para este estudiante.
+                  <td colspan="6" class="py-12 text-center text-slate-400">
+                    <p class="text-sm font-medium">No se registran clases presenciales para este estudiante.</p>
                   </td>
                 </tr>
                 {% endfor %}
@@ -503,30 +446,16 @@
           </div>
         </div>
 
-        {% else %}
-        <div class="bg-white rounded-3xl p-8 border border-slate-200 text-center">
-          <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-xl">
-            ✨
-          </div>
-          <h4 class="font-bold text-slate-800 text-base mb-1">Sin registros de deuda pendientes</h4>
-          <p class="text-xs text-slate-500">
-            {% if alumno.es_becado %}
-            Este estudiante cuenta con una beca activa otorgada por la institución.
-            {% else %}
-            El estudiante se encuentra sin deudas registradas o su plan no requiere cobro de cuotas.
-            {% endif %}
-          </p>
-        </div>
-        {% endif %}
-
       </div>
+      {% endif %}
 
-      <!-- PESTAÑA: SIMULACROS (Solo Ver) -->
-      <div x-show="activeTab === 'simulacros'" class="space-y-8">
+      {% if es_presencial %}
+      <!-- PESTAÑA: SIMULACROS PRESENCIALES -->
+      <div x-show="activeTab === 'simulacros_presenciales'" class="space-y-6">
 
-        <!-- 1. Simulacros Presenciales Estándar (OMR) -->
-        <div class="space-y-4">
-          <div class="flex items-center justify-between">
+        <!-- Simulacros Físicos ICFES -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
             <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
               <span>📋</span> Simulacros Presenciales ICFES (Sesiones Oficiales)
             </h3>
@@ -542,10 +471,10 @@
                 <div>
                   <h4 class="text-lg font-black text-slate-900">{{ sim.simulacro.nombre }}</h4>
                   <p class="text-xs text-slate-400 font-medium mt-0.5">
-                    Fecha de realización: {{ sim.fecha_realizacion|date:"d/m/Y"|default:"Pendiente" }}
+                    Fecha de Realización: {{ sim.fecha_realizacion|date:"d/m/Y"|default:"Registrado" }}
                   </p>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-4">
                   <div class="text-right">
                     <span class="text-xs text-slate-400 block font-semibold">Puntaje Global</span>
                     <span class="text-2xl sm:text-3xl font-black text-[#155EEF]">
@@ -553,11 +482,8 @@
                     </span>
                   </div>
                   {% if sim.estado == 'Calificado' %}
-                  <a
-                    href="{% url 'simulacros:descargar_resultado_individual_pdf' sim.pk %}"
-                    target="_blank"
-                    class="px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200 transition flex items-center gap-1.5"
-                  >
+                  <a href="{% url 'simulacros:descargar_resultado_individual_pdf' sim.pk %}" target="_blank"
+                    class="px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200 transition flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
@@ -567,7 +493,7 @@
                 </div>
               </div>
 
-              <!-- Desglose por componentes ICFES -->
+              <!-- Componentes Evaluados -->
               <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-4">
                 <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
                   <span class="text-[11px] font-semibold text-slate-500 block">Matemáticas</span>
@@ -592,17 +518,17 @@
               </div>
             </div>
             {% empty %}
-            <div class="bg-white rounded-3xl p-8 border border-slate-200 text-center text-slate-400 text-sm">
-              Aún no hay registros de simulacros presenciales estándar para este estudiante.
+            <div class="bg-white rounded-3xl p-8 border border-slate-200 text-center">
+              <p class="text-sm text-slate-400 font-medium">No se registran simulacros físicos calificados aún.</p>
             </div>
             {% endfor %}
           </div>
         </div>
 
-        <!-- 2. Simulacros Diagnósticos Presenciales -->
-        {% if simulacros_diagnosticos %}
-        <div class="space-y-4">
-          <div class="flex items-center justify-between">
+        <!-- Simulacros Diagnósticos Presenciales -->
+        {% if simulacros_diagnosticos.exists %}
+        <div class="pt-6 border-t border-slate-200">
+          <div class="flex items-center justify-between mb-4">
             <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
               <span>🩺</span> Simulacros Diagnósticos
             </h3>
@@ -617,9 +543,7 @@
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
                 <div>
                   <h4 class="text-lg font-black text-slate-900">{{ diag.simulacro.nombre }}</h4>
-                  <p class="text-xs text-slate-400 font-medium mt-0.5">
-                    Fecha: {{ diag.fecha_realizacion|date:"d/m/Y"|default:"Pendiente" }}
-                  </p>
+                  <p class="text-xs text-slate-400 font-medium mt-0.5">Diagnóstico Inicial de Competencias</p>
                 </div>
                 <div class="text-right">
                   <span class="text-xs text-slate-400 block font-semibold">Puntaje Global</span>
@@ -657,10 +581,14 @@
         </div>
         {% endif %}
 
-        <!-- 3. Simulacros Virtuales -->
-        {% if simulacros_virtuales %}
-        <div class="space-y-4">
-          <div class="flex items-center justify-between">
+      </div>
+      {% endif %}
+
+      {% if es_virtual %}
+      <!-- PESTAÑA: SIMULACROS VIRTUALES (Solo VirtualStudents) -->
+      <div x-show="activeTab === 'simulacros_virtuales'" class="space-y-6">
+        <div>
+          <div class="flex items-center justify-between mb-4">
             <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
               <span>💻</span> Intentos en Simulacros Virtuales
             </h3>
@@ -677,6 +605,7 @@
                     <th class="py-3.5 px-6">Simulacro Virtual</th>
                     <th class="py-3.5 px-6">Fecha Finalización</th>
                     <th class="py-3.5 px-6 text-center">Puntaje Global</th>
+                    <th class="py-3.5 px-6 text-center">Tiempo</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -689,6 +618,15 @@
                         {{ iv.puntaje_global|floatformat:1 }} / 500
                       </span>
                     </td>
+                    <td class="py-4 px-6 text-center text-xs text-slate-500">
+                      {{ iv.tiempo_empleado_minutos|default:"—" }} min
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="4" class="py-12 text-center text-slate-400">
+                      <p class="text-sm font-medium">No se registran intentos de simulacros virtuales completados.</p>
+                    </td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -696,72 +634,100 @@
             </div>
           </div>
         </div>
-        {% endif %}
-
       </div>
+      {% endif %}
 
-      <!-- PESTAÑA: NOTAS DE CLASE (Solo Ver) -->
-      <div x-show="activeTab === 'notas'" class="space-y-6">
-        <!-- Promedios por Materia -->
-        {% if promedios_materias %}
-        <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
-          <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <span>📊</span> Promedio Acumulado por Materia
-          </h3>
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {% for pm in promedios_materias %}
-            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-              <div>
-                <p class="text-xs text-slate-500 font-medium truncate max-w-[120px]">{{ pm.clase__materia__nombre }}</p>
-                <p class="text-lg font-black text-slate-800">{{ pm.promedio|floatformat:"1" }}</p>
-              </div>
-              <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
-                ★
-              </div>
+      <!-- PESTAÑA: CARTERA Y CUOTAS (Ambos tipos de estudiantes) -->
+      <div x-show="activeTab === 'cartera'" class="space-y-6">
+        {% if deuda %}
+        <!-- Estado General de Cartera -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div>
+              <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Estado de Cuenta</span>
+              <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+                {% if deuda.saldo_pendiente <= 0 %}
+                <span class="text-emerald-600">Paz y Salvo</span>
+                {% elif tiene_cuotas_vencidas %}
+                <span class="text-rose-600">Cuenta con Cuota(s) Vencida(s)</span>
+                {% else %}
+                <span class="text-blue-600">Al Día con Cuotas Pendientes</span>
+                {% endif %}
+              </h3>
             </div>
-            {% endfor %}
+            <div class="flex items-center gap-2">
+              <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider
+                {% if deuda.saldo_pendiente <= 0 %}bg-emerald-100 text-emerald-800 border border-emerald-200
+                {% elif tiene_cuotas_vencidas %}bg-rose-100 text-rose-800 border border-rose-200
+                {% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
+                {% if deuda.saldo_pendiente <= 0 %}Paz y Salvo{% elif tiene_cuotas_vencidas %}Mora / Vencida{% else %}Al Día{% endif %}
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <span class="text-xs font-medium text-slate-400 block mb-1">Monto Total Contratado</span>
+              <span class="text-2xl font-black text-slate-800">${{ deuda.valor_total|floatformat:0 }}</span>
+            </div>
+
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <span class="text-xs font-medium text-slate-400 block mb-1">Total Abonado</span>
+              <span class="text-2xl font-black text-emerald-600">${{ total_abonado|floatformat:0 }}</span>
+            </div>
+
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <span class="text-xs font-medium text-slate-400 block mb-1">Saldo Pendiente</span>
+              <span class="text-2xl font-black {% if deuda.saldo_pendiente > 0 %}text-rose-600{% else %}text-slate-800{% endif %}">
+                ${{ deuda.saldo_pendiente|floatformat:0 }}
+              </span>
+            </div>
           </div>
         </div>
-        {% endif %}
 
-        <!-- Listado Detallado de Notas -->
+        <!-- Tabla de Cuotas (Solo Ver: sin botones de edición, creación ni borrado) -->
         <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
-            <h3 class="font-bold text-slate-800 text-sm sm:text-base">Detalle de Calificaciones por Clase</h3>
-            <span class="text-xs text-slate-400 font-medium">{{ notas.count }} registros</span>
+            <h3 class="font-bold text-slate-800 text-sm sm:text-base">Desglose de Cuotas y Vencimientos</h3>
+            <span class="text-xs text-slate-400 font-medium">{{ cuotas|length }} cuotas</span>
           </div>
 
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
               <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider font-semibold border-b border-slate-100">
                 <tr>
-                  <th class="py-3.5 px-6">Materia</th>
-                  <th class="py-3.5 px-6">Fecha de Clase</th>
-                  <th class="py-3.5 px-6 text-center">Calificación</th>
+                  <th class="py-3.5 px-6"># Cuota</th>
+                  <th class="py-3.5 px-6">Vencimiento</th>
+                  <th class="py-3.5 px-6 text-right">Valor Cuota</th>
+                  <th class="py-3.5 px-6 text-right">Abonado</th>
+                  <th class="py-3.5 px-6 text-right">Saldo Restante</th>
+                  <th class="py-3.5 px-6 text-center">Estado</th>
+                  <th class="py-3.5 px-6 text-center">Fecha Pago</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                {% for n in notas %}
-                <tr class="hover:bg-slate-50/70 transition">
-                  <td class="py-4 px-6 font-bold text-slate-800">
-                    {{ n.clase.materia.nombre }}
-                  </td>
-                  <td class="py-4 px-6 text-slate-600 font-medium">
-                    {{ n.clase.fecha|date:"d/m/Y"|default:n.clase.fecha }}
+                {% for c in cuotas %}
+                <tr class="hover:bg-slate-50/80 transition border-b border-slate-100 last:border-0">
+                  <td class="py-4 px-6 font-bold text-slate-700">Cuota {{ forloop.counter }}</td>
+                  <td class="py-4 px-6 text-slate-700 font-medium">{{ c.fecha_vencimiento|date:"d/m/Y" }}</td>
+                  <td class="py-4 px-6 text-right font-bold text-slate-800">${{ c.monto|floatformat:0 }}</td>
+                  <td class="py-4 px-6 text-right font-semibold text-emerald-600">${{ c.monto_abonado|floatformat:0 }}</td>
+                  <td class="py-4 px-6 text-right font-black {% if c.saldo_restante > 0 %}text-rose-600{% else %}text-slate-400{% endif %}">
+                    ${{ c.saldo_restante|floatformat:0 }}
                   </td>
                   <td class="py-4 px-6 text-center">
-                    <span class="inline-flex items-center px-3 py-1 rounded-xl text-sm font-black 
-                      {% if n.nota >= 70 %}bg-emerald-100 text-emerald-800 border border-emerald-200
-                      {% elif n.nota >= 50 %}bg-amber-100 text-amber-800 border border-amber-200
-                      {% else %}bg-rose-100 text-rose-800 border border-rose-200{% endif %}">
-                      {{ n.nota|floatformat:"1" }}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {{ c.badge_color }}">
+                      {{ c.estado_calculado }}
                     </span>
+                  </td>
+                  <td class="py-4 px-6 text-center text-xs text-slate-500 font-medium">
+                    {% if c.fecha_pago %}{{ c.fecha_pago|date:"d/m/Y" }}{% else %}<span class="text-slate-300">—</span>{% endif %}
                   </td>
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="3" class="py-8 text-center text-slate-400 text-sm">
-                    No hay calificaciones registradas para este estudiante.
+                  <td colspan="7" class="py-12 text-center text-slate-400">
+                    <p class="text-sm font-medium">No hay cuotas programadas registradas para esta deuda.</p>
                   </td>
                 </tr>
                 {% endfor %}
@@ -769,6 +735,16 @@
             </table>
           </div>
         </div>
+
+        {% else %}
+        <div class="bg-white rounded-3xl p-8 border border-slate-200 text-center">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-xl">
+            ✨
+          </div>
+          <h4 class="font-bold text-slate-800 text-base mb-1">Sin registros de cartera pendientes</h4>
+          <p class="text-xs text-slate-400 max-w-sm mx-auto">El estudiante no registra deudas activas o compromisos pendientes en el sistema financiero.</p>
+        </div>
+        {% endif %}
       </div>
 
     </div>

@@ -54,9 +54,11 @@ class VentanaRegistroForm(forms.ModelForm):
             'fecha_fin': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'w-full p-2 border border-gray-300 rounded outline-none'}),
         }
         
+_STYLE_INPUT_REGISTRO = 'w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#155EEF] transition shadow-sm'
+
 class RegistroPublicoForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}))
-    password_confirm = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': _STYLE_INPUT_REGISTRO, 'placeholder': '••••••••'}))
+    password_confirm = forms.CharField(widget=forms.PasswordInput(attrs={'class': _STYLE_INPUT_REGISTRO, 'placeholder': '••••••••'}))
     tipo_registro = forms.ChoiceField(
         choices=[
             ('', '--- Selecciona tu Modalidad ---'),
@@ -64,20 +66,20 @@ class RegistroPublicoForm(forms.ModelForm):
             ('virtual_student', 'Estudiante 100% Virtual (Plataforma)'),
         ],
         label='Modalidad',
-        widget=forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'})
+        widget=forms.Select(attrs={'class': _STYLE_INPUT_REGISTRO})
     )
     
     class Meta:
         model = User
         fields = ['tipo_documento', 'numero_documento', 'first_name', 'last_name', 'email', 'telefono', 'username']
         widgets = {
-            'tipo_documento': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
-            'numero_documento': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
-            'first_name': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
-            'last_name': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
-            'email': forms.EmailInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
-            'telefono': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
-            'username': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded focus:border-indigo-500 outline-none'}),
+            'tipo_documento': forms.Select(attrs={'class': _STYLE_INPUT_REGISTRO}),
+            'numero_documento': forms.TextInput(attrs={'class': _STYLE_INPUT_REGISTRO, 'placeholder': 'Ej: 1045236890'}),
+            'first_name': forms.TextInput(attrs={'class': _STYLE_INPUT_REGISTRO, 'placeholder': 'Ej: Juan Andrés'}),
+            'last_name': forms.TextInput(attrs={'class': _STYLE_INPUT_REGISTRO, 'placeholder': 'Ej: Pérez Gómez'}),
+            'email': forms.EmailInput(attrs={'class': _STYLE_INPUT_REGISTRO, 'placeholder': 'ejemplo@correo.com'}),
+            'telefono': forms.TextInput(attrs={'class': _STYLE_INPUT_REGISTRO, 'placeholder': 'Ej: 3001234567'}),
+            'username': forms.TextInput(attrs={'class': _STYLE_INPUT_REGISTRO, 'placeholder': 'Ej: juanperez11'}),
         }
 
     def clean(self):
