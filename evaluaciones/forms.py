@@ -7,6 +7,7 @@ class TallerForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['modulo'].required = False
         self.fields['modulo'].empty_label = "Sin Módulo (Taller Presencial en Vivo)"
+        self.fields['tema'].required = True
         self.fields['tema'].empty_label = "--- Busca o selecciona un Tema ---"
 
     class Meta:
@@ -62,6 +63,11 @@ from .models.banco import Pregunta, Opcion, ImagenPregunta, BloqueContexto, Imag
 from django.forms import inlineformset_factory
 
 class PreguntaForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['tema'].required = True
+        self.fields['tema'].empty_label = "--- Busca o selecciona un Tema ---"
+
     class Meta:
         model = Pregunta
         fields = ['tema', 'bloque_contexto', 'enunciado']

@@ -47,7 +47,18 @@ class PreguntaCreateView(DocenteOStaffPermissionMixin, HistorialMixin, CreateVie
         # Refill back parameter or list
         taller_id = self.request.GET.get('taller')
         if taller_id:
-            return redirect('evaluaciones:taller_preguntas_manage', pk=taller_id)
+            from ..models.talleres import Taller
+            from django.urls import reverse
+            taller = Taller.objects.filter(pk=taller_id).first()
+            if taller and not taller.tema and self.object.tema:
+                taller.tema = self.object.tema
+                taller.save(update_fields=['tema'])
+
+            target_tema_id = self.object.tema_id or (taller.tema_id if taller and taller.tema else None)
+            redirect_url = reverse('evaluaciones:taller_preguntas_manage', kwargs={'pk': taller_id})
+            if target_tema_id:
+                redirect_url += f"?tema={target_tema_id}"
+            return redirect(redirect_url)
         return redirect(self.get_success_url())
 
     def get_success_url(self):
@@ -87,6 +98,21 @@ class PreguntaUpdateView(DocenteOStaffPermissionMixin, HistorialMixin, UpdateVie
         else:
             # Si hay errores de validación, volvemos a mostrar el formulario con los errores
             return self.render_to_response(self.get_context_data(form=form))
+
+        taller_id = self.request.GET.get('taller')
+        if taller_id:
+            from ..models.talleres import Taller
+            from django.urls import reverse
+            taller = Taller.objects.filter(pk=taller_id).first()
+            if taller and not taller.tema and self.object.tema:
+                taller.tema = self.object.tema
+                taller.save(update_fields=['tema'])
+
+            target_tema_id = self.object.tema_id or (taller.tema_id if taller and taller.tema else None)
+            redirect_url = reverse('evaluaciones:taller_preguntas_manage', kwargs={'pk': taller_id})
+            if target_tema_id:
+                redirect_url += f"?tema={target_tema_id}"
+            return redirect(redirect_url)
 
         return redirect('evaluaciones:pregunta_list')
 

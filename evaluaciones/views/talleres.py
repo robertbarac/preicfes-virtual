@@ -107,11 +107,27 @@ class TallerPreguntaManageView(DocenteOStaffPermissionMixin, TemplateView):
         asignadas_ids = taller.preguntas_taller.values_list('pregunta_id', flat=True)
         context['preguntas_asignadas'] = taller.preguntas_taller.select_related('pregunta').all()
         
+        # Resolver tema del taller: si no tiene tema asignado pero ya tiene preguntas con tema, asociarlo automáticamente
+        taller_tema = taller.tema
+        if not taller_tema:
+            primera_con_tema = taller.preguntas_taller.select_related('pregunta__tema').filter(pregunta__tema__isnull=False).first()
+            if primera_con_tema and primera_con_tema.pregunta.tema:
+                taller_tema = primera_con_tema.pregunta.tema
+                taller.tema = taller_tema
+                taller.save(update_fields=['tema'])
+
         # Filtros del buscador
-        q = self.request.GET.get('q', '')
-        tema_id = self.request.GET.get('tema', '')
+        q = self.request.GET.get('q', '').strip()
         
-        # Preguntas disponibles en el banco (podemos filtrar por tema del taller si es necesario)
+        # Si 'tema' no fue enviado explícitamente en el GET, colocar por defecto el tema del taller
+        if 'tema' in self.request.GET:
+            tema_id = self.request.GET.get('tema', '').strip()
+        elif taller_tema:
+            tema_id = str(taller_tema.id)
+        else:
+            tema_id = ''
+        
+        # Preguntas disponibles en el banco (excluyendo las ya asignadas)
         disponibles = Pregunta.objects.exclude(id__in=asignadas_ids).select_related('tema', 'tema__materia')
         
         if q:
@@ -119,16 +135,13 @@ class TallerPreguntaManageView(DocenteOStaffPermissionMixin, TemplateView):
             
         if tema_id:
             disponibles = disponibles.filter(tema_id=tema_id)
-        elif taller.tema and not self.request.GET:
-            # Si entramos por primera vez sin filtros explícitos, sugerimos las del tema del taller
-            disponibles = disponibles.filter(tema=taller.tema)
             
         context['preguntas_disponibles'] = disponibles
         context['q_val'] = q
         context['tema_val'] = tema_id
         
         from curriculo.models.core import Tema
-        context['temas_filtro'] = Tema.objects.select_related('materia').all()
+        context['temas_filtro'] = Tema.objects.select_related('materia').all().order_by('materia__nombre', 'nombre')
         
         return context
 
@@ -136,14 +149,35 @@ class TallerPreguntaManageView(DocenteOStaffPermissionMixin, TemplateView):
         taller = get_object_or_404(Taller, pk=self.kwargs['pk'])
         action = request.POST.get('action')
         pregunta_id = request.POST.get('pregunta_id')
+        tema_id = request.POST.get('tema') or request.GET.get('tema', '')
+        q = request.POST.get('q') or request.GET.get('q', '')
         
+        from django.urls import reverse
+        
+        def _get_redirect():
+            redirect_url = reverse('evaluaciones:taller_preguntas_manage', kwargs={'pk': taller.pk})
+            params = []
+            param_tema = tema_id or (str(taller.tema_id) if taller.tema_id else '')
+            if param_tema:
+                params.append(f"tema={param_tema}")
+            if q:
+                params.append(f"q={q}")
+            if params:
+                redirect_url += "?" + "&".join(params)
+            return redirect(redirect_url)
+
         if not pregunta_id:
-            return redirect('evaluaciones:taller_preguntas_manage', pk=taller.pk)
+            return _get_redirect()
             
         pregunta = get_object_or_404(Pregunta, pk=pregunta_id)
         from ..models.talleres import PreguntaTaller
         
         if action == 'add':
+            # Si el taller no tiene tema y la pregunta agregada sí tiene, auto-vincular tema
+            if not taller.tema and pregunta.tema:
+                taller.tema = pregunta.tema
+                taller.save(update_fields=['tema'])
+
             # Verificar si ya existe para no duplicar
             if not PreguntaTaller.objects.filter(taller=taller, pregunta=pregunta).exists():
                 # Asignar un orden base (al final)
@@ -158,7 +192,7 @@ class TallerPreguntaManageView(DocenteOStaffPermissionMixin, TemplateView):
                 relacion.delete()
                 messages.warning(request, f"Pregunta removida del taller.")
                 
-        return redirect('evaluaciones:taller_preguntas_manage', pk=taller.pk)
+        return _get_redirect()
 
 from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin
