@@ -3,22 +3,22 @@
 
 {% block title %}Revisar Clave OMR por Pregunta | PreVirtual{% endblock %}
 
-{% block extra_css %}
+{% block content %}
 <style>
-  .option-pill input:checked + span {
+  .option-pill-span.is-active {
     background-color: #4f46e5 !important;
     color: #ffffff !important;
-    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4) !important;
+    font-weight: 900 !important;
   }
-  .option-pill-z input:checked + span {
+  .option-pill-span-z.is-active {
     background-color: #f59e0b !important;
     color: #ffffff !important;
-    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4) !important;
+    font-weight: 900 !important;
   }
 </style>
-{% endblock %}
 
-{% block content %}
 <div class="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 
   <!-- Header -->
@@ -35,17 +35,17 @@
         Revisión de Claves Pregunta por Pregunta
       </h1>
       <p class="text-xs sm:text-sm text-slate-500 mt-1">
-        A la derecha observa el recorte real de la hoja escaneada. A la izquierda selecciona o corrige la opción detectada.
+        La opción detectada por el OMR aparece <span class="font-bold text-indigo-600">marcada en azul</span>. A la derecha puedes contrastar contra el recorte real de la hoja para verificar o cambiar cualquier opción con un clic.
       </p>
     </div>
 
-    <!-- Quick Stats -->
+    <!-- Stats -->
     <div class="flex items-center gap-3">
       <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-2">
-        <span class="text-xs text-slate-500 font-medium">Total:</span>
+        <span class="text-xs text-slate-500 font-medium">Total Preguntas:</span>
         <span class="text-sm font-black text-slate-800">{{ total_preguntas }}</span>
       </div>
-      <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-2" id="badgeDudosasContainer">
+      <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-2">
         <span class="text-xs text-slate-500 font-medium">Dudosas / Z:</span>
         <span class="text-sm font-black {% if total_dudosas > 0 %}text-amber-600{% else %}text-emerald-600{% endif %}" id="totalDudosasBadge">
           {{ total_dudosas }}
@@ -69,40 +69,24 @@
     {% csrf_token %}
 
     {% if tipo == 'completo' %}
-    <!-- Selector de Sesión (Tabs) -->
+    <!-- Selector de Sesión (Tabs S1 y S2) -->
     <div class="bg-white p-2 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-2 sticky top-14 z-20 backdrop-blur-md bg-white/95">
       <button type="button" id="tabBtnS1" onclick="switchSession('s1')" 
               class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm">
         <span>Sesión 1 (Preguntas 1 - 120)</span>
-        {% if dudosas_s1 > 0 %}
-        <span id="badgeTabS1" class="px-2 py-0.5 text-[11px] rounded-full bg-amber-400 text-amber-950 font-black">
-          {{ dudosas_s1 }} dudosas
-        </span>
-        {% endif %}
       </button>
 
       <button type="button" id="tabBtnS2" onclick="switchSession('s2')" 
               class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100">
         <span>Sesión 2 (Preguntas 1 - 134)</span>
-        {% if dudosas_s2 > 0 %}
-        <span id="badgeTabS2" class="px-2 py-0.5 text-[11px] rounded-full bg-amber-400 text-amber-950 font-black">
-          {{ dudosas_s2 }} dudosas
-        </span>
-        {% endif %}
-      </button>
-
-      <!-- Filtro Ver solo dudosas -->
-      <button type="button" id="btnToggleDudosas" onclick="toggleOnlyDudosas()"
-              class="py-2.5 px-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 flex items-center gap-1.5 transition">
-        <span>⚠️ Solo dudosas</span>
       </button>
     </div>
 
-    <!-- CONTENEDOR SESIÓN 1 -->
+    <!-- CONTENEDOR SESIÓN 1 (TODAS LAS 120 PREGUNTAS) -->
     <div id="sessionContainerS1" class="space-y-4">
       <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 py-3 flex items-center justify-between">
         <div>
-          <h2 class="text-sm font-black text-indigo-950">Sesión 1 • 120 Preguntas</h2>
+          <h2 class="text-sm font-black text-indigo-950">Sesión 1 • 120 Preguntas para Verificar</h2>
           <p class="text-xs text-indigo-700">Matemáticas (1-30), Lectura (31-60), Sociales (61-90), Naturales (91-120)</p>
         </div>
         <span class="text-xs font-mono font-bold text-indigo-600 bg-white px-2.5 py-1 rounded-lg border border-indigo-200">
@@ -112,13 +96,13 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-3" id="gridS1">
         {% for p in preguntas_s1 %}
-        <div class="q-item flex items-center justify-between p-3 bg-white hover:bg-slate-50 border rounded-2xl gap-3 transition shadow-xs {% if p.es_dudosa %}border-amber-300 bg-amber-50/30 is-dudosa{% else %}border-slate-200/90{% endif %}"
+        <div class="q-item flex items-center justify-between p-3 bg-white hover:bg-slate-50 border rounded-2xl gap-3 transition shadow-xs {% if p.es_dudosa %}border-amber-300 bg-amber-50/30{% else %}border-slate-200/90{% endif %}"
              id="row_s1_{{ p.num }}"
              data-sesion="s1"
              data-num="{{ p.num }}"
              data-dudosa="{% if p.es_dudosa %}1{% else %}0{% endif %}">
           
-          <!-- Lado Izquierdo: Número y Selector de Opciones -->
+          <!-- Lado Izquierdo: Número y Selector de Opciones Marcadas -->
           <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <span class="q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center {% if p.es_dudosa %}bg-amber-100 text-amber-900 border border-amber-300{% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
               {{ p.num }}
@@ -126,28 +110,28 @@
 
             <div class="inline-flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/60">
               {% for opt in p.opciones_disponibles %}
-              <label class="option-pill cursor-pointer select-none">
+              <label class="cursor-pointer select-none">
                 <input type="radio" 
                        name="s1_q_{{ p.num }}" 
                        value="{{ opt }}" 
                        {% if p.opcion == opt %}checked{% endif %} 
                        class="sr-only"
-                       onchange="updateQuestion('s1', '{{ p.num }}', '{{ opt }}')">
-                <span class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-xs font-black text-slate-600 hover:bg-slate-200 transition">
+                       onchange="updateQuestionUI('s1', '{{ p.num }}', '{{ opt }}', this)">
+                <span class="option-pill-span w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-xs font-black transition {% if p.opcion == opt %}is-active bg-indigo-600 text-white shadow-sm{% else %}text-slate-600 hover:bg-slate-200{% endif %}">
                   {{ opt }}
                 </span>
               </label>
               {% endfor %}
 
               <!-- Opción Z (Dudosa / Sin marca) -->
-              <label class="option-pill-z cursor-pointer select-none">
+              <label class="cursor-pointer select-none">
                 <input type="radio" 
                        name="s1_q_{{ p.num }}" 
                        value="Z" 
                        {% if p.opcion == 'Z' %}checked{% endif %} 
                        class="sr-only"
-                       onchange="updateQuestion('s1', '{{ p.num }}', 'Z')">
-                <span class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-xs font-black text-slate-400 hover:bg-slate-200 transition"
+                       onchange="updateQuestionUI('s1', '{{ p.num }}', 'Z', this)">
+                <span class="option-pill-span-z w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-xs font-black transition {% if p.opcion == 'Z' %}is-active bg-amber-500 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-200{% endif %}"
                       title="Dudosa / Sin responder">
                   —
                 </span>
@@ -170,11 +154,11 @@
       </div>
     </div>
 
-    <!-- CONTENEDOR SESIÓN 2 -->
+    <!-- CONTENEDOR SESIÓN 2 (TODAS LAS 134 PREGUNTAS) -->
     <div id="sessionContainerS2" class="space-y-4 hidden">
       <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 py-3 flex items-center justify-between">
         <div>
-          <h2 class="text-sm font-black text-indigo-950">Sesión 2 • 134 Preguntas</h2>
+          <h2 class="text-sm font-black text-indigo-950">Sesión 2 • 134 Preguntas para Verificar</h2>
           <p class="text-xs text-indigo-700">Sociales 2 (1-45), Matemáticas 2 (46-79), Naturales 2 (80-89), Inglés (90-134)</p>
         </div>
         <span class="text-xs font-mono font-bold text-indigo-600 bg-white px-2.5 py-1 rounded-lg border border-indigo-200">
@@ -184,13 +168,13 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-3" id="gridS2">
         {% for p in preguntas_s2 %}
-        <div class="q-item flex items-center justify-between p-3 bg-white hover:bg-slate-50 border rounded-2xl gap-3 transition shadow-xs {% if p.es_dudosa %}border-amber-300 bg-amber-50/30 is-dudosa{% else %}border-slate-200/90{% endif %}"
+        <div class="q-item flex items-center justify-between p-3 bg-white hover:bg-slate-50 border rounded-2xl gap-3 transition shadow-xs {% if p.es_dudosa %}border-amber-300 bg-amber-50/30{% else %}border-slate-200/90{% endif %}"
              id="row_s2_{{ p.num }}"
              data-sesion="s2"
              data-num="{{ p.num }}"
              data-dudosa="{% if p.es_dudosa %}1{% else %}0{% endif %}">
           
-          <!-- Lado Izquierdo: Número y Selector de Opciones -->
+          <!-- Lado Izquierdo: Número y Selector de Opciones Marcadas -->
           <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <span class="q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center {% if p.es_dudosa %}bg-amber-100 text-amber-900 border border-amber-300{% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
               {{ p.num }}
@@ -198,28 +182,28 @@
 
             <div class="inline-flex items-center gap-0.5 sm:gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/60 flex-wrap">
               {% for opt in p.opciones_disponibles %}
-              <label class="option-pill cursor-pointer select-none">
+              <label class="cursor-pointer select-none">
                 <input type="radio" 
                        name="s2_q_{{ p.num }}" 
                        value="{{ opt }}" 
                        {% if p.opcion == opt %}checked{% endif %} 
                        class="sr-only"
-                       onchange="updateQuestion('s2', '{{ p.num }}', '{{ opt }}')">
-                <span class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black text-slate-600 hover:bg-slate-200 transition">
+                       onchange="updateQuestionUI('s2', '{{ p.num }}', '{{ opt }}', this)">
+                <span class="option-pill-span w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black transition {% if p.opcion == opt %}is-active bg-indigo-600 text-white shadow-sm{% else %}text-slate-600 hover:bg-slate-200{% endif %}">
                   {{ opt }}
                 </span>
               </label>
               {% endfor %}
 
               <!-- Opción Z (Dudosa / Sin marca) -->
-              <label class="option-pill-z cursor-pointer select-none">
+              <label class="cursor-pointer select-none">
                 <input type="radio" 
                        name="s2_q_{{ p.num }}" 
                        value="Z" 
                        {% if p.opcion == 'Z' %}checked{% endif %} 
                        class="sr-only"
-                       onchange="updateQuestion('s2', '{{ p.num }}', 'Z')">
-                <span class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black text-slate-400 hover:bg-slate-200 transition"
+                       onchange="updateQuestionUI('s2', '{{ p.num }}', 'Z', this)">
+                <span class="option-pill-span-z w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black transition {% if p.opcion == 'Z' %}is-active bg-amber-500 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-200{% endif %}"
                       title="Dudosa / Sin responder">
                   —
                 </span>
@@ -243,29 +227,27 @@
     </div>
 
     {% else %}
-    <!-- SIMULACRO DIAGNÓSTICO (90 Preguntas) -->
+    <!-- SIMULACRO DIAGNÓSTICO (TODAS LAS 90 PREGUNTAS) -->
     <div class="space-y-4">
       <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 py-3 flex items-center justify-between">
         <div>
-          <h2 class="text-sm font-black text-indigo-950">Simulacro Diagnóstico • 90 Preguntas</h2>
+          <h2 class="text-sm font-black text-indigo-950">Simulacro Diagnóstico • 90 Preguntas para Verificar</h2>
           <p class="text-xs text-indigo-700">Matemáticas, Lectura, Sociales, Naturales e Inglés</p>
         </div>
-        <!-- Filtro Ver solo dudosas -->
-        <button type="button" id="btnToggleDudosas" onclick="toggleOnlyDudosas()"
-                class="py-1.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-xs hover:bg-slate-50 flex items-center gap-1.5 transition">
-          <span>⚠️ Solo dudosas</span>
-        </button>
+        <span class="text-xs font-mono font-bold text-indigo-600 bg-white px-2.5 py-1 rounded-lg border border-indigo-200">
+          Total: 90 Ítems
+        </span>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-3" id="gridSD">
         {% for p in preguntas_sd %}
-        <div class="q-item flex items-center justify-between p-3 bg-white hover:bg-slate-50 border rounded-2xl gap-3 transition shadow-xs {% if p.es_dudosa %}border-amber-300 bg-amber-50/30 is-dudosa{% else %}border-slate-200/90{% endif %}"
+        <div class="q-item flex items-center justify-between p-3 bg-white hover:bg-slate-50 border rounded-2xl gap-3 transition shadow-xs {% if p.es_dudosa %}border-amber-300 bg-amber-50/30{% else %}border-slate-200/90{% endif %}"
              id="row_sd_{{ p.num }}"
              data-sesion="sd"
              data-num="{{ p.num }}"
              data-dudosa="{% if p.es_dudosa %}1{% else %}0{% endif %}">
           
-          <!-- Lado Izquierdo: Número y Selector de Opciones -->
+          <!-- Lado Izquierdo: Número y Selector de Opciones Marcadas -->
           <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <span class="q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center {% if p.es_dudosa %}bg-amber-100 text-amber-900 border border-amber-300{% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
               {{ p.num }}
@@ -273,28 +255,28 @@
 
             <div class="inline-flex items-center gap-0.5 sm:gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/60 flex-wrap">
               {% for opt in p.opciones_disponibles %}
-              <label class="option-pill cursor-pointer select-none">
+              <label class="cursor-pointer select-none">
                 <input type="radio" 
                        name="sd_q_{{ p.num }}" 
                        value="{{ opt }}" 
                        {% if p.opcion == opt %}checked{% endif %} 
                        class="sr-only"
-                       onchange="updateQuestion('sd', '{{ p.num }}', '{{ opt }}')">
-                <span class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black text-slate-600 hover:bg-slate-200 transition">
+                       onchange="updateQuestionUI('sd', '{{ p.num }}', '{{ opt }}', this)">
+                <span class="option-pill-span w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black transition {% if p.opcion == opt %}is-active bg-indigo-600 text-white shadow-sm{% else %}text-slate-600 hover:bg-slate-200{% endif %}">
                   {{ opt }}
                 </span>
               </label>
               {% endfor %}
 
               <!-- Opción Z (Dudosa / Sin marca) -->
-              <label class="option-pill-z cursor-pointer select-none">
+              <label class="cursor-pointer select-none">
                 <input type="radio" 
                        name="sd_q_{{ p.num }}" 
                        value="Z" 
                        {% if p.opcion == 'Z' %}checked{% endif %} 
                        class="sr-only"
-                       onchange="updateQuestion('sd', '{{ p.num }}', 'Z')">
-                <span class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black text-slate-400 hover:bg-slate-200 transition"
+                       onchange="updateQuestionUI('sd', '{{ p.num }}', 'Z', this)">
+                <span class="option-pill-span-z w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black transition {% if p.opcion == 'Z' %}is-active bg-amber-500 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-200{% endif %}"
                       title="Dudosa / Sin responder">
                   —
                 </span>
@@ -318,7 +300,7 @@
     </div>
     {% endif %}
 
-    <!-- Sticky Bottom Bar -->
+    <!-- Barra Inferior Fija -->
     <div class="sticky bottom-4 z-30 bg-white/95 backdrop-blur-md border border-slate-200 rounded-3xl p-4 shadow-xl flex items-center justify-between">
       <div class="flex items-center gap-3">
         <a href="{% url 'simulacros:crear_con_omr' %}" 
@@ -326,7 +308,7 @@
           ← Volver a Subir
         </a>
         <div class="hidden sm:block text-xs text-slate-500">
-          Las selecciones se consolidan en el siguiente paso.
+          Todas las preguntas se encuentran listadas para su verificación.
         </div>
       </div>
 
@@ -346,8 +328,6 @@
 </div>
 
 <script>
-  let onlyDudosasActive = false;
-
   function switchSession(sesion) {
     const s1Cont = document.getElementById('sessionContainerS1');
     const s2Cont = document.getElementById('sessionContainerS2');
@@ -369,100 +349,58 @@
     }
   }
 
-  function updateQuestion(sesion, num, opt) {
+  function updateQuestionUI(sesion, num, opt, radioInput) {
     const row = document.getElementById(`row_${sesion}_${num}`);
     if (!row) return;
 
+    // Quitar estado activo de todos los spans en esta fila
+    const spans = row.querySelectorAll('.option-pill-span, .option-pill-span-z');
+    spans.forEach(span => {
+      span.classList.remove('is-active', 'bg-indigo-600', 'bg-amber-500', 'text-white', 'shadow-sm');
+      if (span.classList.contains('option-pill-span-z')) {
+        span.classList.add('text-slate-400');
+      } else {
+        span.classList.add('text-slate-600');
+      }
+    });
+
+    // Activar el span seleccionado
+    const selectedSpan = radioInput.nextElementSibling;
+    if (selectedSpan) {
+      if (opt === 'Z') {
+        selectedSpan.classList.add('is-active', 'bg-amber-500', 'text-white', 'shadow-sm');
+        selectedSpan.classList.remove('text-slate-400');
+      } else {
+        selectedSpan.classList.add('is-active', 'bg-indigo-600', 'text-white', 'shadow-sm');
+        selectedSpan.classList.remove('text-slate-600');
+      }
+    }
+
     const badge = row.querySelector('.q-badge');
     const isZ = (opt === 'Z');
-
     row.dataset.dudosa = isZ ? '1' : '0';
 
     if (isZ) {
-      row.classList.add('border-amber-300', 'bg-amber-50/30', 'is-dudosa');
+      row.classList.add('border-amber-300', 'bg-amber-50/30');
       row.classList.remove('border-slate-200/90');
       if (badge) {
         badge.className = 'q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center bg-amber-100 text-amber-900 border border-amber-300';
       }
     } else {
-      row.classList.remove('border-amber-300', 'bg-amber-50/30', 'is-dudosa');
+      row.classList.remove('border-amber-300', 'bg-amber-50/30');
       row.classList.add('border-slate-200/90');
       if (badge) {
         badge.className = 'q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center bg-slate-100 text-slate-700 border border-slate-200';
       }
     }
 
-    recalcCounters();
-  }
-
-  function recalcCounters() {
+    // Actualizar conteo de dudosas
     const totalDudosas = document.querySelectorAll('.q-item[data-dudosa="1"]').length;
-    const badge = document.getElementById('totalDudosasBadge');
-    if (badge) {
-      badge.textContent = totalDudosas;
-      if (totalDudosas === 0) {
-        badge.className = 'text-sm font-black text-emerald-600';
-      } else {
-        badge.className = 'text-sm font-black text-amber-600';
-      }
+    const totalBadge = document.getElementById('totalDudosasBadge');
+    if (totalBadge) {
+      totalBadge.textContent = totalDudosas;
+      totalBadge.className = totalDudosas === 0 ? 'text-sm font-black text-emerald-600' : 'text-sm font-black text-amber-600';
     }
-
-    const dudosasS1 = document.querySelectorAll('#gridS1 .q-item[data-dudosa="1"]').length;
-    const badgeS1 = document.getElementById('badgeTabS1');
-    if (badgeS1) {
-      if (dudosasS1 > 0) {
-        badgeS1.textContent = `${dudosasS1} dudosas`;
-        badgeS1.classList.remove('hidden');
-      } else {
-        badgeS1.classList.add('hidden');
-      }
-    }
-
-    const dudosasS2 = document.querySelectorAll('#gridS2 .q-item[data-dudosa="1"]').length;
-    const badgeS2 = document.getElementById('badgeTabS2');
-    if (badgeS2) {
-      if (dudosasS2 > 0) {
-        badgeS2.textContent = `${dudosasS2} dudosas`;
-        badgeS2.classList.remove('hidden');
-      } else {
-        badgeS2.classList.add('hidden');
-      }
-    }
-
-    if (onlyDudosasActive) {
-      applyDudosasFilter();
-    }
-  }
-
-  function toggleOnlyDudosas() {
-    onlyDudosasActive = !onlyDudosasActive;
-    const btn = document.getElementById('btnToggleDudosas');
-    if (onlyDudosasActive) {
-      if (btn) {
-        btn.classList.add('bg-amber-500', 'text-white', 'border-amber-600');
-        btn.classList.remove('bg-white', 'text-slate-700');
-      }
-    } else {
-      if (btn) {
-        btn.classList.remove('bg-amber-500', 'text-white', 'border-amber-600');
-        btn.classList.add('bg-white', 'text-slate-700');
-      }
-    }
-    applyDudosasFilter();
-  }
-
-  function applyDudosasFilter() {
-    document.querySelectorAll('.q-item').forEach(item => {
-      if (onlyDudosasActive) {
-        if (item.dataset.dudosa === '1') {
-          item.classList.remove('hidden');
-        } else {
-          item.classList.add('hidden');
-        }
-      } else {
-        item.classList.remove('hidden');
-      }
-    });
   }
 </script>
 {% endblock %}
