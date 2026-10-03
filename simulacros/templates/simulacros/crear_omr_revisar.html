@@ -1,24 +1,57 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Revisar Clave OMR | PreVirtual{% endblock %}
+{% block title %}Revisar Clave OMR por Pregunta | PreVirtual{% endblock %}
+
+{% block extra_css %}
+<style>
+  .option-pill input:checked + span {
+    background-color: #4f46e5 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+  }
+  .option-pill-z input:checked + span {
+    background-color: #f59e0b !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+<div class="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 
   <!-- Header -->
-  <div class="mb-8">
-    <div class="flex items-center gap-2 text-xs font-bold text-indigo-600 uppercase tracking-widest mb-1">
-      <span>Escaner Óptico OMR</span>
-      <span>•</span>
-      <span>Paso 2 de 3</span>
+  <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 text-xs font-bold text-indigo-600 uppercase tracking-widest mb-1">
+        <span>Escaner Óptico OMR</span>
+        <span>•</span>
+        <span>Paso 2 de 3</span>
+        <span>•</span>
+        <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200">Solo Superusuario</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black text-slate-900">
+        Revisión de Claves Pregunta por Pregunta
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-1">
+        A la derecha observa el recorte real de la hoja escaneada. A la izquierda selecciona o corrige la opción detectada.
+      </p>
     </div>
-    <h1 class="text-2xl sm:text-3xl font-black text-slate-900">
-      Verificar y Corregir Secuencia de Claves OMR
-    </h1>
-    <p class="text-sm text-slate-500 mt-1">
-      Revisa las respuestas detectadas por el escáner. Puedes editar directamente en cada campo si alguna burbuja fue leída erróneamente.
-    </p>
+
+    <!-- Quick Stats -->
+    <div class="flex items-center gap-3">
+      <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-2">
+        <span class="text-xs text-slate-500 font-medium">Total:</span>
+        <span class="text-sm font-black text-slate-800">{{ total_preguntas }}</span>
+      </div>
+      <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-2" id="badgeDudosasContainer">
+        <span class="text-xs text-slate-500 font-medium">Dudosas / Z:</span>
+        <span class="text-sm font-black {% if total_dudosas > 0 %}text-amber-600{% else %}text-emerald-600{% endif %}" id="totalDudosasBadge">
+          {{ total_dudosas }}
+        </span>
+      </div>
+    </div>
   </div>
 
   {% if messages %}
@@ -26,126 +59,286 @@
     {% for message in messages %}
     <div class="p-4 rounded-2xl text-sm font-medium flex items-center justify-between {% if message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% elif message.tags == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200{% else %}bg-green-50 text-green-800 border border-green-200{% endif %}">
       <span>{{ message }}</span>
-      <button @click="$el.parentElement.remove()" class="text-slate-400 hover:text-slate-700">✕</button>
+      <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-700">✕</button>
     </div>
     {% endfor %}
   </div>
   {% endif %}
 
-  <form method="POST" class="space-y-6">
+  <form method="POST" id="formRevisarOMR" class="space-y-6">
     {% csrf_token %}
 
     {% if tipo == 'completo' %}
-    <!-- SESIÓN 1 -->
-    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-4">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-          <span>📘</span> Sesión 1 — 120 Preguntas
-        </h2>
-        <span id="badge-total-s1" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
-          Total S1: <span id="count-total-s1">0</span> / 120
+    <!-- Selector de Sesión (Tabs) -->
+    <div class="bg-white p-2 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-2 sticky top-14 z-20 backdrop-blur-md bg-white/95">
+      <button type="button" id="tabBtnS1" onclick="switchSession('s1')" 
+              class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm">
+        <span>Sesión 1 (Preguntas 1 - 120)</span>
+        {% if dudosas_s1 > 0 %}
+        <span id="badgeTabS1" class="px-2 py-0.5 text-[11px] rounded-full bg-amber-400 text-amber-950 font-black">
+          {{ dudosas_s1 }} dudosas
         </span>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {% for tira in data.s1 %}
-        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-700 uppercase">Tira {{ tira.etiqueta }}</span>
-            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded badge-tira {% if tira.ok %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}"
-                  data-esperado="{{ tira.esperado }}">
-              <span class="tira-len">{{ tira.secuencia|length }}</span> / {{ tira.esperado }}
-            </span>
-          </div>
-          <textarea name="s1_{{ tira.etiqueta }}"
-                    rows="3"
-                    spellcheck="false"
-                    class="tira-input w-full font-mono text-sm uppercase p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-400 focus:outline-none resize-none bg-white tracking-widest"
-                    data-esperado="{{ tira.esperado }}">{{ tira.secuencia }}</textarea>
-          <p class="text-[11px] text-slate-400">Opciones: A, B, C, D</p>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- SESIÓN 2 -->
-    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-4">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-          <span>📙</span> Sesión 2 — 134 Preguntas
-        </h2>
-        <span id="badge-total-s2" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
-          Total S2: <span id="count-total-s2">0</span> / 134
-        </span>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {% for tira in data.s2 %}
-        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-700 uppercase">Tira {{ tira.etiqueta }}</span>
-            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded badge-tira {% if tira.ok %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}"
-                  data-esperado="{{ tira.esperado }}">
-              <span class="tira-len">{{ tira.secuencia|length }}</span> / {{ tira.esperado }}
-            </span>
-          </div>
-          <textarea name="s2_{{ tira.etiqueta }}"
-                    rows="3"
-                    spellcheck="false"
-                    class="tira-input w-full font-mono text-sm uppercase p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-400 focus:outline-none resize-none bg-white tracking-widest"
-                    data-esperado="{{ tira.esperado }}">{{ tira.secuencia }}</textarea>
-          <p class="text-[11px] text-slate-400">Opciones: A, B, C, D (o E..H en tiras de 8)</p>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
-    {% if tipo == 'diagnostico' %}
-    <!-- DIAGNÓSTICO -->
-    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-4">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-          <span>🩺</span> Simulacro Diagnóstico — 90 Preguntas
-        </h2>
-        <span id="badge-total-sd" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
-          Total: <span id="count-total-sd">0</span> / 90
-        </span>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {% for tira in data.sd %}
-        <div class="p-4 rounded-2xl bg-purple-50/50 border border-purple-100 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-purple-900 uppercase">Tira {{ tira.etiqueta }}</span>
-            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded badge-tira {% if tira.ok %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}"
-                  data-esperado="{{ tira.esperado }}">
-              <span class="tira-len">{{ tira.secuencia|length }}</span> / {{ tira.esperado }}
-            </span>
-          </div>
-          <textarea name="sd_{{ tira.etiqueta }}"
-                    rows="3"
-                    spellcheck="false"
-                    class="tira-input w-full font-mono text-sm uppercase p-2.5 rounded-xl border border-purple-200 focus:ring-2 focus:ring-purple-400 focus:outline-none resize-none bg-white tracking-widest"
-                    data-esperado="{{ tira.esperado }}">{{ tira.secuencia }}</textarea>
-          <p class="text-[11px] text-slate-400">Opciones: A, B, C, D</p>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- Botones de Acción -->
-    <div class="flex items-center justify-between pt-4">
-      <a href="{% url 'simulacros:crear_con_omr' %}"
-         class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 transition">
-        ← Volver a Subir
-      </a>
-
-      <button type="submit"
-              class="px-7 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm shadow-md shadow-green-600/20 transition flex items-center gap-2">
-        <span>Confirmar Claves y Continuar →</span>
+        {% endif %}
       </button>
+
+      <button type="button" id="tabBtnS2" onclick="switchSession('s2')" 
+              class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100">
+        <span>Sesión 2 (Preguntas 1 - 134)</span>
+        {% if dudosas_s2 > 0 %}
+        <span id="badgeTabS2" class="px-2 py-0.5 text-[11px] rounded-full bg-amber-400 text-amber-950 font-black">
+          {{ dudosas_s2 }} dudosas
+        </span>
+        {% endif %}
+      </button>
+
+      <!-- Filtro Ver solo dudosas -->
+      <button type="button" id="btnToggleDudosas" onclick="toggleOnlyDudosas()"
+              class="py-2.5 px-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 flex items-center gap-1.5 transition">
+        <span>⚠️ Solo dudosas</span>
+      </button>
+    </div>
+
+    <!-- CONTENEDOR SESIÓN 1 -->
+    <div id="sessionContainerS1" class="space-y-4">
+      <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 py-3 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-black text-indigo-950">Sesión 1 • 120 Preguntas</h2>
+          <p class="text-xs text-indigo-700">Matemáticas (1-30), Lectura (31-60), Sociales (61-90), Naturales (91-120)</p>
+        </div>
+        <span class="text-xs font-mono font-bold text-indigo-600 bg-white px-2.5 py-1 rounded-lg border border-indigo-200">
+          4 Opciones (A, B, C, D)
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3" id="gridS1">
+        {% for p in preguntas_s1 %}
+        <div class="q-item flex items-center justify-between p-3 bg-white hover:bg-slate-50 border rounded-2xl gap-3 transition shadow-xs {% if p.es_dudosa %}border-amber-300 bg-amber-50/30 is-dudosa{% else %}border-slate-200/90{% endif %}"
+             id="row_s1_{{ p.num }}"
+             data-sesion="s1"
+             data-num="{{ p.num }}"
+             data-dudosa="{% if p.es_dudosa %}1{% else %}0{% endif %}">
+          
+          <!-- Lado Izquierdo: Número y Selector de Opciones -->
+          <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <span class="q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center {% if p.es_dudosa %}bg-amber-100 text-amber-900 border border-amber-300{% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
+              {{ p.num }}
+            </span>
+
+            <div class="inline-flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/60">
+              {% for opt in p.opciones_disponibles %}
+              <label class="option-pill cursor-pointer select-none">
+                <input type="radio" 
+                       name="s1_q_{{ p.num }}" 
+                       value="{{ opt }}" 
+                       {% if p.opcion == opt %}checked{% endif %} 
+                       class="sr-only"
+                       onchange="updateQuestion('s1', '{{ p.num }}', '{{ opt }}')">
+                <span class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-xs font-black text-slate-600 hover:bg-slate-200 transition">
+                  {{ opt }}
+                </span>
+              </label>
+              {% endfor %}
+
+              <!-- Opción Z (Dudosa / Sin marca) -->
+              <label class="option-pill-z cursor-pointer select-none">
+                <input type="radio" 
+                       name="s1_q_{{ p.num }}" 
+                       value="Z" 
+                       {% if p.opcion == 'Z' %}checked{% endif %} 
+                       class="sr-only"
+                       onchange="updateQuestion('s1', '{{ p.num }}', 'Z')">
+                <span class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-xs font-black text-slate-400 hover:bg-slate-200 transition"
+                      title="Dudosa / Sin responder">
+                  —
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Lado Derecho: Recorte extraído de la pregunta -->
+          <div class="flex-1 max-w-[240px] sm:max-w-[290px] flex justify-end">
+            <div class="relative group cursor-zoom-in">
+              <img src="{{ p.img_url }}" 
+                   alt="S1 P{{ p.num }}" 
+                   class="h-8 sm:h-9 object-contain rounded-lg border border-slate-200 bg-white shadow-xs group-hover:scale-125 group-hover:shadow-md transition origin-right z-10"
+                   loading="lazy">
+            </div>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- CONTENEDOR SESIÓN 2 -->
+    <div id="sessionContainerS2" class="space-y-4 hidden">
+      <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 py-3 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-black text-indigo-950">Sesión 2 • 134 Preguntas</h2>
+          <p class="text-xs text-indigo-700">Sociales 2 (1-45), Matemáticas 2 (46-79), Naturales 2 (80-89), Inglés (90-134)</p>
+        </div>
+        <span class="text-xs font-mono font-bold text-indigo-600 bg-white px-2.5 py-1 rounded-lg border border-indigo-200">
+          Preguntas 80-134 tienen 8 opciones (A-H)
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3" id="gridS2">
+        {% for p in preguntas_s2 %}
+        <div class="q-item flex items-center justify-between p-3 bg-white hover:bg-slate-50 border rounded-2xl gap-3 transition shadow-xs {% if p.es_dudosa %}border-amber-300 bg-amber-50/30 is-dudosa{% else %}border-slate-200/90{% endif %}"
+             id="row_s2_{{ p.num }}"
+             data-sesion="s2"
+             data-num="{{ p.num }}"
+             data-dudosa="{% if p.es_dudosa %}1{% else %}0{% endif %}">
+          
+          <!-- Lado Izquierdo: Número y Selector de Opciones -->
+          <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            <span class="q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center {% if p.es_dudosa %}bg-amber-100 text-amber-900 border border-amber-300{% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
+              {{ p.num }}
+            </span>
+
+            <div class="inline-flex items-center gap-0.5 sm:gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/60 flex-wrap">
+              {% for opt in p.opciones_disponibles %}
+              <label class="option-pill cursor-pointer select-none">
+                <input type="radio" 
+                       name="s2_q_{{ p.num }}" 
+                       value="{{ opt }}" 
+                       {% if p.opcion == opt %}checked{% endif %} 
+                       class="sr-only"
+                       onchange="updateQuestion('s2', '{{ p.num }}', '{{ opt }}')">
+                <span class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black text-slate-600 hover:bg-slate-200 transition">
+                  {{ opt }}
+                </span>
+              </label>
+              {% endfor %}
+
+              <!-- Opción Z (Dudosa / Sin marca) -->
+              <label class="option-pill-z cursor-pointer select-none">
+                <input type="radio" 
+                       name="s2_q_{{ p.num }}" 
+                       value="Z" 
+                       {% if p.opcion == 'Z' %}checked{% endif %} 
+                       class="sr-only"
+                       onchange="updateQuestion('s2', '{{ p.num }}', 'Z')">
+                <span class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black text-slate-400 hover:bg-slate-200 transition"
+                      title="Dudosa / Sin responder">
+                  —
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Lado Derecho: Recorte extraído de la pregunta -->
+          <div class="flex-1 max-w-[240px] sm:max-w-[290px] flex justify-end">
+            <div class="relative group cursor-zoom-in">
+              <img src="{{ p.img_url }}" 
+                   alt="S2 P{{ p.num }}" 
+                   class="h-8 sm:h-9 object-contain rounded-lg border border-slate-200 bg-white shadow-xs group-hover:scale-125 group-hover:shadow-md transition origin-right z-10"
+                   loading="lazy">
+            </div>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% else %}
+    <!-- SIMULACRO DIAGNÓSTICO (90 Preguntas) -->
+    <div class="space-y-4">
+      <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 py-3 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-black text-indigo-950">Simulacro Diagnóstico • 90 Preguntas</h2>
+          <p class="text-xs text-indigo-700">Matemáticas, Lectura, Sociales, Naturales e Inglés</p>
+        </div>
+        <!-- Filtro Ver solo dudosas -->
+        <button type="button" id="btnToggleDudosas" onclick="toggleOnlyDudosas()"
+                class="py-1.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-xs hover:bg-slate-50 flex items-center gap-1.5 transition">
+          <span>⚠️ Solo dudosas</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3" id="gridSD">
+        {% for p in preguntas_sd %}
+        <div class="q-item flex items-center justify-between p-3 bg-white hover:bg-slate-50 border rounded-2xl gap-3 transition shadow-xs {% if p.es_dudosa %}border-amber-300 bg-amber-50/30 is-dudosa{% else %}border-slate-200/90{% endif %}"
+             id="row_sd_{{ p.num }}"
+             data-sesion="sd"
+             data-num="{{ p.num }}"
+             data-dudosa="{% if p.es_dudosa %}1{% else %}0{% endif %}">
+          
+          <!-- Lado Izquierdo: Número y Selector de Opciones -->
+          <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            <span class="q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center {% if p.es_dudosa %}bg-amber-100 text-amber-900 border border-amber-300{% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
+              {{ p.num }}
+            </span>
+
+            <div class="inline-flex items-center gap-0.5 sm:gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/60 flex-wrap">
+              {% for opt in p.opciones_disponibles %}
+              <label class="option-pill cursor-pointer select-none">
+                <input type="radio" 
+                       name="sd_q_{{ p.num }}" 
+                       value="{{ opt }}" 
+                       {% if p.opcion == opt %}checked{% endif %} 
+                       class="sr-only"
+                       onchange="updateQuestion('sd', '{{ p.num }}', '{{ opt }}')">
+                <span class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black text-slate-600 hover:bg-slate-200 transition">
+                  {{ opt }}
+                </span>
+              </label>
+              {% endfor %}
+
+              <!-- Opción Z (Dudosa / Sin marca) -->
+              <label class="option-pill-z cursor-pointer select-none">
+                <input type="radio" 
+                       name="sd_q_{{ p.num }}" 
+                       value="Z" 
+                       {% if p.opcion == 'Z' %}checked{% endif %} 
+                       class="sr-only"
+                       onchange="updateQuestion('sd', '{{ p.num }}', 'Z')">
+                <span class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black text-slate-400 hover:bg-slate-200 transition"
+                      title="Dudosa / Sin responder">
+                  —
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Lado Derecho: Recorte extraído de la pregunta -->
+          <div class="flex-1 max-w-[240px] sm:max-w-[290px] flex justify-end">
+            <div class="relative group cursor-zoom-in">
+              <img src="{{ p.img_url }}" 
+                   alt="SD P{{ p.num }}" 
+                   class="h-8 sm:h-9 object-contain rounded-lg border border-slate-200 bg-white shadow-xs group-hover:scale-125 group-hover:shadow-md transition origin-right z-10"
+                   loading="lazy">
+            </div>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Sticky Bottom Bar -->
+    <div class="sticky bottom-4 z-30 bg-white/95 backdrop-blur-md border border-slate-200 rounded-3xl p-4 shadow-xl flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="{% url 'simulacros:crear_con_omr' %}" 
+           class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition text-xs sm:text-sm">
+          ← Volver a Subir
+        </a>
+        <div class="hidden sm:block text-xs text-slate-500">
+          Las selecciones se consolidan en el siguiente paso.
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button type="submit" 
+                class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs sm:text-sm shadow-md shadow-indigo-500/20 hover:shadow-lg transition flex items-center gap-2">
+          <span>Continuar al Paso 3 (Guardar)</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
   </form>
@@ -153,76 +346,123 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  function actualizarContadores() {
-    const inputs = document.querySelectorAll('.tira-input');
-    let totalS1 = 0;
-    let totalS2 = 0;
-    let totalSD = 0;
+  let onlyDudosasActive = false;
 
-    inputs.forEach(input => {
-      // Limpiar caracteres inválidos
-      const limpio = input.value.replace(/[^A-Za-z]/g, '').toUpperCase();
-      if (input.value !== limpio) {
-        input.value = limpio;
-      }
+  function switchSession(sesion) {
+    const s1Cont = document.getElementById('sessionContainerS1');
+    const s2Cont = document.getElementById('sessionContainerS2');
+    const tabS1 = document.getElementById('tabBtnS1');
+    const tabS2 = document.getElementById('tabBtnS2');
 
-      const esperado = parseInt(input.dataset.esperado, 10);
-      const actual = limpio.length;
-      const parent = input.closest('div');
-      const badge = parent.querySelector('.badge-tira');
-      const lenSpan = badge ? badge.querySelector('.tira-len') : null;
+    if (!s1Cont || !s2Cont) return;
 
-      if (lenSpan) lenSpan.textContent = actual;
-
-      if (badge) {
-        if (actual === esperado) {
-          badge.className = 'text-xs font-mono font-bold px-2 py-0.5 rounded badge-tira bg-green-100 text-green-800';
-          input.classList.remove('border-red-400', 'bg-red-50');
-        } else {
-          badge.className = 'text-xs font-mono font-bold px-2 py-0.5 rounded badge-tira bg-red-100 text-red-800';
-          input.classList.add('border-red-400', 'bg-red-50');
-        }
-      }
-
-      if (input.name.startsWith('s1_')) totalS1 += actual;
-      if (input.name.startsWith('s2_')) totalS2 += actual;
-      if (input.name.startsWith('sd_')) totalSD += actual;
-    });
-
-    const countS1 = document.getElementById('count-total-s1');
-    if (countS1) {
-      countS1.textContent = totalS1;
-      const bS1 = document.getElementById('badge-total-s1');
-      if (bS1) {
-        bS1.className = totalS1 === 120 ? 'text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-800' : 'text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-800';
-      }
-    }
-
-    const countS2 = document.getElementById('count-total-s2');
-    if (countS2) {
-      countS2.textContent = totalS2;
-      const bS2 = document.getElementById('badge-total-s2');
-      if (bS2) {
-        bS2.className = totalS2 === 134 ? 'text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-800' : 'text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-800';
-      }
-    }
-
-    const countSD = document.getElementById('count-total-sd');
-    if (countSD) {
-      countSD.textContent = totalSD;
-      const bSD = document.getElementById('badge-total-sd');
-      if (bSD) {
-        bSD.className = totalSD === 90 ? 'text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-800' : 'text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-800';
-      }
+    if (sesion === 's1') {
+      s1Cont.classList.remove('hidden');
+      s2Cont.classList.add('hidden');
+      tabS1.className = 'flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm';
+      tabS2.className = 'flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100';
+    } else {
+      s1Cont.classList.add('hidden');
+      s2Cont.classList.remove('hidden');
+      tabS2.className = 'flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm';
+      tabS1.className = 'flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100';
     }
   }
 
-  document.querySelectorAll('.tira-input').forEach(input => {
-    input.addEventListener('input', actualizarContadores);
-  });
+  function updateQuestion(sesion, num, opt) {
+    const row = document.getElementById(`row_${sesion}_${num}`);
+    if (!row) return;
 
-  actualizarContadores();
-});
+    const badge = row.querySelector('.q-badge');
+    const isZ = (opt === 'Z');
+
+    row.dataset.dudosa = isZ ? '1' : '0';
+
+    if (isZ) {
+      row.classList.add('border-amber-300', 'bg-amber-50/30', 'is-dudosa');
+      row.classList.remove('border-slate-200/90');
+      if (badge) {
+        badge.className = 'q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center bg-amber-100 text-amber-900 border border-amber-300';
+      }
+    } else {
+      row.classList.remove('border-amber-300', 'bg-amber-50/30', 'is-dudosa');
+      row.classList.add('border-slate-200/90');
+      if (badge) {
+        badge.className = 'q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center bg-slate-100 text-slate-700 border border-slate-200';
+      }
+    }
+
+    recalcCounters();
+  }
+
+  function recalcCounters() {
+    const totalDudosas = document.querySelectorAll('.q-item[data-dudosa="1"]').length;
+    const badge = document.getElementById('totalDudosasBadge');
+    if (badge) {
+      badge.textContent = totalDudosas;
+      if (totalDudosas === 0) {
+        badge.className = 'text-sm font-black text-emerald-600';
+      } else {
+        badge.className = 'text-sm font-black text-amber-600';
+      }
+    }
+
+    const dudosasS1 = document.querySelectorAll('#gridS1 .q-item[data-dudosa="1"]').length;
+    const badgeS1 = document.getElementById('badgeTabS1');
+    if (badgeS1) {
+      if (dudosasS1 > 0) {
+        badgeS1.textContent = `${dudosasS1} dudosas`;
+        badgeS1.classList.remove('hidden');
+      } else {
+        badgeS1.classList.add('hidden');
+      }
+    }
+
+    const dudosasS2 = document.querySelectorAll('#gridS2 .q-item[data-dudosa="1"]').length;
+    const badgeS2 = document.getElementById('badgeTabS2');
+    if (badgeS2) {
+      if (dudosasS2 > 0) {
+        badgeS2.textContent = `${dudosasS2} dudosas`;
+        badgeS2.classList.remove('hidden');
+      } else {
+        badgeS2.classList.add('hidden');
+      }
+    }
+
+    if (onlyDudosasActive) {
+      applyDudosasFilter();
+    }
+  }
+
+  function toggleOnlyDudosas() {
+    onlyDudosasActive = !onlyDudosasActive;
+    const btn = document.getElementById('btnToggleDudosas');
+    if (onlyDudosasActive) {
+      if (btn) {
+        btn.classList.add('bg-amber-500', 'text-white', 'border-amber-600');
+        btn.classList.remove('bg-white', 'text-slate-700');
+      }
+    } else {
+      if (btn) {
+        btn.classList.remove('bg-amber-500', 'text-white', 'border-amber-600');
+        btn.classList.add('bg-white', 'text-slate-700');
+      }
+    }
+    applyDudosasFilter();
+  }
+
+  function applyDudosasFilter() {
+    document.querySelectorAll('.q-item').forEach(item => {
+      if (onlyDudosasActive) {
+        if (item.dataset.dudosa === '1') {
+          item.classList.remove('hidden');
+        } else {
+          item.classList.add('hidden');
+        }
+      } else {
+        item.classList.remove('hidden');
+      }
+    });
+  }
 </script>
 {% endblock %}

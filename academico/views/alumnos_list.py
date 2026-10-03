@@ -32,6 +32,12 @@ class AlumnosListView(UserPassesTestMixin, LoginRequiredMixin, ListView):
     paginate_by = 20
     login_url = 'login'
 
+    def get_paginate_by(self, queryset):
+        param = self.request.GET.get('todos') or self.request.GET.get('all')
+        if param in ('1', 'true', 'si', 'all', 'todos'):
+            return None
+        return self.paginate_by
+
     def test_func(self):
         user = self.request.user
         if not user.is_authenticated:
@@ -285,7 +291,8 @@ class AlumnosListView(UserPassesTestMixin, LoginRequiredMixin, ListView):
         
         # Preparar alumnos con información adicional
         alumnos_con_info = []
-        for alumno in context['page_obj']:
+        lista_alumnos = context.get('page_obj') or context.get('alumnos') or context.get('object_list') or []
+        for alumno in lista_alumnos:
             # Determinar si el alumno ha culminado
             fecha_actual = timezone.localtime(timezone.now()).date()
             culminado = False

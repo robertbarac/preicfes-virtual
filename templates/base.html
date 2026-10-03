@@ -134,6 +134,80 @@
             color: #FFFFFF !important;
         }
         {% endif %}
+
+        /* ================= ESTILOS PARA IMPRESIÓN (Ctrl + P) ================= */
+        @media print {
+            html, body {
+                height: auto !important;
+                min-height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+
+            /* Ocultar barra lateral, cabeceras, pies de página y elementos marcados */
+            aside,
+            header,
+            footer,
+            .sidebar,
+            [x-data*="sidebarOpen"] > div:first-child,
+            [x-data*="sidebarOpen"] > div:nth-child(2),
+            button[aria-label="Abrir menú"],
+            .no-print {
+                display: none !important;
+                visibility: hidden !important;
+            }
+
+            /* Desenvolver el layout flex/h-screen para permitir flujo multipágina continuo */
+            [x-data*="sidebarOpen"] {
+                display: block !important;
+                height: auto !important;
+                width: 100% !important;
+                overflow: visible !important;
+            }
+
+            main {
+                display: block !important;
+                flex: none !important;
+                overflow: visible !important;
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+            }
+
+            .max-w-7xl, .container {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .overflow-x-auto, .overflow-y-auto {
+                overflow: visible !important;
+            }
+
+            /* Rompimiento de tablas en múltiples páginas */
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                page-break-inside: auto !important;
+            }
+
+            thead {
+                display: table-header-group !important;
+            }
+
+            tr {
+                page-break-inside: avoid !important;
+                page-break-after: auto !important;
+            }
+        }
     </style>
 </head>
 
@@ -288,6 +362,7 @@
                             </svg>
                             <span>Resultados Simulacros</span>
                         </a>
+                        {% if request.user.is_superuser %}
                         <a href="{% url 'simulacros:crear_con_omr' %}"
                             class="sidebar-item {% if 'crear-con-omr' in request.path %}active{% endif %}">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -296,6 +371,7 @@
                             </svg>
                             <span>Nuevo Simulacro OMR</span>
                         </a>
+                        {% endif %}
                         <a href="{% url 'cartera:becados_list' %}"
                             class="sidebar-item {% if 'becados' in request.path %}active{% endif %}">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">

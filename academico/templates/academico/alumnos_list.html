@@ -1,13 +1,61 @@
 {% extends 'base.html' %}
 
+{% block extra_css %}
+<style>
+@media print {
+    @page {
+        size: landscape;
+        margin: 8mm;
+    }
+    body {
+        font-size: 8pt !important;
+        background: #ffffff !important;
+    }
+    table {
+        width: 100% !important;
+        font-size: 7.5pt !important;
+        border-collapse: collapse !important;
+    }
+    th, td {
+        padding: 3px 4px !important;
+        border: 1px solid #e5e7eb !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+    thead {
+        display: table-header-group !important;
+    }
+    tr {
+        page-break-inside: avoid !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}
+
 {% block title %}Lista Alumnos{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
+    <!-- Encabezado exclusivo para impresión (Ctrl + P) -->
+    <div class="hidden print:block mb-4 border-b-2 border-slate-800 pb-2">
+        <div class="flex justify-between items-end">
+            <div>
+                <h1 class="text-xl font-black text-slate-900">Listado General de Alumnos</h1>
+                <p class="text-xs text-slate-600">GV Valdez Campus PreICFES</p>
+            </div>
+            <div class="text-right text-xs text-slate-600">
+                <p>Fecha de emisión: {% now "d/m/Y H:i" %}</p>
+                <p class="font-bold">Total registros: {{ total_alumnos }}</p>
+            </div>
+        </div>
+    </div>
     <h1 class="text-3xl font-bold mb-4">Lista de Alumnos</h1>
 
     <!-- Formulario de búsqueda -->
-    <form method="get" class="mb-6 bg-white p-4 rounded-lg shadow-md">
+    <form method="get" class="mb-6 bg-white p-4 rounded-lg shadow-md no-print">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="sm:col-span-2">
                 <label for="buscador" class="block text-sm font-medium text-gray-700">Nombres / Apellidos / Identificación / Nombres Padres / Nombres Madres</label>
@@ -160,8 +208,32 @@
     <div class="mb-4">
         <div class="bg-white p-4 rounded-lg shadow-md">
             <div class="flex justify-between items-center">
-                <div>
+                <div class="flex items-center gap-3">
                     <span class="text-lg font-semibold">Total: {{ total_alumnos }} alumno{{ total_alumnos|pluralize }}</span>
+                    {% if is_paginated %}
+                    <a href="?todos=1{% if query_string %}&{{ query_string }}{% endif %}" 
+                       class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-md no-print"
+                       title="Cargar todos los alumnos para imprimir la lista completa sin cortes de página">
+                        📄 Ver todos los {{ total_alumnos }} para imprimir
+                    </a>
+                    {% elif request.GET.todos == '1' %}
+                    <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md no-print">
+                        ✓ Mostrando todos los {{ total_alumnos }} alumnos
+                    </span>
+                    <a href="{% url 'alumnos_list' %}{% if query_string %}?{{ query_string }}{% endif %}"
+                       class="text-xs text-slate-500 hover:text-slate-800 underline no-print">
+                        Volver a paginar (20 por pág)
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="no-print flex items-center gap-2">
+                    <button type="button" onclick="window.print()" 
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold shadow-sm transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                        </svg>
+                        <span>Imprimir (Ctrl+P)</span>
+                    </button>
                 </div>
                 {% if filtros_activos %}
                 <div>
@@ -189,7 +261,7 @@
     </div>
 
     {% if perms.academico.add_alumno %}
-    <div class="mt-4">
+    <div class="mt-4 no-print">
         <a href="/admin/academico/alumno/add/"
             class="inline-flex justify-center py-1 px-3 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
             <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -203,7 +275,7 @@
     {% endif %}
     <!-- Paginación -->
     {% if is_paginated %}
-    <div class="mt-6 flex justify-center">
+    <div class="mt-6 flex justify-center no-print">
         <ol class="flex justify-center gap-1 text-xs font-medium">
             <!-- Botón "Anterior" -->
             {% if page_obj.has_previous %}
@@ -304,7 +376,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
-                {% for alumno in page_obj %}
+                {% for alumno in page_obj|default:alumnos %}
                 <tr onclick="window.location='{% url 'alumno_detail' alumno.id %}';"
                     class="cursor-pointer hover:bg-gray-50 transition duration-200">
                     <td class="px-3 py-2 whitespace-nowrap">

@@ -1,19 +1,37 @@
 import os
+import shutil
+import uuid
 import tempfile
+import cv2
+import numpy as np
+
 from django.views import View
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.conf import settings
 from django.urls import reverse
-from django.core.exceptions import ValidationError
 
 from ..models import (
     Simulacro, SimulacroDiagnostico,
     _DEFAULT_COMPONENTES_S1, _DEFAULT_COMPONENTES_S2, _DEFAULT_COMPONENTES_SD
 )
 from ..procesar_simulacro import (
-    extraer_tiras_individuales, extraer_tiras_diagnostico, LONGITUDES_ESPERADAS
+    normalizar_hoja, hacer_tiras, encontrar_circulos_en_tira, evaluar_tira,
+    LONGITUDES_ESPERADAS, ETIQUETAS_S1, ETIQUETAS_S2, ETIQUETAS_SD
 )
+
+
+class SuperuserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    """Restringe el acceso exclusivamente a superusuarios."""
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.is_superuser
+
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            return redirect('login')
+        raise PermissionDenied("Solo los superusuarios pueden acceder a la creación de simulacros por OMR.")
 
 
 def _guardar_temp_file(uploaded_file):
@@ -26,7 +44,168 @@ def _guardar_temp_file(uploaded_file):
     return tmp.name
 
 
-class CrearSimulacroOMRView(LoginRequiredMixin, View):
+def _extraer_preguntas_con_recortes(path_imagen, modo, token, user=None):
+    """
+    Procesa una hoja modelo escaneada, extrae las tiras y recorta individualmente
+    cada pregunta (fila de burbujas), guardando el recorte como imagen JPEG.
+    
+    Retorna:
+        list of dicts: [
+            {
+                'num': 1,
+                'opcion': 'A',  # detectada por OMR o 'Z' si vacía/dudosa
+                'n_opciones': 4, # 4 u 8
+                'opciones_disponibles': ['A', 'B', 'C', 'D'],
+                'img_url': '/media/temp_omr_crops/<token>/s1_q1.jpg',
+                'materia': 'Matemáticas',
+                'columna': 'C1',
+                'es_dudosa': False,
+            },
+            ...
+        ]
+    """
+    crops_dir = os.path.join(settings.MEDIA_ROOT, 'temp_omr_crops', token)
+    os.makedirs(crops_dir, exist_ok=True)
+
+    img = cv2.imread(path_imagen)
+    if img is None:
+        raise ValueError(f"No se pudo cargar la imagen: {path_imagen}")
+    
+    img = normalizar_hoja(img)
+    tiras = hacer_tiras(img, modo, user=user)
+
+    # Nombres de materia según columna y modo
+    MATERIAS_S1 = {
+        'C1': 'Matemáticas (1-30)',
+        'C2': 'Lectura Crítica (31-60)',
+        'C3': 'Sociales y Ciudadanas (61-90)',
+        'C4': 'Ciencias Naturales (91-120)',
+    }
+    MATERIAS_S2 = {
+        'C1': 'Sociales y Ciudadanas 2 (1-45)',
+        'C2a': 'Matemáticas 2 (46-79)',
+        'C2b': 'Ciencias Naturales 2 (80-89)',
+        'C3': 'Inglés (90-134)',
+    }
+    MATERIAS_SD = {
+        'C1': 'Matemáticas / Lectura (1-30)',
+        'C2': 'Lectura / Sociales / Naturales (31-60)',
+        'C3a': 'Ciencias Naturales (61-72)',
+        'C3b': 'Inglés (73-90)',
+    }
+
+    if modo == 'S1':
+        materias_map = MATERIAS_S1
+    elif modo == 'S2':
+        materias_map = MATERIAS_S2
+    else:
+        materias_map = MATERIAS_SD
+
+    preguntas = []
+    q_global_num = 1
+
+    for i, (tira_img, n_opciones, _etq) in enumerate(tiras):
+        if modo == 'S1':
+            etiqueta = ETIQUETAS_S1[i]
+        elif modo == 'S2':
+            etiqueta = ETIQUETAS_S2[i]
+        else:
+            etiqueta = ETIQUETAS_SD[i]
+
+        esperado = LONGITUDES_ESPERADAS[modo][etiqueta]
+        materia_label = materias_map.get(etiqueta, f"Columna {etiqueta}")
+
+        # OMR sobre la tira
+        imgThresh, circulos, _ = encontrar_circulos_en_tira(tira_img, n_opciones)
+        respuestas = evaluar_tira(circulos, imgThresh, n_opciones)
+
+        # Agrupar círculos en filas para extraer coordenadas verticales
+        burbujas = []
+        for c in circulos:
+            x, y, w, h = cv2.boundingRect(c)
+            burbujas.append({'x': x, 'y': y, 'w': w, 'h': h, 'cY': y + h // 2})
+
+        filas = []
+        if burbujas:
+            burbujas = sorted(burbujas, key=lambda b: b['cY'])
+            tol_y = burbujas[0]['h'] * 0.70
+            fila_cur = [burbujas[0]]
+            for b in burbujas[1:]:
+                if abs(b['cY'] - fila_cur[-1]['cY']) < tol_y:
+                    fila_cur.append(b)
+                else:
+                    filas.append(fila_cur)
+                    fila_cur = [b]
+            filas.append(fila_cur)
+
+        H_tira, W_tira = tira_img.shape[:2]
+        row_height = H_tira / float(esperado) if esperado > 0 else 30
+
+        # Para cada una de las preguntas de esta tira
+        for k in range(esperado):
+            opcion = respuestas[k] if k < len(respuestas) else 'Z'
+            if opcion not in ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'):
+                opcion = 'Z'
+
+            # Determinar coordenadas de recorte vertical
+            if len(filas) == esperado:
+                f = filas[k]
+                min_y = min(b['y'] for b in f)
+                max_y = max(b['y'] + b['h'] for b in f)
+                pad = 6
+                y1 = max(0, min_y - pad)
+                y2 = min(H_tira, max_y + pad)
+            else:
+                # Sincronización por centroide o rejilla proporcional
+                target_cy = (k + 0.5) * row_height
+                matching_f = None
+                for f in filas:
+                    c_y = sum(b['cY'] for b in f) / float(len(f))
+                    if abs(c_y - target_cy) < row_height * 0.45:
+                        matching_f = f
+                        break
+                if matching_f:
+                    min_y = min(b['y'] for b in matching_f)
+                    max_y = max(b['y'] + b['h'] for b in matching_f)
+                    pad = 6
+                    y1 = max(0, min_y - pad)
+                    y2 = min(H_tira, max_y + pad)
+                else:
+                    y1 = max(0, int(k * row_height))
+                    y2 = min(H_tira, int((k + 1) * row_height))
+
+            # Extraer recorte
+            crop_img = tira_img[y1:y2, 0:W_tira]
+            if crop_img.size == 0 or crop_img.shape[0] < 5:
+                y1 = max(0, int(k * row_height))
+                y2 = min(H_tira, int((k + 1) * row_height))
+                crop_img = tira_img[y1:y2, 0:W_tira]
+
+            # Guardar recorte
+            crop_name = f"{modo.lower()}_{etiqueta.lower()}_q{q_global_num}.jpg"
+            crop_path = os.path.join(crops_dir, crop_name)
+            cv2.imwrite(crop_path, crop_img)
+
+            img_url = f"{settings.MEDIA_URL}temp_omr_crops/{token}/{crop_name}"
+            opciones_disp = ['A', 'B', 'C', 'D'] if n_opciones == 4 else ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+
+            preguntas.append({
+                'num': q_global_num,
+                'opcion': opcion,
+                'n_opciones': n_opciones,
+                'opciones_disponibles': opciones_disp,
+                'img_url': img_url,
+                'materia': materia_label,
+                'columna': etiqueta,
+                'es_dudosa': (opcion == 'Z'),
+            })
+
+            q_global_num += 1
+
+    return preguntas
+
+
+class CrearSimulacroOMRView(SuperuserRequiredMixin, View):
     """Paso 1: Subir imagen(es) de la hoja modelo para escanear con OMR."""
     template_name = 'simulacros/crear_omr_subir.html'
 
@@ -35,6 +214,7 @@ class CrearSimulacroOMRView(LoginRequiredMixin, View):
 
     def post(self, request):
         tipo = request.POST.get('tipo', 'completo')
+        token = uuid.uuid4().hex
 
         if tipo == 'completo':
             file_s1 = request.FILES.get('imagen_s1')
@@ -48,41 +228,42 @@ class CrearSimulacroOMRView(LoginRequiredMixin, View):
             path_s2 = _guardar_temp_file(file_s2)
 
             try:
-                res = extraer_tiras_individuales(path_s1, path_s2, user=request.user)
+                preguntas_s1 = _extraer_preguntas_con_recortes(path_s1, 'S1', token, user=request.user)
+                preguntas_s2 = _extraer_preguntas_con_recortes(path_s2, 'S2', token, user=request.user)
+            except Exception as e:
+                messages.error(request, f"Error al procesar las hojas con OMR: {e}")
+                return render(request, self.template_name, {'tipo_seleccionado': tipo})
             finally:
                 if os.path.exists(path_s1): os.remove(path_s1)
                 if os.path.exists(path_s2): os.remove(path_s2)
 
-            if res.get('error'):
-                messages.warning(request, f"Advertencia OMR: {res['error']}")
-
             request.session['clave_omr_data'] = {
+                'token': token,
                 'tipo': 'completo',
-                's1': res['s1'],
-                's2': res['s2'],
-                'error': res.get('error'),
+                'preguntas_s1': preguntas_s1,
+                'preguntas_s2': preguntas_s2,
             }
             return redirect('simulacros:revisar_clave_omr')
 
         elif tipo == 'diagnostico':
             file_sd = request.FILES.get('imagen_sd')
             if not file_sd:
-                messages.error(request, "Debes subir la hoja modelo del Simulacro Diagnóstico (90P).")
+                messages.error(request, "Debes subir la hoja modelo del Simulacro Diagnóstico (90 preguntas).")
                 return render(request, self.template_name, {'tipo_seleccionado': tipo})
 
             path_sd = _guardar_temp_file(file_sd)
             try:
-                res = extraer_tiras_diagnostico(path_sd, user=request.user)
+                preguntas_sd = _extraer_preguntas_con_recortes(path_sd, 'SD', token, user=request.user)
+            except Exception as e:
+                messages.error(request, f"Error al procesar la hoja de diagnóstico con OMR: {e}")
+                return render(request, self.template_name, {'tipo_seleccionado': tipo})
             finally:
                 if os.path.exists(path_sd): os.remove(path_sd)
 
-            if res.get('error'):
-                messages.warning(request, f"Advertencia OMR: {res['error']}")
-
             request.session['clave_omr_data'] = {
+                'token': token,
                 'tipo': 'diagnostico',
-                'sd': res['sd'],
-                'error': res.get('error'),
+                'preguntas_sd': preguntas_sd,
             }
             return redirect('simulacros:revisar_clave_omr')
 
@@ -90,8 +271,8 @@ class CrearSimulacroOMRView(LoginRequiredMixin, View):
         return render(request, self.template_name)
 
 
-class RevisarClaveOMRView(LoginRequiredMixin, View):
-    """Paso 2: Revisar y corregir individualmente cada opción detectada por el OMR."""
+class RevisarClaveOMRView(SuperuserRequiredMixin, View):
+    """Paso 2: Revisar y corregir pregunta por pregunta con su imagen recortada y selector de opciones."""
     template_name = 'simulacros/crear_omr_revisar.html'
 
     def get(self, request):
@@ -100,11 +281,34 @@ class RevisarClaveOMRView(LoginRequiredMixin, View):
             messages.error(request, "No hay escaneos pendientes de revisión. Por favor sube la hoja modelo.")
             return redirect('simulacros:crear_con_omr')
 
+        tipo = data['tipo']
         context = {
-            'data': data,
-            'tipo': data['tipo'],
-            'longitudes': LONGITUDES_ESPERADAS,
+            'tipo': tipo,
+            'token': data.get('token'),
         }
+
+        if tipo == 'completo':
+            preguntas_s1 = data.get('preguntas_s1', [])
+            preguntas_s2 = data.get('preguntas_s2', [])
+            dudosas_s1 = sum(1 for p in preguntas_s1 if p.get('es_dudosa'))
+            dudosas_s2 = sum(1 for p in preguntas_s2 if p.get('es_dudosa'))
+            context.update({
+                'preguntas_s1': preguntas_s1,
+                'preguntas_s2': preguntas_s2,
+                'total_preguntas': len(preguntas_s1) + len(preguntas_s2),
+                'total_dudosas': dudosas_s1 + dudosas_s2,
+                'dudosas_s1': dudosas_s1,
+                'dudosas_s2': dudosas_s2,
+            })
+        else:
+            preguntas_sd = data.get('preguntas_sd', [])
+            dudosas_sd = sum(1 for p in preguntas_sd if p.get('es_dudosa'))
+            context.update({
+                'preguntas_sd': preguntas_sd,
+                'total_preguntas': len(preguntas_sd),
+                'total_dudosas': dudosas_sd,
+            })
+
         return render(request, self.template_name, context)
 
     def post(self, request):
@@ -116,30 +320,22 @@ class RevisarClaveOMRView(LoginRequiredMixin, View):
         tipo = data['tipo']
 
         if tipo == 'completo':
-            s1_tiras = []
-            for tira in data['s1']:
-                etq = tira['etiqueta']
-                val = request.POST.get(f"s1_{etq}", tira['secuencia']).upper().strip()
-                s1_tiras.append(val)
+            s1_vals = [request.POST.get(f"s1_q_{i}", 'Z').upper().strip() for i in range(1, 121)]
+            s2_vals = [request.POST.get(f"s2_q_{i}", 'Z').upper().strip() for i in range(1, 135)]
 
-            s2_tiras = []
-            for tira in data['s2']:
-                etq = tira['etiqueta']
-                val = request.POST.get(f"s2_{etq}", tira['secuencia']).upper().strip()
-                s2_tiras.append(val)
+            # Normalizar caracteres no reconocidos
+            s1_vals = [v if v in ('A', 'B', 'C', 'D') else 'Z' for v in s1_vals]
+            s2_vals = [v if v in ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H') else 'Z' for v in s2_vals]
 
-            seq_s1 = ''.join(s1_tiras)
-            seq_s2 = ''.join(s2_tiras)
+            seq_s1 = ''.join(s1_vals)
+            seq_s2 = ''.join(s2_vals)
 
-            if len(seq_s1) != 120:
-                messages.error(request, f"La Sesión 1 debe tener exactamente 120 respuestas. Actualmente tiene {len(seq_s1)}.")
-                return render(request, self.template_name, {'data': data, 'tipo': tipo, 'longitudes': LONGITUDES_ESPERADAS})
-
-            if len(seq_s2) != 134:
-                messages.error(request, f"La Sesión 2 debe tener exactamente 134 respuestas. Actualmente tiene {len(seq_s2)}.")
-                return render(request, self.template_name, {'data': data, 'tipo': tipo, 'longitudes': LONGITUDES_ESPERADAS})
+            if len(seq_s1) != 120 or len(seq_s2) != 134:
+                messages.error(request, "Las respuestas no tienen la longitud esperada (120 en S1 y 134 en S2).")
+                return self.get(request)
 
             request.session['clave_omr_final'] = {
+                'token': data.get('token'),
                 'tipo': 'completo',
                 'soluciones_s1': seq_s1,
                 'soluciones_s2': seq_s2,
@@ -147,18 +343,16 @@ class RevisarClaveOMRView(LoginRequiredMixin, View):
             return redirect('simulacros:guardar_simulacro_omr')
 
         elif tipo == 'diagnostico':
-            sd_tiras = []
-            for tira in data['sd']:
-                etq = tira['etiqueta']
-                val = request.POST.get(f"sd_{etq}", tira['secuencia']).upper().strip()
-                sd_tiras.append(val)
+            sd_vals = [request.POST.get(f"sd_q_{i}", 'Z').upper().strip() for i in range(1, 91)]
+            sd_vals = [v if v in ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H') else 'Z' for v in sd_vals]
 
-            seq_sd = ''.join(sd_tiras)
+            seq_sd = ''.join(sd_vals)
             if len(seq_sd) != 90:
-                messages.error(request, f"El Simulacro Diagnóstico debe tener exactamente 90 respuestas. Actualmente tiene {len(seq_sd)}.")
-                return render(request, self.template_name, {'data': data, 'tipo': tipo, 'longitudes': LONGITUDES_ESPERADAS})
+                messages.error(request, "El Simulacro Diagnóstico debe tener exactamente 90 respuestas.")
+                return self.get(request)
 
             request.session['clave_omr_final'] = {
+                'token': data.get('token'),
                 'tipo': 'diagnostico',
                 'soluciones': seq_sd,
             }
@@ -167,7 +361,7 @@ class RevisarClaveOMRView(LoginRequiredMixin, View):
         return redirect('simulacros:crear_con_omr')
 
 
-class GuardarSimulacroOMRView(LoginRequiredMixin, View):
+class GuardarSimulacroOMRView(SuperuserRequiredMixin, View):
     """Paso 3: Formulario final para guardar el objeto con sus demás parámetros."""
     template_name = 'simulacros/crear_omr_guardar.html'
 
@@ -196,6 +390,7 @@ class GuardarSimulacroOMRView(LoginRequiredMixin, View):
 
         tipo = final_data['tipo']
         nombre = request.POST.get('nombre', '').strip()
+        token = final_data.get('token')
 
         if not nombre:
             messages.error(request, "El nombre del simulacro es obligatorio.")
@@ -213,6 +408,15 @@ class GuardarSimulacroOMRView(LoginRequiredMixin, View):
         except (ValueError, TypeError):
             messages.error(request, "Los valores numéricos de umbrales y objetivos deben ser válidos.")
             return self.get(request)
+
+        def _cleanup_crops():
+            if token:
+                crops_dir = os.path.join(settings.MEDIA_ROOT, 'temp_omr_crops', token)
+                if os.path.exists(crops_dir):
+                    try:
+                        shutil.rmtree(crops_dir)
+                    except Exception:
+                        pass
 
         if tipo == 'completo':
             soluciones_s1 = request.POST.get('soluciones_s1', final_data.get('soluciones_s1', '')).strip().upper()
@@ -238,7 +442,7 @@ class GuardarSimulacroOMRView(LoginRequiredMixin, View):
             simulacro.full_clean()
             simulacro.save()
 
-            # Limpiar datos de sesión
+            _cleanup_crops()
             request.session.pop('clave_omr_data', None)
             request.session.pop('clave_omr_final', None)
 
@@ -265,6 +469,7 @@ class GuardarSimulacroOMRView(LoginRequiredMixin, View):
             simulacro_diag.full_clean()
             simulacro_diag.save()
 
+            _cleanup_crops()
             request.session.pop('clave_omr_data', None)
             request.session.pop('clave_omr_final', None)
 
