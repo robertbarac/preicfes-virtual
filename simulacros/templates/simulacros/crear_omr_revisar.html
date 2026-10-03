@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Revisar Clave OMR | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 text-xs font-bold text-indigo-600 uppercase tracking-widest mb-1">
+      <span>Escaner Óptico OMR</span>
+      <span>•</span>
+      <span>Paso 2 de 3</span>
+    </div>
+    <h1 class="text-2xl sm:text-3xl font-black text-slate-900">
+      Verificar y Corregir Secuencia de Claves OMR
+    </h1>
+    <p class="text-sm text-slate-500 mt-1">
+      Revisa las respuestas detectadas por el escáner. Puedes editar directamente en cada campo si alguna burbuja fue leída erróneamente.
+    </p>
+  </div>
+
+  {% if messages %}
+  <div class="space-y-3 mb-6">
+    {% for message in messages %}
+    <div class="p-4 rounded-2xl text-sm font-medium flex items-center justify-between {% if message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% elif message.tags == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200{% else %}bg-green-50 text-green-800 border border-green-200{% endif %}">
+      <span>{{ message }}</span>
+      <button @click="$el.parentElement.remove()" class="text-slate-400 hover:text-slate-700">✕</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="POST" class="space-y-6">
+    {% csrf_token %}
+
+    {% if tipo == 'completo' %}
+    <!-- SESIÓN 1 -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <span>📘</span> Sesión 1 — 120 Preguntas
+        </h2>
+        <span id="badge-total-s1" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+          Total S1: <span id="count-total-s1">0</span> / 120
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {% for tira in data.s1 %}
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700 uppercase">Tira {{ tira.etiqueta }}</span>
+            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded badge-tira {% if tira.ok %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}"
+                  data-esperado="{{ tira.esperado }}">
+              <span class="tira-len">{{ tira.secuencia|length }}</span> / {{ tira.esperado }}
+            </span>
+          </div>
+          <textarea name="s1_{{ tira.etiqueta }}"
+                    rows="3"
+                    spellcheck="false"
+                    class="tira-input w-full font-mono text-sm uppercase p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-400 focus:outline-none resize-none bg-white tracking-widest"
+                    data-esperado="{{ tira.esperado }}">{{ tira.secuencia }}</textarea>
+          <p class="text-[11px] text-slate-400">Opciones: A, B, C, D</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- SESIÓN 2 -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <span>📙</span> Sesión 2 — 134 Preguntas
+        </h2>
+        <span id="badge-total-s2" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+          Total S2: <span id="count-total-s2">0</span> / 134
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {% for tira in data.s2 %}
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700 uppercase">Tira {{ tira.etiqueta }}</span>
+            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded badge-tira {% if tira.ok %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}"
+                  data-esperado="{{ tira.esperado }}">
+              <span class="tira-len">{{ tira.secuencia|length }}</span> / {{ tira.esperado }}
+            </span>
+          </div>
+          <textarea name="s2_{{ tira.etiqueta }}"
+                    rows="3"
+                    spellcheck="false"
+                    class="tira-input w-full font-mono text-sm uppercase p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-400 focus:outline-none resize-none bg-white tracking-widest"
+                    data-esperado="{{ tira.esperado }}">{{ tira.secuencia }}</textarea>
+          <p class="text-[11px] text-slate-400">Opciones: A, B, C, D (o E..H en tiras de 8)</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if tipo == 'diagnostico' %}
+    <!-- DIAGNÓSTICO -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <span>🩺</span> Simulacro Diagnóstico — 90 Preguntas
+        </h2>
+        <span id="badge-total-sd" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+          Total: <span id="count-total-sd">0</span> / 90
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {% for tira in data.sd %}
+        <div class="p-4 rounded-2xl bg-purple-50/50 border border-purple-100 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-purple-900 uppercase">Tira {{ tira.etiqueta }}</span>
+            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded badge-tira {% if tira.ok %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}"
+                  data-esperado="{{ tira.esperado }}">
+              <span class="tira-len">{{ tira.secuencia|length }}</span> / {{ tira.esperado }}
+            </span>
+          </div>
+          <textarea name="sd_{{ tira.etiqueta }}"
+                    rows="3"
+                    spellcheck="false"
+                    class="tira-input w-full font-mono text-sm uppercase p-2.5 rounded-xl border border-purple-200 focus:ring-2 focus:ring-purple-400 focus:outline-none resize-none bg-white tracking-widest"
+                    data-esperado="{{ tira.esperado }}">{{ tira.secuencia }}</textarea>
+          <p class="text-[11px] text-slate-400">Opciones: A, B, C, D</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Botones de Acción -->
+    <div class="flex items-center justify-between pt-4">
+      <a href="{% url 'simulacros:crear_con_omr' %}"
+         class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 transition">
+        ← Volver a Subir
+      </a>
+
+      <button type="submit"
+              class="px-7 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm shadow-md shadow-green-600/20 transition flex items-center gap-2">
+        <span>Confirmar Claves y Continuar →</span>
+      </button>
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function actualizarContadores() {
+    const inputs = document.querySelectorAll('.tira-input');
+    let totalS1 = 0;
+    let totalS2 = 0;
+    let totalSD = 0;
+
+    inputs.forEach(input => {
+      // Limpiar caracteres inválidos
+      const limpio = input.value.replace(/[^A-Za-z]/g, '').toUpperCase();
+      if (input.value !== limpio) {
+        input.value = limpio;
+      }
+
+      const esperado = parseInt(input.dataset.esperado, 10);
+      const actual = limpio.length;
+      const parent = input.closest('div');
+      const badge = parent.querySelector('.badge-tira');
+      const lenSpan = badge ? badge.querySelector('.tira-len') : null;
+
+      if (lenSpan) lenSpan.textContent = actual;
+
+      if (badge) {
+        if (actual === esperado) {
+          badge.className = 'text-xs font-mono font-bold px-2 py-0.5 rounded badge-tira bg-green-100 text-green-800';
+          input.classList.remove('border-red-400', 'bg-red-50');
+        } else {
+          badge.className = 'text-xs font-mono font-bold px-2 py-0.5 rounded badge-tira bg-red-100 text-red-800';
+          input.classList.add('border-red-400', 'bg-red-50');
+        }
+      }
+
+      if (input.name.startsWith('s1_')) totalS1 += actual;
+      if (input.name.startsWith('s2_')) totalS2 += actual;
+      if (input.name.startsWith('sd_')) totalSD += actual;
+    });
+
+    const countS1 = document.getElementById('count-total-s1');
+    if (countS1) {
+      countS1.textContent = totalS1;
+      const bS1 = document.getElementById('badge-total-s1');
+      if (bS1) {
+        bS1.className = totalS1 === 120 ? 'text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-800' : 'text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-800';
+      }
+    }
+
+    const countS2 = document.getElementById('count-total-s2');
+    if (countS2) {
+      countS2.textContent = totalS2;
+      const bS2 = document.getElementById('badge-total-s2');
+      if (bS2) {
+        bS2.className = totalS2 === 134 ? 'text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-800' : 'text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-800';
+      }
+    }
+
+    const countSD = document.getElementById('count-total-sd');
+    if (countSD) {
+      countSD.textContent = totalSD;
+      const bSD = document.getElementById('badge-total-sd');
+      if (bSD) {
+        bSD.className = totalSD === 90 ? 'text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-800' : 'text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-800';
+      }
+    }
+  }
+
+  document.querySelectorAll('.tira-input').forEach(input => {
+    input.addEventListener('input', actualizarContadores);
+  });
+
+  actualizarContadores();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Guardar Simulacro OMR | PreVirtual{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 text-xs font-bold text-emerald-600 uppercase tracking-widest mb-1">
+      <span>Escaner Óptico OMR</span>
+      <span>•</span>
+      <span>Paso 3 de 3</span>
+    </div>
+    <h1 class="text-2xl sm:text-3xl font-black text-slate-900">
+      {% if tipo == 'completo' %}Guardar Simulacro Presencial (Completo){% else %}Guardar Simulacro Diagnóstico (90 Preguntas){% endif %}
+    </h1>
+    <p class="text-sm text-slate-500 mt-1">
+      Las secuencias de respuestas OMR han sido verificadas. Asigna el nombre al simulacro y ajusta los parámetros de escala y ponderación antes de guardar.
+    </p>
+  </div>
+
+  <!-- Messages -->
+  {% if messages %}
+  <div class="space-y-3 mb-6">
+    {% for message in messages %}
+    <div class="p-4 rounded-2xl text-sm font-medium flex items-center justify-between {% if message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% elif message.tags == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200{% else %}bg-green-50 text-green-800 border border-green-200{% endif %}">
+      <span>{{ message }}</span>
+      <button @click="$el.parentElement.remove()" class="text-slate-400 hover:text-slate-700">✕</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="POST" class="space-y-6">
+    {% csrf_token %}
+
+    <!-- Nombre y Tipo -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">1. Identificación del Examen</h2>
+          <p class="text-xs text-slate-500">Nombre único con el cual los docentes y directivos identificarán esta prueba.</p>
+        </div>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+          {% if tipo == 'completo' %}S1 (120) + S2 (134){% else %}Diagnóstico (90 ítems){% endif %}
+        </span>
+      </div>
+
+      <div>
+        <label for="nombre" class="block text-sm font-bold text-slate-700 mb-2">
+          Nombre del Simulacro <span class="text-red-500">*</span>
+        </label>
+        <input type="text" name="nombre" id="nombre" required
+               class="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-800 font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors shadow-sm"
+               placeholder="Ej: Simulacro Presencial ICFES 2026-I">
+      </div>
+    </div>
+
+    <!-- Secuencias Verificadas OMR -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-5">
+      <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">2. Claves de Respuestas Validadas</h2>
+          <p class="text-xs text-slate-500">Cadena de caracteres leída del OMR que se empleará para calificar las hojas de los estudiantes.</p>
+        </div>
+        <a href="{% url 'simulacros:revisar_clave_omr' %}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline">
+          Volver a editar tiras
+        </a>
+      </div>
+
+      {% if tipo == 'completo' %}
+      <div class="space-y-4">
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-bold text-slate-700">Sesión 1 (120 ítems)</span>
+            <span class="text-xs font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">120 / 120 caracteres</span>
+          </div>
+          <textarea name="soluciones_s1" rows="3" readonly
+                    class="w-full font-mono text-sm tracking-widest bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 select-all cursor-text focus:outline-none">{{ soluciones_s1 }}</textarea>
+          <div class="text-[11px] text-slate-400 mt-1 flex flex-wrap gap-2">
+            <span>Matemáticas: 1-30</span> • 
+            <span>Lectura Crítica: 31-60</span> • 
+            <span>Sociales y Ciudadanas: 61-90</span> • 
+            <span>Ciencias Naturales: 91-120</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-bold text-slate-700">Sesión 2 (134 ítems)</span>
+            <span class="text-xs font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">134 / 134 caracteres</span>
+          </div>
+          <textarea name="soluciones_s2" rows="3" readonly
+                    class="w-full font-mono text-sm tracking-widest bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 select-all cursor-text focus:outline-none">{{ soluciones_s2 }}</textarea>
+          <div class="text-[11px] text-slate-400 mt-1 flex flex-wrap gap-2">
+            <span>Sociales y Ciudadanas 2: 1-48</span> • 
+            <span>Matemáticas 2: 49-79</span> • 
+            <span>Ciencias Naturales 2: 80-96</span> • 
+            <span>Inglés: 97-134</span>
+          </div>
+        </div>
+      </div>
+
+      {% else %}
+      <div>
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs font-bold text-slate-700">Simulacro Diagnóstico (90 ítems)</span>
+          <span class="text-xs font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">90 / 90 caracteres</span>
+        </div>
+        <textarea name="soluciones" rows="3" readonly
+                  class="w-full font-mono text-sm tracking-widest bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 select-all cursor-text focus:outline-none">{{ soluciones }}</textarea>
+        <div class="text-[11px] text-slate-400 mt-1 flex flex-wrap gap-2">
+          <span>Matemáticas: 1-18</span> • 
+          <span>Lectura Crítica: 19-36</span> • 
+          <span>Sociales y Ciudadanas: 37-54</span> • 
+          <span>Ciencias Naturales: 55-72</span> • 
+          <span>Inglés: 73-90</span>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Parámetros de Escala y Puntajes Modificados -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6">
+      <div class="border-b border-slate-100 pb-4">
+        <h2 class="text-lg font-bold text-slate-900">3. Parámetros de Modificación y Umbrales</h2>
+        <p class="text-xs text-slate-500">Configuración matemática para el cálculo de puntajes ajustados y estimación de progreso.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div>
+          <label for="umbral" class="block text-xs font-bold text-slate-600 mb-1">Umbral Mínimo</label>
+          <input type="number" name="umbral" id="umbral" value="200" required
+                 class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold focus:ring-emerald-500 focus:border-emerald-500">
+          <p class="text-[10px] text-slate-400 mt-0.5">Puntaje global base (def: 200)</p>
+        </div>
+
+        <div>
+          <label for="umbral_1" class="block text-xs font-bold text-slate-600 mb-1">Umbral 1</label>
+          <input type="number" name="umbral_1" id="umbral_1" value="140" required
+                 class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold focus:ring-emerald-500 focus:border-emerald-500">
+          <p class="text-[10px] text-slate-400 mt-0.5">Rango inferior (def: 140)</p>
+        </div>
+
+        <div>
+          <label for="objetivo_1" class="block text-xs font-bold text-slate-600 mb-1">Objetivo Base 1</label>
+          <input type="number" name="objetivo_1" id="objetivo_1" value="245" required
+                 class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold focus:ring-emerald-500 focus:border-emerald-500">
+          <p class="text-[10px] text-slate-400 mt-0.5">Meta nivel 1 (def: 245)</p>
+        </div>
+
+        <div>
+          <label for="umbral_2" class="block text-xs font-bold text-slate-600 mb-1">Umbral 2</label>
+          <input type="number" name="umbral_2" id="umbral_2" value="240" required
+                 class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold focus:ring-emerald-500 focus:border-emerald-500">
+          <p class="text-[10px] text-slate-400 mt-0.5">Rango medio (def: 240)</p>
+        </div>
+
+        <div>
+          <label for="objetivo_2" class="block text-xs font-bold text-slate-600 mb-1">Objetivo Base 2</label>
+          <input type="number" name="objetivo_2" id="objetivo_2" value="280" required
+                 class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold focus:ring-emerald-500 focus:border-emerald-500">
+          <p class="text-[10px] text-slate-400 mt-0.5">Meta nivel 2 (def: 280)</p>
+        </div>
+
+        <div>
+          <label for="objetivo_3" class="block text-xs font-bold text-slate-600 mb-1">Objetivo Base 3</label>
+          <input type="number" name="objetivo_3" id="objetivo_3" value="310" required
+                 class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold focus:ring-emerald-500 focus:border-emerald-500">
+          <p class="text-[10px] text-slate-400 mt-0.5">Meta nivel 3 (def: 310)</p>
+        </div>
+
+        <div>
+          <label for="boost_min" class="block text-xs font-bold text-slate-600 mb-1">Boost Mínimo</label>
+          <input type="number" name="boost_min" id="boost_min" value="6" required
+                 class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold focus:ring-emerald-500 focus:border-emerald-500">
+          <p class="text-[10px] text-slate-400 mt-0.5">Aumento mín (def: 6)</p>
+        </div>
+
+        <div>
+          <label for="boost_max" class="block text-xs font-bold text-slate-600 mb-1">Boost Máximo</label>
+          <input type="number" name="boost_max" id="boost_max" value="12" required
+                 class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold focus:ring-emerald-500 focus:border-emerald-500">
+          <p class="text-[10px] text-slate-400 mt-0.5">Aumento máx (def: 12)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-between pt-4">
+      <a href="{% url 'simulacros:revisar_clave_omr' %}" 
+         class="px-6 py-3 rounded-2xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-colors shadow-sm text-sm">
+        ← Volver al Paso 2
+      </a>
+
+      <button type="submit"
+              class="px-8 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black tracking-wide shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Guardar y Crear Simulacro</span>
+      </button>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}

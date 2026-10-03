@@ -63,13 +63,41 @@ class PreguntaTallerInline(admin.TabularInline):
     extra = 1
     autocomplete_fields = ['pregunta']
 
+class TallerPresencialFilter(admin.SimpleListFilter):
+    title = 'modalidad / clase'
+    parameter_name = 'es_presencial'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('1', 'Taller presencial (Asociado a Clase)'),
+            ('0', 'Taller virtual (Sin clase asociada)'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == '1':
+            return queryset.filter(clases_presenciales__isnull=False).distinct()
+        if self.value() == '0':
+            return queryset.filter(clases_presenciales__isnull=True)
+        return queryset
+
 @admin.register(Taller)
 class TallerAdmin(admin.ModelAdmin):
-    list_display = ('titulo', 'modulo', 'tema', 'orden', 'intentos_permitidos')
-    list_filter = ('modulo', 'tema')
+    list_display = ('titulo', 'get_materia', 'tema', 'modulo', 'es_taller_presencial', 'orden', 'intentos_permitidos')
+    list_filter = (TallerPresencialFilter, 'tema__materia', 'modulo', 'tema')
     search_fields = ('titulo', 'descripcion')
     autocomplete_fields = ['tema']
     inlines = [PreguntaTallerInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('modulo', 'tema', 'tema__materia').prefetch_related('clases_presenciales')
+
+    @admin.display(description='Materia', ordering='tema__materia__nombre')
+    def get_materia(self, obj):
+        return obj.tema.materia if obj.tema else None
+
+    @admin.display(boolean=True, description='¿Presencial?')
+    def es_taller_presencial(self, obj):
+        return bool(obj.clases_presenciales.all())
 
 class RespuestaTallerInline(admin.TabularInline):
     model = RespuestaTaller

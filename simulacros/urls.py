@@ -15,4 +15,7 @@ urlpatterns = [
     path('resultados/informe-directivo/', views.DescargarInformeDirectivoPDFView.as_view(), name='descargar_informe_directivo'),
     path('resultados/informe-directivo-real/', views.DescargarInformeDirectivoRealPDFView.as_view(), name='descargar_informe_directivo_real'),
     path('resultados/<int:resultado_pk>/pdf/', views.DescargarResultadoIndividualPDFView.as_view(), name='descargar_resultado_individual_pdf'),
+    path('crear-con-omr/', views.CrearSimulacroOMRView.as_view(), name='crear_con_omr'),
+    path('crear-con-omr/revisar/', views.RevisarClaveOMRView.as_view(), name='revisar_clave_omr'),
+    path('crear-con-omr/guardar/', views.GuardarSimulacroOMRView.as_view(), name='guardar_simulacro_omr'),
 ]

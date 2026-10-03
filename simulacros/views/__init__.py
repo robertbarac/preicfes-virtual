@@ -3,3 +3,5 @@ from .calificar_diagnostico import GrupoCalificarDiagnosticoView, RevisarDiagnos
 from .resultados import ResultadosSimulacroListView
 from .resultados_diagnostico import ResultadosDiagnosticoListView
 from .pdf import DescargarResultadosPDFView, DescargarInformeDirectivoPDFView, DescargarInformeDirectivoRealPDFView, DescargarResultadosRealesPDFView, DescargarResultadoIndividualPDFView
+from .crear_omr import CrearSimulacroOMRView, RevisarClaveOMRView, GuardarSimulacroOMRView
+

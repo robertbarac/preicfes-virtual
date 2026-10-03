@@ -46,5 +46,5 @@ urlpatterns = [
     path('ventas/', include('ventas.urls')),
     path('academico/', include('academico.urls')),
     path('ubicaciones/', include('ubicaciones.urls')),
-    path('simulacros-fisicos/', include('simulacros.urls')),
+    path('simulacros/', include('simulacros.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
