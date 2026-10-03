@@ -478,7 +478,7 @@
                   <div class="text-right">
                     <span class="text-xs text-slate-400 block font-semibold">Puntaje Global</span>
                     <span class="text-2xl sm:text-3xl font-black text-[#155EEF]">
-                      {% if sim.estado == 'Calificado' %}{{ sim.puntaje_global|floatformat:0 }} <span class="text-xs text-slate-400 font-normal">/ 500</span>{% else %}--{% endif %}
+                      {% if sim.estado == 'Calificado' %}{{ sim.puntaje_global_modificado|floatformat:0 }} <span class="text-xs text-slate-400 font-normal">/ 500</span>{% else %}--{% endif %}
                     </span>
                   </div>
                   {% if sim.estado == 'Calificado' %}
@@ -497,23 +497,23 @@
               <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-4">
                 <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
                   <span class="text-[11px] font-semibold text-slate-500 block">Matemáticas</span>
-                  <span class="text-base font-black text-slate-800 mt-1 block">{{ sim.puntaje_matematicas|floatformat:0 }}</span>
+                  <span class="text-base font-black text-slate-800 mt-1 block">{{ sim.puntaje_matematicas_modificado|floatformat:0 }}</span>
                 </div>
                 <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
                   <span class="text-[11px] font-semibold text-slate-500 block">Lectura Crítica</span>
-                  <span class="text-base font-black text-slate-800 mt-1 block">{{ sim.puntaje_lectura|floatformat:0 }}</span>
+                  <span class="text-base font-black text-slate-800 mt-1 block">{{ sim.puntaje_lectura_modificado|floatformat:0 }}</span>
                 </div>
                 <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
                   <span class="text-[11px] font-semibold text-slate-500 block">Sociales</span>
-                  <span class="text-base font-black text-slate-800 mt-1 block">{{ sim.puntaje_sociales|floatformat:0 }}</span>
+                  <span class="text-base font-black text-slate-800 mt-1 block">{{ sim.puntaje_sociales_modificado|floatformat:0 }}</span>
                 </div>
                 <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
                   <span class="text-[11px] font-semibold text-slate-500 block">Naturales</span>
-                  <span class="text-base font-black text-slate-800 mt-1 block">{{ sim.puntaje_naturales|floatformat:0 }}</span>
+                  <span class="text-base font-black text-slate-800 mt-1 block">{{ sim.puntaje_naturales_modificado|floatformat:0 }}</span>
                 </div>
                 <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
                   <span class="text-[11px] font-semibold text-slate-500 block">Inglés</span>
-                  <span class="text-base font-black text-slate-800 mt-1 block">{{ sim.puntaje_ingles|floatformat:0 }}</span>
+                  <span class="text-base font-black text-slate-800 mt-1 block">{{ sim.puntaje_ingles_modificado|floatformat:0 }}</span>
                 </div>
               </div>
             </div>
@@ -548,7 +548,7 @@
                 <div class="text-right">
                   <span class="text-xs text-slate-400 block font-semibold">Puntaje Global</span>
                   <span class="text-2xl sm:text-3xl font-black text-purple-700">
-                    {{ diag.puntaje_global|floatformat:0 }} <span class="text-xs text-slate-400 font-normal">/ 500</span>
+                    {{ diag.puntaje_global_modificado|floatformat:0 }} <span class="text-xs text-slate-400 font-normal">/ 500</span>
                   </span>
                 </div>
               </div>
@@ -556,23 +556,23 @@
               <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-4">
                 <div class="p-3 rounded-2xl bg-purple-50/50 border border-purple-100 text-center">
                   <span class="text-[11px] font-semibold text-slate-500 block">Matemáticas</span>
-                  <span class="text-base font-black text-slate-800 mt-1 block">{{ diag.puntaje_matematicas|floatformat:0 }}</span>
+                  <span class="text-base font-black text-slate-800 mt-1 block">{{ diag.puntaje_matematicas_modificado|floatformat:0 }}</span>
                 </div>
                 <div class="p-3 rounded-2xl bg-purple-50/50 border border-purple-100 text-center">
                   <span class="text-[11px] font-semibold text-slate-500 block">Lectura</span>
-                  <span class="text-base font-black text-slate-800 mt-1 block">{{ diag.puntaje_lectura|floatformat:0 }}</span>
+                  <span class="text-base font-black text-slate-800 mt-1 block">{{ diag.puntaje_lectura_modificado|floatformat:0 }}</span>
                 </div>
                 <div class="p-3 rounded-2xl bg-purple-50/50 border border-purple-100 text-center">
                   <span class="text-[11px] font-semibold text-slate-500 block">Sociales</span>
-                  <span class="text-base font-black text-slate-800 mt-1 block">{{ diag.puntaje_sociales|floatformat:0 }}</span>
+                  <span class="text-base font-black text-slate-800 mt-1 block">{{ diag.puntaje_sociales_modificado|floatformat:0 }}</span>
                 </div>
                 <div class="p-3 rounded-2xl bg-purple-50/50 border border-purple-100 text-center">
                   <span class="text-[11px] font-semibold text-slate-500 block">Naturales</span>
-                  <span class="text-base font-black text-slate-800 mt-1 block">{{ diag.puntaje_naturales|floatformat:0 }}</span>
+                  <span class="text-base font-black text-slate-800 mt-1 block">{{ diag.puntaje_naturales_modificado|floatformat:0 }}</span>
                 </div>
                 <div class="p-3 rounded-2xl bg-purple-50/50 border border-purple-100 text-center">
                   <span class="text-[11px] font-semibold text-slate-500 block">Inglés</span>
-                  <span class="text-base font-black text-slate-800 mt-1 block">{{ diag.puntaje_ingles|floatformat:0 }}</span>
+                  <span class="text-base font-black text-slate-800 mt-1 block">{{ diag.puntaje_ingles_modificado|floatformat:0 }}</span>
                 </div>
               </div>
             </div>

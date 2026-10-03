@@ -509,7 +509,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-center">{{ resultado.fecha_realizacion|date:"d/m/Y"|default:"-" }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold">
                                 {% if resultado.estado == 'Calificado' %}
-                                    {{ resultado.puntaje_global|floatformat:"0" }}
+                                    {{ resultado.puntaje_global_modificado|floatformat:"0" }}
                                 {% else %}
                                     -
                                 {% endif %}
