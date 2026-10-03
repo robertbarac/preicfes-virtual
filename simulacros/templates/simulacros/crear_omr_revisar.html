@@ -35,7 +35,7 @@
         Revisión de Claves Pregunta por Pregunta
       </h1>
       <p class="text-xs sm:text-sm text-slate-500 mt-1">
-        La opción detectada por el OMR aparece <span class="font-bold text-indigo-600">marcada en azul</span>. A la derecha puedes contrastar contra el recorte real de la hoja para verificar o cambiar cualquier opción con un clic.
+        La opción detectada por el OMR aparece <span class="font-bold text-indigo-600">marcada en azul</span>. Haz clic en cualquier imagen para abrirla en <span class="font-semibold text-slate-700">Zoom Ampliado</span> y contrastar las burbujas (especialmente útil en preguntas de 8 opciones).
       </p>
     </div>
 
@@ -139,14 +139,20 @@
             </div>
           </div>
 
-          <!-- Lado Derecho: Recorte extraído de la pregunta -->
+          <!-- Lado Derecho: Recorte extraído de la pregunta con Zoom al clic -->
           <div class="flex-1 max-w-[240px] sm:max-w-[290px] flex justify-end">
-            <div class="relative group cursor-zoom-in">
+            <button type="button" 
+                    onclick="abrirModalZoom('{{ p.img_url }}', 'Sesión 1 - Pregunta {{ p.num }}', 's1', '{{ p.num }}')"
+                    class="relative group cursor-zoom-in block rounded-lg overflow-hidden border border-slate-200 bg-white shadow-2xs hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                    title="Haz clic para ver zoom ampliado">
               <img src="{{ p.img_url }}" 
                    alt="S1 P{{ p.num }}" 
-                   class="h-8 sm:h-9 object-contain rounded-lg border border-slate-200 bg-white shadow-xs group-hover:scale-125 group-hover:shadow-md transition origin-right z-10"
+                   class="h-8 sm:h-9 object-contain group-hover:scale-105 transition-transform"
                    loading="lazy">
-            </div>
+              <div class="absolute inset-0 bg-indigo-900/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                <span class="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow">🔍 Zoom</span>
+              </div>
+            </button>
           </div>
 
         </div>
@@ -211,14 +217,20 @@
             </div>
           </div>
 
-          <!-- Lado Derecho: Recorte extraído de la pregunta -->
+          <!-- Lado Derecho: Recorte extraído con Zoom al clic -->
           <div class="flex-1 max-w-[240px] sm:max-w-[290px] flex justify-end">
-            <div class="relative group cursor-zoom-in">
+            <button type="button" 
+                    onclick="abrirModalZoom('{{ p.img_url }}', 'Sesión 2 - Pregunta {{ p.num }}', 's2', '{{ p.num }}')"
+                    class="relative group cursor-zoom-in block rounded-lg overflow-hidden border border-slate-200 bg-white shadow-2xs hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                    title="Haz clic para ver zoom ampliado">
               <img src="{{ p.img_url }}" 
                    alt="S2 P{{ p.num }}" 
-                   class="h-8 sm:h-9 object-contain rounded-lg border border-slate-200 bg-white shadow-xs group-hover:scale-125 group-hover:shadow-md transition origin-right z-10"
+                   class="h-8 sm:h-9 object-contain group-hover:scale-105 transition-transform"
                    loading="lazy">
-            </div>
+              <div class="absolute inset-0 bg-indigo-900/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                <span class="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow">🔍 Zoom</span>
+              </div>
+            </button>
           </div>
 
         </div>
@@ -232,7 +244,7 @@
       <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 py-3 flex items-center justify-between">
         <div>
           <h2 class="text-sm font-black text-indigo-950">Simulacro Diagnóstico • 90 Preguntas para Verificar</h2>
-          <p class="text-xs text-indigo-700">Matemáticas, Lectura, Sociales, Naturales e Inglés</p>
+          <p class="text-xs text-indigo-700">Matemáticas, Lectura, Sociales, Naturales e Inglés (Haz clic en cualquier recorte para Zoom)</p>
         </div>
         <span class="text-xs font-mono font-bold text-indigo-600 bg-white px-2.5 py-1 rounded-lg border border-indigo-200">
           Total: 90 Ítems
@@ -284,14 +296,20 @@
             </div>
           </div>
 
-          <!-- Lado Derecho: Recorte extraído de la pregunta -->
+          <!-- Lado Derecho: Recorte extraído con Zoom al clic -->
           <div class="flex-1 max-w-[240px] sm:max-w-[290px] flex justify-end">
-            <div class="relative group cursor-zoom-in">
+            <button type="button" 
+                    onclick="abrirModalZoom('{{ p.img_url }}', 'Simulacro Diagnóstico - Pregunta {{ p.num }}', 'sd', '{{ p.num }}')"
+                    class="relative group cursor-zoom-in block rounded-lg overflow-hidden border border-slate-200 bg-white shadow-2xs hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                    title="Haz clic para ver zoom ampliado">
               <img src="{{ p.img_url }}" 
                    alt="SD P{{ p.num }}" 
-                   class="h-8 sm:h-9 object-contain rounded-lg border border-slate-200 bg-white shadow-xs group-hover:scale-125 group-hover:shadow-md transition origin-right z-10"
+                   class="h-8 sm:h-9 object-contain group-hover:scale-105 transition-transform"
                    loading="lazy">
-            </div>
+              <div class="absolute inset-0 bg-indigo-900/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                <span class="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow">🔍 Zoom</span>
+              </div>
+            </button>
           </div>
 
         </div>
@@ -325,6 +343,44 @@
 
   </form>
 
+</div>
+
+<!-- ================= MODAL DE ZOOM INTERACTIVO ================= -->
+<div id="modalZoom" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in" onclick="cerrarModalZoom(event)">
+  <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden" onclick="event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+        <h3 id="modalZoomTitle" class="text-sm font-black text-slate-800">Recorte Ampliado</h3>
+      </div>
+      <button type="button" onclick="cerrarModalZoomDirecto()" 
+              class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center text-sm font-bold transition">
+        ✕
+      </button>
+    </div>
+
+    <!-- Modal Body: Imagen Gigante en Alta Resolución -->
+    <div class="p-6 bg-slate-100 flex flex-col items-center justify-center min-h-[160px]">
+      <div class="p-3 bg-white rounded-2xl shadow-md border border-slate-200 w-full flex items-center justify-center overflow-x-auto">
+        <img id="modalZoomImg" src="" alt="Recorte Ampliado" class="max-h-48 sm:max-h-64 object-contain transition-transform duration-200 hover:scale-125 origin-center cursor-zoom-in">
+      </div>
+      <p class="text-[11px] text-slate-500 mt-3 flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Pasa el ratón sobre la imagen para agrandar aún más. También puedes presionar <kbd class="px-1.5 py-0.5 text-[10px] bg-white border border-slate-300 rounded font-mono shadow-2xs">ESC</kbd> para cerrar.
+      </p>
+    </div>
+
+    <!-- Modal Footer: Botón Cerrar -->
+    <div class="px-6 py-3 border-t border-slate-100 flex justify-end bg-white">
+      <button type="button" onclick="cerrarModalZoomDirecto()" 
+              class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition">
+        Cerrar Zoom
+      </button>
+    </div>
+
+  </div>
 </div>
 
 <script>
@@ -402,5 +458,40 @@
       totalBadge.className = totalDudosas === 0 ? 'text-sm font-black text-emerald-600' : 'text-sm font-black text-amber-600';
     }
   }
+
+  /* ================= MODAL ZOOM FUNCTIONS ================= */
+  function abrirModalZoom(imgUrl, titulo, sesion, num) {
+    const modal = document.getElementById('modalZoom');
+    const modalImg = document.getElementById('modalZoomImg');
+    const modalTitle = document.getElementById('modalZoomTitle');
+
+    if (!modal || !modalImg || !modalTitle) return;
+
+    modalImg.src = imgUrl;
+    modalTitle.textContent = `${titulo} • Burbujas Escaneadas (Zoom)`;
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+  }
+
+  function cerrarModalZoomDirecto() {
+    const modal = document.getElementById('modalZoom');
+    if (modal) {
+      modal.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+  }
+
+  function cerrarModalZoom(e) {
+    if (e.target.id === 'modalZoom') {
+      cerrarModalZoomDirecto();
+    }
+  }
+
+  // Cerrar con la tecla Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      cerrarModalZoomDirecto();
+    }
+  });
 </script>
 {% endblock %}

@@ -257,13 +257,13 @@
             <!-- SWITCHER DE PORTALES (Exclusivo para Superusuarios y Docentes / Teachers) -->
             {% if user.is_superuser or user.es_docente %}
             <div class="px-2 mb-4">
-                <div class="bg-slate-900/90 p-1 rounded-xl border border-slate-700/80 flex items-center gap-1 shadow-lg">
+                <div class="bg-[#03133D] p-1 rounded-xl border border-blue-900/50 flex items-center gap-1 shadow-lg">
                     <a href="{% url 'curriculo:programa_list' %}"
-                        class="flex-1 py-2 px-1 text-center text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 {% if 'academico' not in request.path and 'cartera' not in request.path and 'ventas' not in request.path and 'ubicaciones' not in request.path and 'simulacros' not in request.path %}bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-md ring-1 ring-teal-400/50{% else %}text-slate-400 hover:text-white hover:bg-slate-800/80{% endif %}">
+                        class="flex-1 py-2 px-1 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 {% if 'academico' not in request.path and 'cartera' not in request.path and 'ventas' not in request.path and 'ubicaciones' not in request.path and 'simulacros' not in request.path %}bg-[#0661F8] text-white font-extrabold shadow-md shadow-blue-500/30{% else %}text-blue-200/70 hover:text-white hover:bg-white/10{% endif %}">
                         <span>🎓</span> Aula Virtual
                     </a>
                     <a href="{% if user.es_docente and not user.is_superuser %}{% url 'profesor_clases' user.id %}{% else %}{% url 'alumnos_list' %}{% endif %}"
-                        class="flex-1 py-2 px-1 text-center text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 {% if 'academico' in request.path or 'cartera' in request.path and 'ventas' in request.path or 'ubicaciones' in request.path or 'simulacros' in request.path %}bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md ring-1 ring-indigo-400/50{% else %}text-slate-400 hover:text-white hover:bg-slate-800/80{% endif %}">
+                        class="flex-1 py-2 px-1 text-center text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 {% if 'academico' in request.path or 'cartera' in request.path or 'ventas' in request.path or 'ubicaciones' in request.path or 'simulacros' in request.path %}bg-[#0661F8] text-white font-extrabold shadow-md shadow-blue-500/30{% else %}text-blue-200/70 hover:text-white hover:bg-white/10{% endif %}">
                         <span>💼</span> Cartera & Gestión
                     </a>
                 </div>
@@ -289,7 +289,7 @@
             <nav class="mt-2 flex-1 px-3 space-y-1.5">
                 {% if user.is_authenticated %}
 
-                {% if 'mis-clases' not in request.path and 'academico' in request.path or 'cartera' in request.path or 'ventas' in request.path or 'ubicaciones' in request.path %}
+                {% if 'mis-clases' not in request.path and 'academico' in request.path or 'cartera' in request.path or 'ventas' in request.path or 'ubicaciones' in request.path or 'simulacros' in request.path %}
                 <!-- PORTAL 2: GESTIÓN ACADÉMICA Y CARTERA -->
 
                 <!-- GESTIÓN ACADÉMICA — solo staff, observador y docentes -->
@@ -776,7 +776,7 @@
                     <span class="text-xs font-bold uppercase tracking-widest text-blue-100/90 flex items-center gap-2">
                         <span class="text-white font-extrabold tracking-wider">PREPÁRATE. PRACTICA. SUPERA TU META.</span>
                     </span>
-                    {% if user.es_personal_gestion or 'academico' in request.path and 'mis-clases' not in request.path or 'cartera' in request.path or 'ventas' in request.path or 'ubicaciones' in request.path %}
+                    {% if user.es_personal_gestion or 'academico' in request.path and 'mis-clases' not in request.path or 'cartera' in request.path or 'ventas' in request.path or 'ubicaciones' in request.path or 'simulacros' in request.path %}
                     <span class="px-2.5 py-0.5 rounded-full bg-white/15 text-[11px] font-bold text-white tracking-wide border border-white/20">
                         💼 Portal Cartera & Gestión
                     </span>
