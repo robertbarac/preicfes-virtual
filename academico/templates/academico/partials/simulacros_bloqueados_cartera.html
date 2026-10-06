@@ -1,0 +1,118 @@
+<!-- Componente: Bloqueo Persuasivo de Simulacros por Estado de Cartera -->
+<div class="bg-gradient-to-br from-amber-50/80 via-white to-orange-50/50 rounded-3xl p-6 sm:p-10 border border-amber-200/90 shadow-sm relative overflow-hidden">
+  <!-- Adornos sutiles de fondo -->
+  <div class="absolute -right-12 -top-12 w-48 h-48 bg-amber-400/10 rounded-full blur-2xl pointer-events-none"></div>
+  <div class="absolute -left-12 -bottom-12 w-48 h-48 bg-orange-400/10 rounded-full blur-2xl pointer-events-none"></div>
+
+  <div class="relative z-10 max-w-3xl">
+    <!-- Icono y Badge de Estado -->
+    <div class="flex items-center gap-3 mb-4 flex-wrap">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 text-white flex items-center justify-center shadow-lg shadow-amber-500/25 flex-shrink-0">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+        </svg>
+      </div>
+      <div>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300/80">
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          Acceso Restringido por Cartera
+        </span>
+        <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">
+          Resultados y Puntajes de Simulacros Retenidos
+        </h3>
+      </div>
+    </div>
+
+    <!-- Mensaje persuasivo para el estudiante -->
+    <p class="text-sm sm:text-base text-slate-600 leading-relaxed font-medium">
+      Apreciado(a) estudiante, tu proceso de evaluación y hojas de respuestas ya fueron recibidas y procesadas por nuestro equipo académico. Sin embargo, para visualizar tus puntajes globales, el desglose de competencias por áreas evaluadas y descargar tus certificados e informes oficiales en PDF, es indispensable encontrarte al día con las obligaciones de pago de tu programa académico.
+    </p>
+
+    <!-- Motivo específico de retención -->
+    <div class="mt-5 p-4 rounded-2xl bg-amber-100/60 border border-amber-200/90 flex items-start gap-3">
+      <div class="text-amber-700 text-lg flex-shrink-0 mt-0.5">⚠️</div>
+      <div class="text-xs sm:text-sm text-amber-950 font-medium">
+        {% if motivo_bloqueo_simulacros == 'cuotas_vencidas' %}
+          <strong>Obligación vencida pendiente:</strong> Tu cuenta registra actualmente una o más cuotas cuya fecha límite de pago ha expirado. Regulariza tu saldo para desbloquear de inmediato tus resultados.
+        {% elif motivo_bloqueo_simulacros == 'pagadas_parciales' %}
+          <strong>Cuota(s) con pago parcial incompleto:</strong> Cuentas con abonos registrados en tus cuotas, pero el monto total aportado no cubre el valor completo exigible de las cuotas causadas. Cancela el saldo restante para liberar tus puntajes.
+        {% else %}
+          <strong>Compromiso financiero pendiente:</strong> Tu cuenta presenta cuotas o saldos pendientes de regularización en el área de cartera.
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Tarjetas de Resumen Financiero y Académico -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-6">
+      <div class="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-amber-200/60 shadow-sm">
+        <span class="text-xs font-semibold text-slate-400 block mb-1">Simulacros Evaluados</span>
+        <span class="text-xl sm:text-2xl font-black text-indigo-700">
+          {{ total_simulacros_evaluados }} <span class="text-xs font-normal text-slate-500">en plataforma</span>
+        </span>
+        <span class="text-[11px] font-medium text-emerald-600 block mt-1">✓ Calificados y listos</span>
+      </div>
+
+      <div class="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-amber-200/60 shadow-sm">
+        <span class="text-xs font-semibold text-slate-400 block mb-1">Saldo Total Pendiente</span>
+        <span class="text-xl sm:text-2xl font-black text-rose-600">
+          {% if deuda %}${{ deuda.saldo_pendiente|floatformat:0 }}{% else %}$0{% endif %}
+        </span>
+        <span class="text-[11px] font-medium text-slate-500 block mt-1">En el departamento de Cartera</span>
+      </div>
+
+      <div class="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-amber-200/60 shadow-sm">
+        <span class="text-xs font-semibold text-slate-400 block mb-1">Estado de Pago</span>
+        <span class="text-sm sm:text-base font-bold text-amber-800 block mt-1">
+          {% if tiene_cuotas_vencidas %}Cuota(s) Vencida(s){% else %}Pagos Parciales Incompletos{% endif %}
+        </span>
+        <span class="text-[11px] font-medium text-slate-500 block mt-1">Requiere normalización</span>
+      </div>
+    </div>
+
+    {% if cuotas_afectadas_simulacros %}
+    <!-- Listado de cuotas que requieren atención -->
+    <div class="mt-6 bg-white/95 rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
+      <div class="px-5 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Cuotas que requieren pago para liberar resultados:</span>
+        <span class="text-xs font-semibold text-slate-500">{{ cuotas_afectadas_simulacros|length }} cuota(s)</span>
+      </div>
+      <div class="divide-y divide-slate-100">
+        {% for c in cuotas_afectadas_simulacros %}
+        <div class="px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-xs">
+              {{ c.numero_cuota|default:forloop.counter }}
+            </span>
+            <span class="font-bold text-slate-800">Cuota {{ c.numero_cuota|default:forloop.counter }}</span>
+            <span class="text-slate-400">•</span>
+            <span class="text-slate-500">Vencimiento: <strong class="text-slate-700">{{ c.fecha_vencimiento|date:"d/m/Y" }}</strong></span>
+          </div>
+          <div class="flex items-center gap-4 self-end sm:self-auto font-medium">
+            <span class="text-slate-500">Valor: ${{ c.monto|floatformat:0 }}</span>
+            <span class="text-emerald-600">Abonado: ${{ c.monto_abonado|floatformat:0 }}</span>
+            <span class="font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200">
+              Saldo: ${{ c.saldo_restante|floatformat:0 }}
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Llamado a la acción (CTAs) -->
+    <div class="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <button @click="activeTab = 'cartera'" type="button"
+        class="px-6 py-3.5 rounded-2xl bg-[#155EEF] hover:bg-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+        </svg>
+        <span>Ver Mis Cuotas en Cartera y Pagar</span>
+      </button>
+
+      <div class="flex items-center gap-2 text-xs text-slate-500 px-2 font-medium">
+        <span>💡 ¿Ya realizaste tu abono o pago? Comunícate con la coordinación o el área de Cartera para registrar tu soporte y activar tus resultados inmediatamente.</span>
+      </div>
+    </div>
+  </div>
+</div>
