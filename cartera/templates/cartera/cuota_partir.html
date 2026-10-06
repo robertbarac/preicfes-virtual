@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}Partir Cuota | GV Valdez Campus{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+        <!-- Encabezado -->
+        <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-5 text-white">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">✂️</span>
+                <div>
+                    <h1 class="text-2xl font-black">Partir Cuota de Pago</h1>
+                    <p class="text-amber-100 text-xs sm:text-sm mt-0.5">
+                        Divide una cuota en dos pagos registrados simultáneamente (ej: Efectivo y Nequi/Transferencia).
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 sm:p-8">
+            <!-- Resumen de Cuota Original -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center sm:text-left">
+                    <div>
+                        <span class="text-xs text-slate-500 block">Estudiante</span>
+                        <span class="font-bold text-slate-800 text-sm">{{ alumno.nombres }} {{ alumno.primer_apellido }}</span>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-500 block">Monto de la Cuota</span>
+                        <span class="font-black text-slate-900 text-lg" id="display-monto-original">${{ cuota.monto|floatformat:0 }}</span>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-500 block">Fecha de Vencimiento</span>
+                        <span class="font-semibold text-slate-700 text-sm">{{ cuota.fecha_vencimiento|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario -->
+            <form method="POST" action="{% url 'cartera:cuota_partir' cuota.pk %}" id="form-partir-cuota" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Fecha de pago para ambas cuotas -->
+                <div>
+                    <label for="fecha_pago" class="block text-sm font-bold text-slate-800 mb-1">
+                        📅 Fecha de Pago de las Cuotas <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="date" name="fecha_pago" id="fecha_pago" required
+                        value="{{ today|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}"
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-slate-800 text-sm shadow-sm" />
+                    <p class="text-[11px] text-slate-500 mt-1">Se asignará esta fecha de pago a ambas partes de la cuota.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                    <!-- Cuota 1 -->
+                    <div class="bg-amber-50/50 border border-amber-200 rounded-2xl p-4 space-y-4">
+                        <div class="flex items-center justify-between border-b border-amber-200/80 pb-2">
+                            <span class="text-xs font-black text-amber-900 uppercase tracking-wider">Parte 1 (Primer Pago)</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold">Cuota 1</span>
+                        </div>
+
+                        <div>
+                            <label for="monto_1" class="block text-xs font-bold text-slate-700 mb-1">
+                                Monto a Pagar ($) <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="number" step="0.01" min="1" max="{{ cuota.monto }}" name="monto_1" id="monto_1" required
+                                placeholder="Ej: 50000"
+                                class="input-monto w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 font-bold text-slate-900 text-base shadow-sm" />
+                        </div>
+
+                        <div>
+                            <label for="metodo_pago_1" class="block text-xs font-bold text-slate-700 mb-1">
+                                Método de Pago <span class="text-rose-500">*</span>
+                            </label>
+                            <select name="metodo_pago_1" id="metodo_pago_1" required
+                                class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 text-slate-800 text-sm shadow-sm">
+                                <option value="efectivo" selected>Efectivo</option>
+                                <option value="transferencia">Transferencia (Nequi / Bancos)</option>
+                                <option value="datáfono">Datáfono</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="soporte_pago_1" class="block text-xs font-bold text-slate-700 mb-1">
+                                Comprobante / Soporte (Opcional)
+                            </label>
+                            <input type="file" name="soporte_pago_1" id="soporte_pago_1" accept="image/*"
+                                class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200" />
+                        </div>
+                    </div>
+
+                    <!-- Cuota 2 -->
+                    <div class="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 space-y-4">
+                        <div class="flex items-center justify-between border-b border-blue-200/80 pb-2">
+                            <span class="text-xs font-black text-blue-900 uppercase tracking-wider">Parte 2 (Segundo Pago)</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-blue-200 text-blue-900 font-bold">Cuota 2</span>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label for="monto_2" class="block text-xs font-bold text-slate-700">
+                                    Monto a Pagar ($) <span class="text-rose-500">*</span>
+                                </label>
+                                <button type="button" id="btn-calcular-restante" class="text-[11px] font-bold text-blue-600 hover:underline">
+                                    ⚡ Calcular restante
+                                </button>
+                            </div>
+                            <input type="number" step="0.01" min="1" max="{{ cuota.monto }}" name="monto_2" id="monto_2" required
+                                placeholder="Ej: 50000"
+                                class="input-monto w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 font-bold text-slate-900 text-base shadow-sm" />
+                        </div>
+
+                        <div>
+                            <label for="metodo_pago_2" class="block text-xs font-bold text-slate-700 mb-1">
+                                Método de Pago <span class="text-rose-500">*</span>
+                            </label>
+                            <select name="metodo_pago_2" id="metodo_pago_2" required
+                                class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 text-slate-800 text-sm shadow-sm">
+                                <option value="transferencia" selected>Transferencia (Nequi / Bancos)</option>
+                                <option value="efectivo">Efectivo</option>
+                                <option value="datáfono">Datáfono</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="soporte_pago_2" class="block text-xs font-bold text-slate-700 mb-1">
+                                Comprobante / Soporte (Opcional)
+                            </label>
+                            <input type="file" name="soporte_pago_2" id="soporte_pago_2" accept="image/*"
+                                class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-800 hover:file:bg-blue-200" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen y Validación Dinámica -->
+                <div id="validacion-resumen" class="rounded-xl p-4 border transition-all duration-200 bg-slate-50 border-slate-200">
+                    <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
+                        <span class="text-slate-600">Suma de las dos partes:</span>
+                        <span id="suma-partes" class="font-bold text-slate-800 text-base">$0</span>
+                    </div>
+                    <div id="validacion-mensaje" class="text-xs font-bold mt-2 text-slate-500">
+                        Ingresa el monto de la primera y segunda cuota.
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+                    <a href="{% url 'alumno_detail' pk=alumno.pk %}#tab-historial-pagos"
+                        class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-100 transition">
+                        Cancelar
+                    </a>
+                    <button type="submit" id="btn-submit-partir" disabled
+                        class="px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        ✂️ Confirmar y Partir Cuota
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const montoOriginal = parseFloat("{{ cuota.monto }}") || 0;
+    const input1 = document.getElementById('monto_1');
+    const input2 = document.getElementById('monto_2');
+    const sumaDisplay = document.getElementById('suma-partes');
+    const msgDisplay = document.getElementById('validacion-mensaje');
+    const container = document.getElementById('validacion-resumen');
+    const submitBtn = document.getElementById('btn-submit-partir');
+    const calcRestanteBtn = document.getElementById('btn-calcular-restante');
+
+    function formatearDinero(valor) {
+        return '$' + Math.round(valor).toLocaleString('es-CO');
+    }
+
+    function validarMontos() {
+        const val1 = parseFloat(input1.value) || 0;
+        const val2 = parseFloat(input2.value) || 0;
+        const total = val1 + val2;
+
+        sumaDisplay.textContent = formatearDinero(total);
+
+        if (val1 <= 0 || val2 <= 0) {
+            container.className = "rounded-xl p-4 border transition-all bg-amber-50 border-amber-200 text-amber-800";
+            msgDisplay.textContent = "⚠️ Ambos montos deben ser mayores a $0.";
+            submitBtn.disabled = true;
+            return;
+        }
+
+        const dif = Math.abs(total - montoOriginal);
+        if (dif < 0.01) {
+            container.className = "rounded-xl p-4 border transition-all bg-emerald-50 border-emerald-300 text-emerald-800";
+            msgDisplay.textContent = `✓ ¡Excelente! La suma coincide exactamente con el valor original (${formatearDinero(montoOriginal)}). Listo para guardar.`;
+            submitBtn.disabled = false;
+        } else {
+            container.className = "rounded-xl p-4 border transition-all bg-rose-50 border-rose-300 text-rose-800";
+            if (total < montoOriginal) {
+                msgDisplay.textContent = `⚠️ Faltan ${formatearDinero(montoOriginal - total)} para completar el valor original de ${formatearDinero(montoOriginal)}.`;
+            } else {
+                msgDisplay.textContent = `⚠️ Sobran ${formatearDinero(total - montoOriginal)} respecto al valor original de ${formatearDinero(montoOriginal)}.`;
+            }
+            submitBtn.disabled = true;
+        }
+    }
+
+    input1.addEventListener('input', function () {
+        validarMontos();
+    });
+
+    input2.addEventListener('input', function () {
+        validarMontos();
+    });
+
+    if (calcRestanteBtn) {
+        calcRestanteBtn.addEventListener('click', function () {
+            const val1 = parseFloat(input1.value) || 0;
+            const restante = Math.max(0, montoOriginal - val1);
+            input2.value = restante.toFixed(2);
+            validarMontos();
+        });
+    }
+
+    validarMontos();
+});
+</script>
+{% endblock %}

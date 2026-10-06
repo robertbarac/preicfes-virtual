@@ -205,6 +205,18 @@
                                          <a href="{% url 'cartera:cuota_eliminar' cuota.id %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                                              Eliminar
                                          </a>
+                                         {% if cuota.estado == 'emitida' or cuota.estado == 'vencida' %}
+                                         <button type="button"
+                                             class="btn-abrir-partir-cuota inline-flex items-center px-3 py-2 border border-amber-600 text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 shadow-sm transition-colors"
+                                             data-cuota-id="{{ cuota.id }}"
+                                             data-url="{% url 'cartera:cuota_partir' cuota.id %}"
+                                             data-monto="{{ cuota.monto }}"
+                                             data-vencimiento="{{ cuota.fecha_vencimiento|date:'d/m/Y' }}"
+                                             data-estado="{{ cuota.get_estado_display }}"
+                                             title="Partir cuota en 2 métodos de pago">
+                                             ✂️ Partir
+                                         </button>
+                                         {% endif %}
                                          {% endif %}
                                          {% if cuota.estado == 'pagada' or cuota.estado == 'pagada_parcial' %}
                                          <a href="{% url 'cartera:cuota_recibo' cuota.id %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" target="_blank">
@@ -633,8 +645,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Activar la primera pestaña por defecto
-    tabs[0].click();
+    // Activar la pestaña según hash en la URL o la primera por defecto
+    const currentHash = window.location.hash.replace('#', '');
+    let tabTarget = null;
+    if (currentHash) {
+        tabTarget = document.getElementById(currentHash) || document.getElementById('tab-' + currentHash);
+    }
+    if (tabTarget) {
+        tabTarget.click();
+    } else if (tabs.length > 0) {
+        tabs[0].click();
+    }
 });
 </script>
 
@@ -666,6 +687,159 @@ document.addEventListener('DOMContentLoaded', function () {
                 </button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Modal para Partir Cuota (Pago en 2 partes / métodos) -->
+<div id="partir-cuota-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
+    <div class="relative mx-auto border w-full max-w-2xl shadow-2xl rounded-2xl bg-white overflow-hidden my-8">
+        <!-- Encabezado Modal -->
+        <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4 text-white flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">✂️</span>
+                <div>
+                    <h3 class="text-lg font-bold">Partir Cuota de Pago</h3>
+                    <p class="text-xs text-amber-100">Divide esta cuota en 2 cuotas pagadas (ej: Efectivo y Nequi/Transferencia)</p>
+                </div>
+            </div>
+            <button type="button" id="close-partir-modal-x" class="text-white/80 hover:text-white p-1 rounded-lg text-xl font-bold focus:outline-none">
+                ✕
+            </button>
+        </div>
+
+        <!-- Cuerpo del Modal -->
+        <form method="POST" action="" id="form-partir-modal" enctype="multipart/form-data" class="p-6 space-y-5">
+            {% csrf_token %}
+
+            <!-- Resumen de Cuota a Dividir -->
+            <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 flex items-center justify-between flex-wrap gap-2 text-xs sm:text-sm">
+                <div>
+                    <span class="text-slate-500 block text-[11px] font-semibold">Valor Cuota Original:</span>
+                    <span id="modal-display-monto" class="text-lg font-black text-slate-900">$0</span>
+                </div>
+                <div>
+                    <span class="text-slate-500 block text-[11px] font-semibold">Fecha Vencimiento:</span>
+                    <span id="modal-display-vencimiento" class="font-bold text-slate-800">--</span>
+                </div>
+                <div>
+                    <span class="text-slate-500 block text-[11px] font-semibold">Estado Actual:</span>
+                    <span id="modal-display-estado" class="font-bold text-amber-800">--</span>
+                </div>
+            </div>
+
+            <!-- Fecha de pago -->
+            <div>
+                <label for="modal-fecha-pago" class="block text-xs font-bold text-slate-700 mb-1">
+                    📅 Fecha de Pago Recibido <span class="text-rose-500">*</span>
+                </label>
+                <input type="date" name="fecha_pago" id="modal-fecha-pago" required
+                    value="{% now 'Y-m-d' %}" max="{% now 'Y-m-d' %}"
+                    class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-amber-500 text-slate-800 shadow-sm" />
+                <p class="text-[11px] text-slate-400 mt-0.5">Se asignará esta fecha de pago a ambas cuotas creadas.</p>
+            </div>
+
+            <!-- Dos Partes -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Parte 1 -->
+                <div class="bg-amber-50/40 border border-amber-200/90 rounded-xl p-4 space-y-3">
+                    <div class="flex items-center justify-between border-b border-amber-200 pb-1.5">
+                        <span class="text-xs font-black text-amber-900 uppercase tracking-wider">Parte 1 (Primer Método)</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold">1/2</span>
+                    </div>
+
+                    <div>
+                        <label for="modal-monto-1" class="block text-xs font-bold text-slate-700 mb-1">
+                            Monto a Pagar ($) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" step="0.01" min="1" name="monto_1" id="modal-monto-1" required placeholder="0"
+                            class="w-full px-3 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-900 text-sm focus:ring-2 focus:ring-amber-500 shadow-sm" />
+                    </div>
+
+                    <div>
+                        <label for="modal-metodo-1" class="block text-xs font-bold text-slate-700 mb-1">
+                            Método de Pago <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="metodo_pago_1" id="modal-metodo-1" required
+                            class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-amber-500 text-slate-800 shadow-sm">
+                            <option value="efectivo" selected>Efectivo</option>
+                            <option value="transferencia">Transferencia (Nequi / Bancos)</option>
+                            <option value="datáfono">Datáfono</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="modal-soporte-1" class="block text-[11px] font-bold text-slate-600 mb-0.5">
+                            Comprobante (Opcional)
+                        </label>
+                        <input type="file" name="soporte_pago_1" id="modal-soporte-1" accept="image/*"
+                            class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-amber-100 file:text-amber-800" />
+                    </div>
+                </div>
+
+                <!-- Parte 2 -->
+                <div class="bg-blue-50/40 border border-blue-200/90 rounded-xl p-4 space-y-3">
+                    <div class="flex items-center justify-between border-b border-blue-200 pb-1.5">
+                        <span class="text-xs font-black text-blue-900 uppercase tracking-wider">Parte 2 (Segundo Método)</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-200 text-blue-900 font-bold">2/2</span>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="modal-monto-2" class="block text-xs font-bold text-slate-700">
+                                Monto a Pagar ($) <span class="text-rose-500">*</span>
+                            </label>
+                            <button type="button" id="modal-btn-calc-restante" class="text-[11px] font-bold text-blue-600 hover:underline">
+                                ⚡ Autocompletar restante
+                            </button>
+                        </div>
+                        <input type="number" step="0.01" min="1" name="monto_2" id="modal-monto-2" required placeholder="0"
+                            class="w-full px-3 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 shadow-sm" />
+                    </div>
+
+                    <div>
+                        <label for="modal-metodo-2" class="block text-xs font-bold text-slate-700 mb-1">
+                            Método de Pago <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="metodo_pago_2" id="modal-metodo-2" required
+                            class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 text-slate-800 shadow-sm">
+                            <option value="transferencia" selected>Transferencia (Nequi / Bancos)</option>
+                            <option value="efectivo">Efectivo</option>
+                            <option value="datáfono">Datáfono</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="modal-soporte-2" class="block text-[11px] font-bold text-slate-600 mb-0.5">
+                            Comprobante (Opcional)
+                        </label>
+                        <input type="file" name="soporte_pago_2" id="modal-soporte-2" accept="image/*"
+                            class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-blue-100 file:text-blue-800" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verificación y Suma -->
+            <div id="modal-verificacion-box" class="rounded-xl p-3.5 border transition-all duration-200 bg-slate-50 border-slate-200 text-xs">
+                <div class="flex items-center justify-between font-semibold">
+                    <span class="text-slate-600">Suma total de las dos partes:</span>
+                    <span id="modal-suma-display" class="font-bold text-slate-800 text-sm">$0</span>
+                </div>
+                <div id="modal-mensaje-display" class="font-bold mt-1.5 text-slate-500 text-[11px]">
+                    Ingresa los valores de ambas partes.
+                </div>
+            </div>
+
+            <!-- Footer con Botones -->
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <button type="button" id="close-partir-modal-btn" class="px-4 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-100 transition">
+                    Cancelar
+                </button>
+                <button type="submit" id="modal-submit-partir-btn" disabled
+                    class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    ✂️ Confirmar y Partir Cuota
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -712,6 +886,111 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('click', (event) => {
         if (event.target == modal) {
             modal.classList.add('hidden');
+        }
+    });
+
+    // Lógica interactiva para Modal Partir Cuota
+    const partirModal = document.getElementById('partir-cuota-modal');
+    const closePartirX = document.getElementById('close-partir-modal-x');
+    const closePartirBtn = document.getElementById('close-partir-modal-btn');
+    const formPartir = document.getElementById('form-partir-modal');
+    const btnsPartir = document.querySelectorAll('.btn-abrir-partir-cuota');
+
+    const modalDisplayMonto = document.getElementById('modal-display-monto');
+    const modalDisplayVenc = document.getElementById('modal-display-vencimiento');
+    const modalDisplayEstado = document.getElementById('modal-display-estado');
+
+    const inputMonto1 = document.getElementById('modal-monto-1');
+    const inputMonto2 = document.getElementById('modal-monto-2');
+    const sumaDisplay = document.getElementById('modal-suma-display');
+    const msgDisplay = document.getElementById('modal-mensaje-display');
+    const boxValidacion = document.getElementById('modal-verificacion-box');
+    const btnSubmitPartir = document.getElementById('modal-submit-partir-btn');
+    const btnCalcRestante = document.getElementById('modal-btn-calc-restante');
+
+    let currentMontoOriginal = 0;
+
+    function formatearDineroCOP(num) {
+        return '$' + Math.round(num).toLocaleString('es-CO');
+    }
+
+    function validarMontosModal() {
+        if (!inputMonto1 || !inputMonto2) return;
+        const v1 = parseFloat(inputMonto1.value) || 0;
+        const v2 = parseFloat(inputMonto2.value) || 0;
+        const total = v1 + v2;
+
+        if (sumaDisplay) sumaDisplay.textContent = formatearDineroCOP(total);
+
+        if (v1 <= 0 || v2 <= 0) {
+            if (boxValidacion) boxValidacion.className = "rounded-xl p-3.5 border transition-all duration-200 bg-amber-50 border-amber-200 text-amber-800 text-xs";
+            if (msgDisplay) msgDisplay.textContent = "⚠️ Ingresa montos mayores a $0 para ambas cuotas.";
+            if (btnSubmitPartir) btnSubmitPartir.disabled = true;
+            return;
+        }
+
+        const dif = Math.abs(total - currentMontoOriginal);
+        if (dif < 0.01) {
+            if (boxValidacion) boxValidacion.className = "rounded-xl p-3.5 border transition-all duration-200 bg-emerald-50 border-emerald-300 text-emerald-800 text-xs";
+            if (msgDisplay) msgDisplay.textContent = `✓ ¡Correcto! La suma (${formatearDineroCOP(total)}) coincide exactamente con el valor original (${formatearDineroCOP(currentMontoOriginal)}).`;
+            if (btnSubmitPartir) btnSubmitPartir.disabled = false;
+        } else {
+            if (boxValidacion) boxValidacion.className = "rounded-xl p-3.5 border transition-all duration-200 bg-rose-50 border-rose-300 text-rose-800 text-xs";
+            if (total < currentMontoOriginal) {
+                if (msgDisplay) msgDisplay.textContent = `⚠️ Faltan ${formatearDineroCOP(currentMontoOriginal - total)} para alcanzar el valor total de ${formatearDineroCOP(currentMontoOriginal)}.`;
+            } else {
+                if (msgDisplay) msgDisplay.textContent = `⚠️ Sobran ${formatearDineroCOP(total - currentMontoOriginal)} respecto al valor original de ${formatearDineroCOP(currentMontoOriginal)}.`;
+            }
+            if (btnSubmitPartir) btnSubmitPartir.disabled = true;
+        }
+    }
+
+    btnsPartir.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const cuotaId = btn.dataset.cuotaId;
+            const url = btn.dataset.url;
+            currentMontoOriginal = parseFloat(btn.dataset.monto) || 0;
+            const venc = btn.dataset.vencimiento || '--';
+            const est = btn.dataset.estado || '--';
+
+            if (formPartir) formPartir.action = url;
+            if (modalDisplayMonto) modalDisplayMonto.textContent = formatearDineroCOP(currentMontoOriginal);
+            if (modalDisplayVenc) modalDisplayVenc.textContent = venc;
+            if (modalDisplayEstado) modalDisplayEstado.textContent = est;
+
+            if (inputMonto1) inputMonto1.value = '';
+            if (inputMonto2) inputMonto2.value = '';
+
+            validarMontosModal();
+
+            if (partirModal) partirModal.classList.remove('hidden');
+        });
+    });
+
+    if (inputMonto1) inputMonto1.addEventListener('input', validarMontosModal);
+    if (inputMonto2) inputMonto2.addEventListener('input', validarMontosModal);
+
+    if (btnCalcRestante) {
+        btnCalcRestante.addEventListener('click', () => {
+            const v1 = parseFloat(inputMonto1.value) || 0;
+            const restante = Math.max(0, currentMontoOriginal - v1);
+            if (inputMonto2) {
+                inputMonto2.value = restante.toFixed(2);
+                validarMontosModal();
+            }
+        });
+    }
+
+    function cerrarPartirModal() {
+        if (partirModal) partirModal.classList.add('hidden');
+    }
+
+    if (closePartirX) closePartirX.addEventListener('click', cerrarPartirModal);
+    if (closePartirBtn) closePartirBtn.addEventListener('click', cerrarPartirModal);
+
+    window.addEventListener('click', (event) => {
+        if (event.target == partirModal) {
+            cerrarPartirModal();
         }
     });
 });

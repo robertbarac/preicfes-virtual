@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     generar_cuotas_view,
     BecadosListView, GraficaIngresosView, GraficaEgresosView,
-    CuotasVencidasListView, DeudaCreateView, DeudaUpdateView, CuotaCreateView, CuotaUpdateView, CuotaDeleteView, ReciboPDFView,
+    CuotasVencidasListView, DeudaCreateView, DeudaUpdateView, CuotaCreateView, CuotaUpdateView, CuotaDeleteView, CuotaPartirView, ReciboPDFView,
     PazSalvoListView, PazSalvoPDFView, ProximosPagosListView, InformeDiarioView, generar_pdf_informe, MantenimientoCarteraView, toggle_edicion_deuda,
     AcuerdoPagoListView, AcuerdoPagoCreateView, AcuerdoPagoUpdateView, generar_pdf_retirados_view,
     AlumnosSinCarteraListView,
@@ -28,6 +28,7 @@ urlpatterns = [
     path('cuota/agregar/<int:deuda_id>/', CuotaCreateView.as_view(), name='cuota_agregar'),
     path('cuota/editar/<int:pk>/', CuotaUpdateView.as_view(), name='cuota_editar'),
     path('cuota/eliminar/<int:pk>/', CuotaDeleteView.as_view(), name='cuota_eliminar'),
+    path('cuota/partir/<int:pk>/', CuotaPartirView.as_view(), name='cuota_partir'),
     path('cuota/recibo/<int:pk>/', ReciboPDFView.as_view(), name='cuota_recibo'),
     path('proximos-pagos/', ProximosPagosListView.as_view(), name='proximos_pagos'),
     path('paz-salvo/', PazSalvoListView.as_view(), name='paz_salvo'),

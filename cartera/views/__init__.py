@@ -6,6 +6,7 @@ from .becados_list import BecadosListView
 from .cuota_create import CuotaCreateView
 from .cuota_delete import CuotaDeleteView
 from .cuota_update import CuotaUpdateView
+from .cuota_partir import CuotaPartirView
 from .cuotas_vencidas_list import CuotasVencidasListView
 from .deuda_create import DeudaCreateView
 from .deuda_update import DeudaUpdateView
@@ -36,6 +37,7 @@ __all__ = [
     'CuotaCreateView',
     'CuotaUpdateView',
     'CuotaDeleteView',
+    'CuotaPartirView',
     'DeudaCreateView',
     'DeudaUpdateView',
     'GraficaIngresosView',
