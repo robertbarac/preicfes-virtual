@@ -2,16 +2,19 @@
 
 import os
 import tempfile
+import uuid
+import shutil
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse
+from django.conf import settings
 
 from academico.models import Grupo, Alumno
 from ..models import Simulacro, ResultadoSimulacro
-from ..procesar_simulacro import extraer_tiras_individuales, LONGITUDES_ESPERADAS
+from ..procesar_simulacro import extraer_preguntas_con_recortes, LONGITUDES_ESPERADAS
 from ..calculos import calificar, calcular_puntaje_icfes, modificar_puntajes
 
 
@@ -43,14 +46,19 @@ class GrupoCalificarSimulacroView(LoginRequiredMixin, View):
         simulacro = get_object_or_404(Simulacro, id=simulacro_id)
 
         if len(archivos) != len(alumnos_ids) * 2:
-            messages.error(request, f"La cantidad de imágenes ({len(archivos)}) no coincide con el doble de alumnos ({len(alumnos_ids) * 2}).")
+            messages.error(
+                request, 
+                f"La cantidad de imágenes ({len(archivos)}) no coincide con el doble de alumnos ({len(alumnos_ids) * 2}). Debe ser 2 imágenes por alumno (S1 y S2)."
+            )
             return redirect('simulacros:grupo_calificar_simulacro', grupo_id=grupo.id)
 
         archivos_ordenados = sorted(archivos, key=lambda x: x.name)
         alumnos_map = {str(a.id): a for a in Alumno.objects.filter(id__in=alumnos_ids)}
         alumnos_seleccionados = [alumnos_map[aid] for aid in alumnos_ids if aid in alumnos_map]
 
+        token = uuid.uuid4().hex
         batch = {
+            'token':        token,
             'simulacro_id': simulacro_id,
             'grupo_id':     grupo_id,
             'fecha':        fecha_realizacion,
@@ -72,14 +80,33 @@ class GrupoCalificarSimulacroView(LoginRequiredMixin, View):
                     for chunk in file_s2.chunks():
                         dest.write(chunk)
 
-                resultado = extraer_tiras_individuales(path_s1, path_s2, user=request.user)
+                alumno_err = None
+                p_s1 = []
+                p_s2 = []
+
+                try:
+                    p_s1 = extraer_preguntas_con_recortes(path_s1, 'S1', token, user=request.user, prefix=f"a{alumno.id}_")
+                except Exception as e:
+                    alumno_err = f"Error en S1: {e}"
+
+                try:
+                    p_s2 = extraer_preguntas_con_recortes(path_s2, 'S2', token, user=request.user, prefix=f"a{alumno.id}_")
+                except Exception as e:
+                    prev = (alumno_err + " | ") if alumno_err else ""
+                    alumno_err = f"{prev}Error en S2: {e}"
+
+                dudas_s1 = sum(1 for p in p_s1 if p.get('es_dudosa'))
+                dudas_s2 = sum(1 for p in p_s2 if p.get('es_dudosa'))
 
                 batch['alumnos'].append({
-                    'id':     alumno.id,
-                    'nombre': f"{alumno.primer_apellido} {alumno.segundo_apellido} {alumno.nombres}".strip(),
-                    's1':     resultado['s1'],
-                    's2':     resultado['s2'],
-                    'error':  resultado.get('error'),
+                    'id':           alumno.id,
+                    'nombre':       f"{alumno.primer_apellido} {alumno.segundo_apellido} {alumno.nombres}".strip(),
+                    'preguntas_s1': p_s1,
+                    'preguntas_s2': p_s2,
+                    'dudas_count':  dudas_s1 + dudas_s2,
+                    'dudas_s1':     dudas_s1,
+                    'dudas_s2':     dudas_s2,
+                    'error':        alumno_err,
                 })
 
         request.session['simulacro_batch'] = batch
@@ -88,7 +115,8 @@ class GrupoCalificarSimulacroView(LoginRequiredMixin, View):
 
 class RevisarSimulacroView(LoginRequiredMixin, View):
     """
-    Página intermedia de revisión/corrección de secuencias OMR antes de calificar.
+    Página intermedia de revisión/corrección de preguntas OMR recortadas con opción detectada
+    antes de calificar.
     """
 
     def get(self, request):
@@ -98,20 +126,19 @@ class RevisarSimulacroView(LoginRequiredMixin, View):
             return redirect('simulacros:resultados_simulacros')
 
         simulacro = get_object_or_404(Simulacro, id=batch['simulacro_id'])
+        grupo = get_object_or_404(Grupo, id=batch['grupo_id'])
 
-        total_errores = 0
-        for alumno in batch['alumnos']:
-            for tira in alumno['s1'] + alumno['s2']:
-                if not tira['ok']:
-                    total_errores += 1
-            if alumno.get('error'):
-                total_errores += 1
+        total_dudosas = sum(a.get('dudas_count', 0) for a in batch['alumnos'])
+        total_errores = sum(1 for a in batch['alumnos'] if a.get('error'))
 
         context = {
             'batch':         batch,
             'simulacro':     simulacro,
+            'grupo':         grupo,
+            'alumnos':       batch['alumnos'],
+            'total_alumnos': len(batch['alumnos']),
+            'total_dudosas': total_dudosas,
             'total_errores': total_errores,
-            'longitudes':    LONGITUDES_ESPERADAS,
         }
         return render(request, 'simulacros/revisar_simulacro.html', context)
 
@@ -138,18 +165,25 @@ class RevisarSimulacroView(LoginRequiredMixin, View):
             alumno_id = alumno_data['id']
             alumno    = get_object_or_404(Alumno, id=alumno_id)
 
-            # Leer secuencias corregidas desde el formulario
-            s1_tiras = [
-                request.POST.get(f"s1_{alumno_id}_{tira['etiqueta']}", tira['secuencia'])
-                for tira in alumno_data['s1']
-            ]
-            s2_tiras = [
-                request.POST.get(f"s2_{alumno_id}_{tira['etiqueta']}", tira['secuencia'])
-                for tira in alumno_data['s2']
-            ]
+            # Reconstruir S1 (120 preguntas)
+            s1_list = []
+            for k in range(1, 121):
+                val = request.POST.get(f"s1_{alumno_id}_q_{k}")
+                if not val or val not in ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'Z'):
+                    p_orig = alumno_data.get('preguntas_s1', [])
+                    val = p_orig[k - 1]['opcion'] if (k - 1 < len(p_orig)) else 'Z'
+                s1_list.append(val)
+            resp_s1 = ''.join(s1_list)
 
-            resp_s1 = ''.join(s1_tiras)
-            resp_s2 = ''.join(s2_tiras)
+            # Reconstruir S2 (134 preguntas)
+            s2_list = []
+            for k in range(1, 135):
+                val = request.POST.get(f"s2_{alumno_id}_q_{k}")
+                if not val or val not in ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'Z'):
+                    p_orig = alumno_data.get('preguntas_s2', [])
+                    val = p_orig[k - 1]['opcion'] if (k - 1 < len(p_orig)) else 'Z'
+                s2_list.append(val)
+            resp_s2 = ''.join(s2_list)
 
             try:
                 comp_s1 = calificar(resp_s1, simulacro.soluciones_s1, cortes_s1, componentes_s1)
@@ -165,8 +199,7 @@ class RevisarSimulacroView(LoginRequiredMixin, View):
                         consolidados[comp]['buenas']  += comp_s2[comp]['buenas']
                         consolidados[comp]['totales'] += comp_s2[comp]['totales']
 
-                puntajes          = calcular_puntaje_icfes(consolidados)
-                # SE PASA EL SIMULACRO COMPLETO PARA SOPORTAR LOS PARÁMETROS CONFIGURABLES DESDE EL ADMIN
+                puntajes = calcular_puntaje_icfes(consolidados)
                 puntajes_modificados = modificar_puntajes(puntajes, simulacro)
 
                 ResultadoSimulacro.objects.update_or_create(
@@ -193,6 +226,12 @@ class RevisarSimulacroView(LoginRequiredMixin, View):
                 )
             except Exception as e:
                 errores_calificacion.append(f"{alumno}: {e}")
+
+        # Limpiar imágenes temporales de recorte del lote
+        if batch.get('token'):
+            token_dir = os.path.join(settings.MEDIA_ROOT, 'temp_omr_crops', batch['token'])
+            if os.path.exists(token_dir):
+                shutil.rmtree(token_dir, ignore_errors=True)
 
         del request.session['simulacro_batch']
 

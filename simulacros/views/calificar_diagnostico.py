@@ -2,16 +2,19 @@
 
 import os
 import tempfile
+import uuid
+import shutil
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse
+from django.conf import settings
 
 from academico.models import Grupo, Alumno
 from ..models import SimulacroDiagnostico, ResultadoSimulacroDiagnostico
-from ..procesar_simulacro import extraer_tiras_diagnostico, LONGITUDES_ESPERADAS
+from ..procesar_simulacro import extraer_preguntas_con_recortes, LONGITUDES_ESPERADAS
 from ..calculos import calificar, calcular_puntaje_icfes, modificar_puntajes
 
 
@@ -58,7 +61,9 @@ class GrupoCalificarDiagnosticoView(LoginRequiredMixin, View):
         alumnos_map = {str(a.id): a for a in Alumno.objects.filter(id__in=alumnos_ids)}
         alumnos_seleccionados = [alumnos_map[aid] for aid in alumnos_ids if aid in alumnos_map]
 
+        token = uuid.uuid4().hex
         batch = {
+            'token':        token,
             'simulacro_id': simulacro_id,
             'grupo_id':     grupo_id,
             'fecha':        fecha_realizacion,
@@ -74,13 +79,22 @@ class GrupoCalificarDiagnosticoView(LoginRequiredMixin, View):
                     for chunk in file_sd.chunks():
                         dest.write(chunk)
 
-                resultado = extraer_tiras_diagnostico(path_sd, user=request.user)
+                alumno_err = None
+                p_sd = []
+
+                try:
+                    p_sd = extraer_preguntas_con_recortes(path_sd, 'SD', token, user=request.user, prefix=f"a{alumno.id}_")
+                except Exception as e:
+                    alumno_err = f"SD: {e}"
+
+                dudas_sd = sum(1 for p in p_sd if p.get('es_dudosa'))
 
                 batch['alumnos'].append({
-                    'id':     alumno.id,
-                    'nombre': f"{alumno.primer_apellido} {alumno.segundo_apellido} {alumno.nombres}".strip(),
-                    'sd':     resultado['sd'],
-                    'error':  resultado.get('error'),
+                    'id':           alumno.id,
+                    'nombre':       f"{alumno.primer_apellido} {alumno.segundo_apellido} {alumno.nombres}".strip(),
+                    'preguntas_sd': p_sd,
+                    'dudas_count':  dudas_sd,
+                    'error':        alumno_err,
                 })
 
         request.session['simulacro_diagnostico_batch'] = batch
@@ -89,7 +103,8 @@ class GrupoCalificarDiagnosticoView(LoginRequiredMixin, View):
 
 class RevisarDiagnosticoView(LoginRequiredMixin, View):
     """
-    Vista intermedia para revisar/corregir secuencias OMR del Simulacro Diagnóstico antes de guardar.
+    Vista intermedia para revisar/corregir preguntas OMR recortadas del Simulacro Diagnóstico
+    antes de calificar.
     """
 
     def get(self, request):
@@ -99,20 +114,19 @@ class RevisarDiagnosticoView(LoginRequiredMixin, View):
             return redirect('simulacros:resultados_simulacros')
 
         simulacro = get_object_or_404(SimulacroDiagnostico, id=batch['simulacro_id'])
+        grupo = get_object_or_404(Grupo, id=batch['grupo_id'])
 
-        total_errores = 0
-        for alumno in batch['alumnos']:
-            for tira in alumno['sd']:
-                if not tira['ok']:
-                    total_errores += 1
-            if alumno.get('error'):
-                total_errores += 1
+        total_dudosas = sum(a.get('dudas_count', 0) for a in batch['alumnos'])
+        total_errores = sum(1 for a in batch['alumnos'] if a.get('error'))
 
         context = {
             'batch':         batch,
             'simulacro':     simulacro,
+            'grupo':         grupo,
+            'alumnos':       batch['alumnos'],
+            'total_alumnos': len(batch['alumnos']),
+            'total_dudosas': total_dudosas,
             'total_errores': total_errores,
-            'longitudes':    LONGITUDES_ESPERADAS['SD'],
         }
         return render(request, 'simulacros/revisar_diagnostico.html', context)
 
@@ -135,13 +149,15 @@ class RevisarDiagnosticoView(LoginRequiredMixin, View):
             alumno_id = alumno_data['id']
             alumno    = get_object_or_404(Alumno, id=alumno_id)
 
-            # Leer secuencias corregidas desde el formulario
-            sd_tiras = [
-                request.POST.get(f"sd_{alumno_id}_{tira['etiqueta']}", tira['secuencia'])
-                for tira in alumno_data['sd']
-            ]
-
-            resp_sd = ''.join(sd_tiras)
+            # Reconstruir SD (90 preguntas)
+            sd_list = []
+            for k in range(1, 91):
+                val = request.POST.get(f"sd_{alumno_id}_q_{k}")
+                if not val or val not in ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'Z'):
+                    p_orig = alumno_data.get('preguntas_sd', [])
+                    val = p_orig[k - 1]['opcion'] if (k - 1 < len(p_orig)) else 'Z'
+                sd_list.append(val)
+            resp_sd = ''.join(sd_list)
 
             try:
                 comp_results = calificar(resp_sd, simulacro.soluciones, cortes, componentes)
@@ -171,6 +187,12 @@ class RevisarDiagnosticoView(LoginRequiredMixin, View):
                 )
             except Exception as e:
                 errores_calificacion.append(f"{alumno}: {e}")
+
+        # Limpiar imágenes temporales de recorte del lote
+        if batch.get('token'):
+            token_dir = os.path.join(settings.MEDIA_ROOT, 'temp_omr_crops', batch['token'])
+            if os.path.exists(token_dir):
+                shutil.rmtree(token_dir, ignore_errors=True)
 
         del request.session['simulacro_diagnostico_batch']
 

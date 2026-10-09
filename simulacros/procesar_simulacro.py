@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 import os
 import sys
+from django.conf import settings
 
 # ================================================================
 # CONSTANTES DE CORTE — Ajustar si los recortes no caen bien
@@ -755,6 +756,149 @@ def extraer_tiras_diagnostico(path_imagen, user=None):
         resultado['error'] = f"SD: {e}"
 
     return resultado
+
+
+def extraer_preguntas_con_recortes(path_imagen, modo, token, user=None, prefix=""):
+    """
+    Procesa una hoja modelo o de estudiante escaneada, extrae las tiras y recorta individualmente
+    cada pregunta (fila de burbujas), guardando el recorte como imagen JPEG en media/temp_omr_crops/<token>/.
+    
+    Retorna:
+        list of dicts con num, opcion, n_opciones, opciones_disponibles, img_url, materia, columna, es_dudosa.
+    """
+    crops_dir = os.path.join(settings.MEDIA_ROOT, 'temp_omr_crops', token)
+    os.makedirs(crops_dir, exist_ok=True)
+
+    img = cv2.imread(path_imagen)
+    if img is None:
+        raise ValueError(f"No se pudo cargar la imagen: {path_imagen}")
+    
+    img = normalizar_hoja(img)
+    tiras = hacer_tiras(img, modo, user=user)
+
+    MATERIAS_S1 = {
+        'C1': 'Matemáticas (1-30)',
+        'C2': 'Lectura Crítica (31-60)',
+        'C3': 'Sociales y Ciudadanas (61-90)',
+        'C4': 'Ciencias Naturales (91-120)',
+    }
+    MATERIAS_S2 = {
+        'C1': 'Sociales y Ciudadanas 2 (1-45)',
+        'C2a': 'Matemáticas 2 (46-79)',
+        'C2b': 'Ciencias Naturales 2 (80-89)',
+        'C3': 'Inglés (90-134)',
+    }
+    MATERIAS_SD = {
+        'C1': 'Matemáticas / Lectura (1-30)',
+        'C2': 'Lectura / Sociales / Naturales (31-60)',
+        'C3a': 'Ciencias Naturales (61-72)',
+        'C3b': 'Inglés (73-90)',
+    }
+
+    if modo == 'S1':
+        materias_map = MATERIAS_S1
+    elif modo == 'S2':
+        materias_map = MATERIAS_S2
+    else:
+        materias_map = MATERIAS_SD
+
+    preguntas = []
+    q_global_num = 1
+
+    for i, (tira_img, n_opciones, _etq) in enumerate(tiras):
+        if modo == 'S1':
+            etiqueta = ETIQUETAS_S1[i]
+        elif modo == 'S2':
+            etiqueta = ETIQUETAS_S2[i]
+        else:
+            etiqueta = ETIQUETAS_SD[i]
+
+        esperado = LONGITUDES_ESPERADAS[modo][etiqueta]
+        materia_label = materias_map.get(etiqueta, f"Columna {etiqueta}")
+
+        # OMR sobre la tira
+        imgThresh, circulos, _ = encontrar_circulos_en_tira(tira_img, n_opciones)
+        respuestas = evaluar_tira(circulos, imgThresh, n_opciones)
+
+        # Agrupar círculos en filas para extraer coordenadas verticales
+        burbujas = []
+        for c in circulos:
+            x, y, w, h = cv2.boundingRect(c)
+            burbujas.append({'x': x, 'y': y, 'w': w, 'h': h, 'cY': y + h // 2})
+
+        filas = []
+        if burbujas:
+            burbujas = sorted(burbujas, key=lambda b: b['cY'])
+            tol_y = burbujas[0]['h'] * 0.70
+            fila_cur = [burbujas[0]]
+            for b in burbujas[1:]:
+                if abs(b['cY'] - fila_cur[-1]['cY']) < tol_y:
+                    fila_cur.append(b)
+                else:
+                    filas.append(fila_cur)
+                    fila_cur = [b]
+            filas.append(fila_cur)
+
+        H_tira, W_tira = tira_img.shape[:2]
+        row_height = H_tira / float(esperado) if esperado > 0 else 30
+
+        for k in range(esperado):
+            opcion = respuestas[k] if k < len(respuestas) else 'Z'
+            if opcion not in ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'):
+                opcion = 'Z'
+
+            if len(filas) == esperado:
+                f = filas[k]
+                min_y = min(b['y'] for b in f)
+                max_y = max(b['y'] + b['h'] for b in f)
+                pad = 6
+                y1 = max(0, min_y - pad)
+                y2 = min(H_tira, max_y + pad)
+            else:
+                target_cy = (k + 0.5) * row_height
+                matching_f = None
+                for f in filas:
+                    c_y = sum(b['cY'] for b in f) / float(len(f))
+                    if abs(c_y - target_cy) < row_height * 0.45:
+                        matching_f = f
+                        break
+                if matching_f:
+                    min_y = min(b['y'] for b in matching_f)
+                    max_y = max(b['y'] + b['h'] for b in matching_f)
+                    pad = 6
+                    y1 = max(0, min_y - pad)
+                    y2 = min(H_tira, max_y + pad)
+                else:
+                    y1 = max(0, int(k * row_height))
+                    y2 = min(H_tira, int((k + 1) * row_height))
+
+            crop_img = tira_img[y1:y2, 0:W_tira]
+            if crop_img.size == 0 or crop_img.shape[0] < 5:
+                y1 = max(0, int(k * row_height))
+                y2 = min(H_tira, int((k + 1) * row_height))
+                crop_img = tira_img[y1:y2, 0:W_tira]
+
+            crop_name = f"{prefix}{modo.lower()}_{etiqueta.lower()}_q{q_global_num}.jpg"
+            crop_path = os.path.join(crops_dir, crop_name)
+            cv2.imwrite(crop_path, crop_img)
+
+            img_url = f"{settings.MEDIA_URL}temp_omr_crops/{token}/{crop_name}"
+            opciones_disp = ['A', 'B', 'C', 'D'] if n_opciones == 4 else ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+
+            preguntas.append({
+                'num': q_global_num,
+                'opcion': opcion,
+                'n_opciones': n_opciones,
+                'opciones_disponibles': opciones_disp,
+                'img_url': img_url,
+                'materia': materia_label,
+                'columna': etiqueta,
+                'es_dudosa': (opcion == 'Z'),
+            })
+
+            q_global_num += 1
+
+    return preguntas
 
 
 

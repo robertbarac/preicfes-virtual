@@ -1,245 +1,677 @@
 {% extends 'base.html' %}
-{% block title %}Revisar Secuencias — {{ simulacro.nombre }}{% endblock %}
+{% load static %}
+
+{% block title %}Revisar OMR por Alumno — {{ simulacro.nombre }} | PreVirtual{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8"
-     style="background: linear-gradient(160deg, #f8fafc 0%, #f1f5f9 60%, #e9f0fb 100%); min-height: 100vh;">
+<style>
+  .option-pill-span.is-active {
+    background-color: #4f46e5 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4) !important;
+    font-weight: 900 !important;
+  }
+  .option-pill-span-z.is-active {
+    background-color: #f59e0b !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4) !important;
+    font-weight: 900 !important;
+  }
+</style>
 
-  <div class="flex justify-between items-center mb-6">
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+
+  <!-- Header -->
+  <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-800">Revisar Secuencias OMR</h1>
-      <p class="text-sm text-gray-500 mt-1">{{ simulacro.nombre }} — {{ batch.fecha }}</p>
+      <div class="flex items-center gap-2 text-xs font-bold text-indigo-600 uppercase tracking-widest mb-1">
+        <span>Escaner Óptico OMR</span>
+        <span>•</span>
+        <span>Verificación Grupal</span>
+        <span>•</span>
+        <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200">Grupo: {{ grupo.codigo }}</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black text-slate-900">
+        Revisión y Corrección de Respuestas
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-1">
+        {{ simulacro.nombre }} • Fecha: {{ batch.fecha }} • Opciones OMR detectadas con <span class="font-bold text-indigo-600">recorte visual</span> de contraste. Haz clic en cualquier imagen para abrir el <span class="font-semibold text-slate-700">Zoom Ampliado</span>.
+      </p>
     </div>
-    <div id="globalStatus" class="flex items-center gap-3">
-      <span class="text-sm font-semibold text-gray-600">Errores detectados:</span>
-      <span id="errorCount"
-            class="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold
-                   {% if total_errores > 0 %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
-        {{ total_errores }}
-      </span>
+
+    <!-- Stats y Botón Principal -->
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="bg-white px-3.5 py-2 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-2">
+        <span class="text-xs text-slate-500 font-medium">Estudiantes:</span>
+        <span class="text-sm font-black text-slate-800">{{ total_alumnos }}</span>
+      </div>
+      <div class="bg-white px-3.5 py-2 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-2">
+        <span class="text-xs text-slate-500 font-medium">Dudosas / Z:</span>
+        <span class="text-sm font-black {% if total_dudosas > 0 %}text-amber-600{% else %}text-emerald-600{% endif %}" id="totalDudosasBadge">
+          {{ total_dudosas }}
+        </span>
+      </div>
     </div>
   </div>
 
   {% if messages %}
-  <div class="mb-6 space-y-2">
+  <div class="space-y-3 mb-6">
     {% for message in messages %}
-    <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
-      {{ message }}
+    <div class="p-4 rounded-2xl text-sm font-medium flex items-center justify-between {% if message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% elif message.tags == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200{% else %}bg-green-50 text-green-800 border border-green-200{% endif %}">
+      <span>{{ message }}</span>
+      <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-700">✕</button>
     </div>
     {% endfor %}
   </div>
   {% endif %}
 
-  <form method="post" id="revisarForm">
+  <form method="POST" id="formCalificarLote" class="space-y-6">
     {% csrf_token %}
 
-    <div class="space-y-6">
-      {% for alumno in batch.alumnos %}
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-
-        <!-- Encabezado del alumno -->
-        <div class="flex items-center justify-between px-5 py-3
-                    bg-gradient-to-r from-slate-50 via-blue-50 to-slate-50 border-b border-gray-100">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-              {{ forloop.counter }}
-            </div>
-            <span class="font-semibold text-gray-800">{{ alumno.nombre }}</span>
-          </div>
-          {% if alumno.error %}
-          <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
-            ⚠ {{ alumno.error }}
-          </span>
-          {% endif %}
-          <span class="alumno-status text-xs font-semibold px-2 py-1 rounded-full"></span>
+    <!-- ── BARRA SELECTORA DE ESTUDIANTES ── -->
+    <div class="bg-white p-3 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
+      <div class="flex items-center justify-between gap-2 px-1">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-700 uppercase tracking-wide">Seleccionar Estudiante:</span>
+          <span class="text-xs text-slate-400 font-normal">Navega alumno por alumno para revisar sus hojas</span>
         </div>
-
-        <!-- Tiras -->
-        <div class="p-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          <!-- Sesión 1 -->
-          <div>
-            <h3 class="text-xs font-bold uppercase tracking-widest text-blue-600 mb-3">Sesión 1 (120 respuestas)</h3>
-            <div class="grid grid-cols-2 gap-3">
-              {% for tira in alumno.s1 %}
-              {% with campo_id="s1_"|add:alumno.id|stringformat:"s"|add:"_"|add:tira.etiqueta %}
-              <div class="tira-group" data-alumno="{{ alumno.id }}" data-sesion="s1" data-etiqueta="{{ tira.etiqueta }}" data-esperado="{{ tira.esperado }}">
-                <div class="flex items-center justify-between mb-1">
-                  <label for="{{ campo_id }}" class="text-xs font-semibold text-gray-600">
-                    {{ tira.etiqueta }}
-                    <span class="text-gray-400 font-normal">({{ tira.esperado }} resp.)</span>
-                  </label>
-                  <span class="tira-badge text-xs font-bold px-1.5 py-0.5 rounded
-                               {% if tira.ok %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
-                    <span class="tira-len">{{ tira.secuencia|length }}</span>/{{ tira.esperado }}
-                  </span>
-                </div>
-                <textarea id="{{ campo_id }}"
-                          name="s1_{{ alumno.id }}_{{ tira.etiqueta }}"
-                          rows="2"
-                          spellcheck="false"
-                          class="tira-input w-full font-mono text-sm border-2 rounded-lg px-2 py-1 resize-none
-                                 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors
-                                 {% if tira.ok %}border-green-400 bg-green-50{% else %}border-red-400 bg-red-50{% endif %}"
-                          data-esperado="{{ tira.esperado }}">{{ tira.secuencia }}</textarea>
-              </div>
-              {% endwith %}
-              {% endfor %}
-            </div>
-          </div>
-
-          <!-- Sesión 2 -->
-          <div>
-            <h3 class="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-3">Sesión 2 (134 respuestas)</h3>
-            <div class="grid grid-cols-2 gap-3">
-              {% for tira in alumno.s2 %}
-              {% with campo_id="s2_"|add:alumno.id|stringformat:"s"|add:"_"|add:tira.etiqueta %}
-              <div class="tira-group" data-alumno="{{ alumno.id }}" data-sesion="s2" data-etiqueta="{{ tira.etiqueta }}" data-esperado="{{ tira.esperado }}">
-                <div class="flex items-center justify-between mb-1">
-                  <label for="{{ campo_id }}" class="text-xs font-semibold text-gray-600">
-                    {{ tira.etiqueta }}
-                    <span class="text-gray-400 font-normal">({{ tira.esperado }} resp.)</span>
-                  </label>
-                  <span class="tira-badge text-xs font-bold px-1.5 py-0.5 rounded
-                               {% if tira.ok %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
-                    <span class="tira-len">{{ tira.secuencia|length }}</span>/{{ tira.esperado }}
-                  </span>
-                </div>
-                <textarea id="{{ campo_id }}"
-                          name="s2_{{ alumno.id }}_{{ tira.etiqueta }}"
-                          rows="2"
-                          spellcheck="false"
-                          class="tira-input w-full font-mono text-sm border-2 rounded-lg px-2 py-1 resize-none
-                                 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors
-                                 {% if tira.ok %}border-green-400 bg-green-50{% else %}border-red-400 bg-red-50{% endif %}"
-                          data-esperado="{{ tira.esperado }}">{{ tira.secuencia }}</textarea>
-              </div>
-              {% endwith %}
-              {% endfor %}
-            </div>
-          </div>
-
+        <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-medium">
+          <button type="button" id="btnFilterTodos" onclick="filtrarAlumnos('todos')"
+                  class="px-2.5 py-1 rounded-lg bg-white shadow-xs font-bold text-slate-800 transition">
+            Todos ({{ total_alumnos }})
+          </button>
+          <button type="button" id="btnFilterDudas" onclick="filtrarAlumnos('dudas')"
+                  class="px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-800 transition">
+            Solo con Dudas
+          </button>
         </div>
       </div>
-      {% empty %}
-      <div class="text-center py-12 text-gray-500">No hay alumnos para revisar.</div>
-      {% endfor %}
+
+      <!-- Carrusel / Fila de Chips de Estudiantes -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2 pt-1 scrollbar-thin" id="studentChipsContainer">
+        {% for a in alumnos %}
+        <button type="button" 
+                onclick="seleccionarAlumno('{{ a.id }}')"
+                id="tab_alumno_{{ a.id }}"
+                data-alumno-id="{{ a.id }}"
+                data-dudas="{{ a.dudas_count }}"
+                data-index="{{ forloop.counter0 }}"
+                class="student-chip-btn flex-shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold border transition {% if forloop.first %}bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20 is-selected{% else %}bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200{% endif %}">
+          <span class="chip-index w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono {% if forloop.first %}bg-white/20 text-white{% else %}bg-slate-200 text-slate-700{% endif %}">
+            {{ forloop.counter }}
+          </span>
+          <span class="chip-name truncate max-w-[140px] sm:max-w-[180px]">{{ a.nombre }}</span>
+          <span id="badge_alumno_{{ a.id }}" 
+                class="chip-badge text-[10px] font-bold px-1.5 py-0.5 rounded-full {% if a.dudas_count > 0 %}bg-amber-100 text-amber-800 border border-amber-300{% else %}bg-emerald-100 text-emerald-800 border border-emerald-300{% endif %}">
+            {% if a.dudas_count > 0 %}{{ a.dudas_count }} Z{% else %}✓{% endif %}
+          </span>
+        </button>
+        {% endfor %}
+      </div>
     </div>
 
-    <!-- Barra fija inferior -->
-    <div class="sticky bottom-0 mt-8 bg-white/90 backdrop-blur border-t border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl shadow-lg">
-      <div class="flex items-center gap-2 text-sm">
-        <span class="text-gray-600">Tiras con error:</span>
-        <span id="footerErrorCount" class="font-bold text-red-600">{{ total_errores }}</span>
-        <span id="footerOkMsg" class="font-bold text-green-600 hidden">✅ Todo listo para calificar</span>
+    <!-- ── PANELES DE CONTENIDO POR ESTUDIANTE ── -->
+    {% for a in alumnos %}
+    <div id="panel_alumno_{{ a.id }}" 
+         data-alumno-id="{{ a.id }}"
+         class="alumno-content-panel space-y-4 {% if not forloop.first %}hidden{% endif %}">
+
+      <!-- Encabezado del Estudiante Activo -->
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-5 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="bg-indigo-500/30 text-indigo-200 text-xs font-mono font-bold px-2 py-0.5 rounded-lg border border-indigo-400/30">
+              Estudiante #{{ forloop.counter }} de {{ total_alumnos }}
+            </span>
+            {% if a.error %}
+            <span class="bg-rose-500/30 text-rose-200 text-xs font-bold px-2 py-0.5 rounded-lg border border-rose-400/30">
+              ⚠ {{ a.error }}
+            </span>
+            {% endif %}
+          </div>
+          <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">{{ a.nombre }}</h2>
+        </div>
+
+        <!-- Controles de navegación rápida entre alumnos -->
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="navegarAlumno(-1)"
+                  class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-1.5">
+            ← Anterior
+          </button>
+          <button type="button" onclick="navegarAlumno(1)"
+                  class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow">
+            Siguiente →
+          </button>
+        </div>
       </div>
-      <div class="flex gap-3">
-        <a href="javascript:history.back()"
-           class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
-          ← Volver
+
+      <!-- Selector de Sesión (Tabs S1 y S2) dentro del estudiante -->
+      <div class="bg-white p-2 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-2 sticky top-14 z-20 backdrop-blur-md bg-white/95">
+        <button type="button" id="tabBtnS1_{{ a.id }}" onclick="switchSessionStudent('{{ a.id }}', 's1')" 
+                class="session-btn-s1 flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm">
+          <span>Sesión 1 (Preguntas 1 - 120)</span>
+          <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full" id="count_s1_dudas_{{ a.id }}">
+            {{ a.dudas_s1 }} dudosas
+          </span>
+        </button>
+
+        <button type="button" id="tabBtnS2_{{ a.id }}" onclick="switchSessionStudent('{{ a.id }}', 's2')" 
+                class="session-btn-s2 flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100">
+          <span>Sesión 2 (Preguntas 1 - 134)</span>
+          <span class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full" id="count_s2_dudas_{{ a.id }}">
+            {{ a.dudas_s2 }} dudosas
+          </span>
+        </button>
+      </div>
+
+      <!-- ── CONTENEDOR SESIÓN 1 ── -->
+      <div id="sessionContainerS1_{{ a.id }}" class="space-y-4">
+        <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 py-3 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-black text-indigo-950">Sesión 1 • 120 Preguntas</h3>
+            <p class="text-xs text-indigo-700">Matemáticas (1-30), Lectura (31-60), Sociales (61-90), Naturales (91-120)</p>
+          </div>
+          <span class="text-xs font-mono font-bold text-indigo-600 bg-white px-2.5 py-1 rounded-lg border border-indigo-200">
+            4 Opciones (A, B, C, D)
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {% for p in a.preguntas_s1 %}
+          <div class="q-item flex items-center justify-between p-3 bg-white hover:bg-slate-50 border rounded-2xl gap-3 transition shadow-xs {% if p.es_dudosa %}border-amber-300 bg-amber-50/30{% else %}border-slate-200/90{% endif %}"
+               id="row_s1_{{ a.id }}_{{ p.num }}"
+               data-sesion="s1"
+               data-alumno-id="{{ a.id }}"
+               data-num="{{ p.num }}"
+               data-dudosa="{% if p.es_dudosa %}1{% else %}0{% endif %}">
+            
+            <!-- Lado Izquierdo: Número y Selector de Opciones Marcadas -->
+            <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <span class="q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center {% if p.es_dudosa %}bg-amber-100 text-amber-900 border border-amber-300{% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
+                {{ p.num }}
+              </span>
+
+              <div class="inline-flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/60">
+                {% for opt in p.opciones_disponibles %}
+                <label class="cursor-pointer select-none">
+                  <input type="radio" 
+                         name="s1_{{ a.id }}_q_{{ p.num }}" 
+                         value="{{ opt }}" 
+                         {% if p.opcion == opt %}checked{% endif %} 
+                         class="sr-only"
+                         onchange="updateQuestionUI('s1', '{{ a.id }}', '{{ p.num }}', '{{ opt }}', this)">
+                  <span class="option-pill-span w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-xs font-black transition {% if p.opcion == opt %}is-active bg-indigo-600 text-white shadow-sm{% else %}text-slate-600 hover:bg-slate-200{% endif %}">
+                    {{ opt }}
+                  </span>
+                </label>
+                {% endfor %}
+
+                <!-- Opción Z (Dudosa / Sin marca) -->
+                <label class="cursor-pointer select-none">
+                  <input type="radio" 
+                         name="s1_{{ a.id }}_q_{{ p.num }}" 
+                         value="Z" 
+                         {% if p.opcion == 'Z' %}checked{% endif %} 
+                         class="sr-only"
+                         onchange="updateQuestionUI('s1', '{{ a.id }}', '{{ p.num }}', 'Z', this)">
+                  <span class="option-pill-span-z w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-xs font-black transition {% if p.opcion == 'Z' %}is-active bg-amber-500 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-200{% endif %}"
+                        title="Dudosa / Sin responder">
+                    —
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Lado Derecho: Recorte extraído con Zoom al clic -->
+            <div class="flex-1 max-w-[240px] sm:max-w-[290px] flex justify-end">
+              <button type="button" 
+                      onclick="abrirModalZoom('{{ p.img_url }}', '{{ a.nombre|escapejs }} • S1 - Pregunta {{ p.num }}', 's1', '{{ a.id }}', '{{ p.num }}')"
+                      class="relative group cursor-zoom-in block rounded-lg overflow-hidden border border-slate-200 bg-white shadow-2xs hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                      title="Haz clic para ver zoom ampliado">
+                <img src="{{ p.img_url }}" 
+                     alt="S1 P{{ p.num }}" 
+                     class="h-8 sm:h-9 object-contain group-hover:scale-105 transition-transform"
+                     loading="lazy">
+                <div class="absolute inset-0 bg-indigo-900/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                  <span class="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow">🔍 Zoom</span>
+                </div>
+              </button>
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- ── CONTENEDOR SESIÓN 2 ── -->
+      <div id="sessionContainerS2_{{ a.id }}" class="space-y-4 hidden">
+        <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 py-3 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-black text-indigo-950">Sesión 2 • 134 Preguntas</h3>
+            <p class="text-xs text-indigo-700">Sociales 2 (1-45), Matemáticas 2 (46-79), Naturales 2 (80-89), Inglés (90-134)</p>
+          </div>
+          <span class="text-xs font-mono font-bold text-indigo-600 bg-white px-2.5 py-1 rounded-lg border border-indigo-200">
+            4 y 8 Opciones (A-D, A-H)
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {% for p in a.preguntas_s2 %}
+          <div class="q-item flex items-center justify-between p-3 bg-white hover:bg-slate-50 border rounded-2xl gap-3 transition shadow-xs {% if p.es_dudosa %}border-amber-300 bg-amber-50/30{% else %}border-slate-200/90{% endif %}"
+               id="row_s2_{{ a.id }}_{{ p.num }}"
+               data-sesion="s2"
+               data-alumno-id="{{ a.id }}"
+               data-num="{{ p.num }}"
+               data-dudosa="{% if p.es_dudosa %}1{% else %}0{% endif %}">
+            
+            <!-- Lado Izquierdo: Número y Selector de Opciones Marcadas -->
+            <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <span class="q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center {% if p.es_dudosa %}bg-amber-100 text-amber-900 border border-amber-300{% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
+                {{ p.num }}
+              </span>
+
+              <div class="inline-flex items-center gap-0.5 sm:gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/60 flex-wrap">
+                {% for opt in p.opciones_disponibles %}
+                <label class="cursor-pointer select-none">
+                  <input type="radio" 
+                         name="s2_{{ a.id }}_q_{{ p.num }}" 
+                         value="{{ opt }}" 
+                         {% if p.opcion == opt %}checked{% endif %} 
+                         class="sr-only"
+                         onchange="updateQuestionUI('s2', '{{ a.id }}', '{{ p.num }}', '{{ opt }}', this)">
+                  <span class="option-pill-span w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black transition {% if p.opcion == opt %}is-active bg-indigo-600 text-white shadow-sm{% else %}text-slate-600 hover:bg-slate-200{% endif %}">
+                    {{ opt }}
+                  </span>
+                </label>
+                {% endfor %}
+
+                <!-- Opción Z (Dudosa / Sin marca) -->
+                <label class="cursor-pointer select-none">
+                  <input type="radio" 
+                         name="s2_{{ a.id }}_q_{{ p.num }}" 
+                         value="Z" 
+                         {% if p.opcion == 'Z' %}checked{% endif %} 
+                         class="sr-only"
+                         onchange="updateQuestionUI('s2', '{{ a.id }}', '{{ p.num }}', 'Z', this)">
+                  <span class="option-pill-span-z w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-xs font-black transition {% if p.opcion == 'Z' %}is-active bg-amber-500 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-200{% endif %}"
+                        title="Dudosa / Sin responder">
+                    —
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Lado Derecho: Recorte extraído con Zoom al clic -->
+            <div class="flex-1 max-w-[240px] sm:max-w-[290px] flex justify-end">
+              <button type="button" 
+                      onclick="abrirModalZoom('{{ p.img_url }}', '{{ a.nombre|escapejs }} • S2 - Pregunta {{ p.num }}', 's2', '{{ a.id }}', '{{ p.num }}')"
+                      class="relative group cursor-zoom-in block rounded-lg overflow-hidden border border-slate-200 bg-white shadow-2xs hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                      title="Haz clic para ver zoom ampliado">
+                <img src="{{ p.img_url }}" 
+                     alt="S2 P{{ p.num }}" 
+                     class="h-8 sm:h-9 object-contain group-hover:scale-105 transition-transform"
+                     loading="lazy">
+                <div class="absolute inset-0 bg-indigo-900/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                  <span class="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow">🔍 Zoom</span>
+                </div>
+              </button>
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+    {% endfor %}
+
+    <!-- ── BARRA INFERIOR FLOTANTE DE ACCIÓN ── -->
+    <div class="sticky bottom-4 z-30 bg-white/95 backdrop-blur-md border border-slate-200 rounded-3xl p-4 shadow-xl flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="{% url 'simulacros:grupo_calificar_simulacro' grupo.id %}" 
+           class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition text-xs sm:text-sm">
+          ← Subir Nuevamente
         </a>
-        <button type="submit" id="btnCalificar"
-                class="px-6 py-2 rounded-lg text-white text-sm font-bold transition
-                       {% if total_errores > 0 %}bg-gray-400 cursor-not-allowed{% else %}bg-indigo-600 hover:bg-indigo-700{% endif %}"
-                {% if total_errores > 0 %}disabled{% endif %}>
-          Calificar
+        <div class="hidden sm:block text-xs text-slate-500">
+          Revisa que las respuestas dudosas estén corregidas antes de calificar.
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button type="submit" id="btnFinalizarCalificar"
+                class="px-7 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs sm:text-sm shadow-md shadow-indigo-500/25 hover:shadow-lg transition flex items-center gap-2">
+          <span>Finalizar y Calificar Grupo</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
         </button>
       </div>
     </div>
 
   </form>
+
+</div>
+
+<!-- ================= MODAL DE ZOOM INTERACTIVO ================= -->
+<div id="modalZoom" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in" onclick="cerrarModalZoom(event)">
+  <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden" onclick="event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+        <h3 id="modalZoomTitle" class="text-sm font-black text-slate-800">Recorte Ampliado</h3>
+      </div>
+      <button type="button" onclick="cerrarModalZoomDirecto()" 
+              class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center text-sm font-bold transition">
+        ✕
+      </button>
+    </div>
+
+    <!-- Modal Body: Imagen Gigante en Alta Resolución -->
+    <div class="p-6 bg-slate-100 flex flex-col items-center justify-center min-h-[160px]">
+      <div class="p-3 bg-white rounded-2xl shadow-md border border-slate-200 w-full flex items-center justify-center overflow-x-auto">
+        <img id="modalZoomImg" src="" alt="Recorte Ampliado" class="max-h-48 sm:max-h-64 object-contain transition-transform duration-200 hover:scale-125 origin-center cursor-zoom-in">
+      </div>
+      
+      <!-- Selector de opción rápido dentro del modal -->
+      <div class="mt-4 flex flex-col items-center gap-2 w-full">
+        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Modificar opción directamente:</span>
+        <div class="inline-flex items-center gap-1.5 bg-white p-1.5 rounded-2xl shadow-xs border border-slate-200" id="modalOptionButtons">
+          <!-- Botones inyectados dinámicamente -->
+        </div>
+      </div>
+
+      <p class="text-[11px] text-slate-500 mt-3 flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Pasa el ratón sobre la imagen para agrandar aún más. Presiona <kbd class="px-1.5 py-0.5 text-[10px] bg-white border border-slate-300 rounded font-mono shadow-2xs">ESC</kbd> para cerrar.
+      </p>
+    </div>
+
+    <!-- Modal Footer: Botones Cerrar y Navegación entre preguntas -->
+    <div class="px-6 py-3 border-t border-slate-100 flex items-center justify-between bg-white">
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="modalNavegarPregunta(-1)" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+          ← Pregunta Anterior
+        </button>
+        <button type="button" onclick="modalNavegarPregunta(1)" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+          Siguiente Pregunta →
+        </button>
+      </div>
+      <button type="button" onclick="cerrarModalZoomDirecto()" 
+              class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition">
+        Cerrar Zoom
+      </button>
+    </div>
+
+  </div>
 </div>
 
 <script>
-// Convertir a mayúsculas y solo letras A-Z al escribir
-document.querySelectorAll('.tira-input').forEach(textarea => {
-  textarea.addEventListener('input', function () {
-    // Eliminar caracteres no letra y forzar mayúsculas
-    const pos   = this.selectionStart;
-    const clean = this.value.toUpperCase().replace(/[^A-Z]/g, '');
-    if (this.value !== clean) {
-      this.value = clean;
-      this.setSelectionRange(pos, pos);
+  let activeStudentIndex = 0;
+  const studentChips = Array.from(document.querySelectorAll('.student-chip-btn'));
+  const totalStudents = studentChips.length;
+
+  let currentModalSesion = '';
+  let currentModalAlumnoId = '';
+  let currentModalQNum = 1;
+
+  function seleccionarAlumno(alumnoId) {
+    // 1. Ocultar todos los paneles y quitar estilos activos a todos los chips
+    document.querySelectorAll('.alumno-content-panel').forEach(p => p.classList.add('hidden'));
+    studentChips.forEach(chip => {
+      chip.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-md', 'shadow-indigo-600/20', 'is-selected');
+      chip.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
+      const idxSpan = chip.querySelector('.chip-index');
+      if (idxSpan) {
+        idxSpan.className = 'chip-index w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono bg-slate-200 text-slate-700';
+      }
+    });
+
+    // 2. Activar panel correspondiente
+    const targetPanel = document.getElementById(`panel_alumno_${alumnoId}`);
+    if (targetPanel) {
+      targetPanel.classList.remove('hidden');
     }
-    updateTiraStatus(this);
-    updateGlobalStatus();
+
+    // 3. Activar chip correspondiente
+    const targetChip = document.getElementById(`tab_alumno_${alumnoId}`);
+    if (targetChip) {
+      targetChip.classList.remove('bg-slate-50', 'text-slate-700', 'border-slate-200');
+      targetChip.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-md', 'shadow-indigo-600/20', 'is-selected');
+      const idxSpan = targetChip.querySelector('.chip-index');
+      if (idxSpan) {
+        idxSpan.className = 'chip-index w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono bg-white/20 text-white';
+      }
+      activeStudentIndex = parseInt(targetChip.dataset.index || '0');
+      targetChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }
+
+  function navegarAlumno(delta) {
+    let nextIndex = activeStudentIndex + delta;
+    if (nextIndex < 0) nextIndex = 0;
+    if (nextIndex >= totalStudents) nextIndex = totalStudents - 1;
+    if (nextIndex !== activeStudentIndex && studentChips[nextIndex]) {
+      const alumnoId = studentChips[nextIndex].dataset.alumnoId;
+      seleccionarAlumno(alumnoId);
+    }
+  }
+
+  function filtrarAlumnos(tipo) {
+    const btnTodos = document.getElementById('btnFilterTodos');
+    const btnDudas = document.getElementById('btnFilterDudas');
+
+    if (tipo === 'todos') {
+      btnTodos.className = 'px-2.5 py-1 rounded-lg bg-white shadow-xs font-bold text-slate-800 transition';
+      btnDudas.className = 'px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-800 transition';
+      studentChips.forEach(chip => chip.classList.remove('hidden'));
+    } else {
+      btnDudas.className = 'px-2.5 py-1 rounded-lg bg-white shadow-xs font-bold text-slate-800 transition';
+      btnTodos.className = 'px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-800 transition';
+      studentChips.forEach(chip => {
+        const dudas = parseInt(chip.dataset.dudas || '0');
+        if (dudas > 0) {
+          chip.classList.remove('hidden');
+        } else {
+          chip.classList.add('hidden');
+        }
+      });
+    }
+  }
+
+  function switchSessionStudent(alumnoId, sesion) {
+    const s1Cont = document.getElementById(`sessionContainerS1_${alumnoId}`);
+    const s2Cont = document.getElementById(`sessionContainerS2_${alumnoId}`);
+    const tabS1 = document.getElementById(`tabBtnS1_${alumnoId}`);
+    const tabS2 = document.getElementById(`tabBtnS2_${alumnoId}`);
+
+    if (!s1Cont || !s2Cont) return;
+
+    if (sesion === 's1') {
+      s1Cont.classList.remove('hidden');
+      s2Cont.classList.add('hidden');
+      tabS1.className = 'session-btn-s1 flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm';
+      tabS2.className = 'session-btn-s2 flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100';
+    } else {
+      s1Cont.classList.add('hidden');
+      s2Cont.classList.remove('hidden');
+      tabS2.className = 'session-btn-s2 flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm';
+      tabS1.className = 'session-btn-s1 flex-1 py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100';
+    }
+  }
+
+  function updateQuestionUI(sesion, alumnoId, num, opt, radioInput) {
+    const row = document.getElementById(`row_${sesion}_${alumnoId}_${num}`);
+    if (!row) return;
+
+    const estabaDudosa = (row.dataset.dudosa === '1');
+    const ahoraDudosa = (opt === 'Z');
+
+    // Quitar estado activo de todos los spans en esta fila
+    const spans = row.querySelectorAll('.option-pill-span, .option-pill-span-z');
+    spans.forEach(span => {
+      span.classList.remove('is-active', 'bg-indigo-600', 'bg-amber-500', 'text-white', 'shadow-sm');
+      if (span.classList.contains('option-pill-span-z')) {
+        span.classList.add('text-slate-400');
+      } else {
+        span.classList.add('text-slate-600');
+      }
+    });
+
+    // Activar el span seleccionado
+    const selectedSpan = radioInput.nextElementSibling;
+    if (selectedSpan) {
+      if (opt === 'Z') {
+        selectedSpan.classList.add('is-active', 'bg-amber-500', 'text-white', 'shadow-sm');
+        selectedSpan.classList.remove('text-slate-400');
+      } else {
+        selectedSpan.classList.add('is-active', 'bg-indigo-600', 'text-white', 'shadow-sm');
+        selectedSpan.classList.remove('text-slate-600');
+      }
+    }
+
+    const badge = row.querySelector('.q-badge');
+    row.dataset.dudosa = ahoraDudosa ? '1' : '0';
+
+    if (ahoraDudosa) {
+      row.classList.add('border-amber-300', 'bg-amber-50/30');
+      row.classList.remove('border-slate-200/90');
+      if (badge) {
+        badge.className = 'q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center bg-amber-100 text-amber-900 border border-amber-300';
+      }
+    } else {
+      row.classList.remove('border-amber-300', 'bg-amber-50/30');
+      row.classList.add('border-slate-200/90');
+      if (badge) {
+        badge.className = 'q-badge w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center bg-slate-100 text-slate-700 border border-slate-200';
+      }
+    }
+
+    // Actualizar contadores si cambió el estado de duda
+    if (estabaDudosa !== ahoraDudosa) {
+      recalcularContadores(alumnoId);
+    }
+  }
+
+  function recalcularContadores(alumnoId) {
+    // 1. Contar dudosas del alumno
+    const panel = document.getElementById(`panel_alumno_${alumnoId}`);
+    if (!panel) return;
+    const dudasS1 = panel.querySelectorAll(`[id^="row_s1_${alumnoId}_"][data-dudosa="1"]`).length;
+    const dudasS2 = panel.querySelectorAll(`[id^="row_s2_${alumnoId}_"][data-dudosa="1"]`).length;
+    const totalDudasAlumno = dudasS1 + dudasS2;
+
+    const countS1El = document.getElementById(`count_s1_dudas_${alumnoId}`);
+    if (countS1El) countS1El.textContent = `${dudasS1} dudosas`;
+    const countS2El = document.getElementById(`count_s2_dudas_${alumnoId}`);
+    if (countS2El) countS2El.textContent = `${dudasS2} dudosas`;
+
+    const chip = document.getElementById(`tab_alumno_${alumnoId}`);
+    const chipBadge = document.getElementById(`badge_alumno_${alumnoId}`);
+    if (chip) chip.dataset.dudas = totalDudasAlumno;
+    if (chipBadge) {
+      if (totalDudasAlumno > 0) {
+        chipBadge.className = 'chip-badge text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300';
+        chipBadge.textContent = `${totalDudasAlumno} Z`;
+      } else {
+        chipBadge.className = 'chip-badge text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300';
+        chipBadge.textContent = '✓';
+      }
+    }
+
+    // 2. Contar dudosas globales
+    const totalGlobal = document.querySelectorAll('.q-item[data-dudosa="1"]').length;
+    const globalBadge = document.getElementById('totalDudosasBadge');
+    if (globalBadge) {
+      globalBadge.textContent = totalGlobal;
+      globalBadge.className = `text-sm font-black ${totalGlobal > 0 ? 'text-amber-600' : 'text-emerald-600'}`;
+    }
+  }
+
+  // === MODAL DE ZOOM INTERACTIVO ===
+  function abrirModalZoom(imgUrl, titleText, sesion, alumnoId, qNum) {
+    const modal = document.getElementById('modalZoom');
+    const modalImg = document.getElementById('modalZoomImg');
+    const modalTitle = document.getElementById('modalZoomTitle');
+    const optionsCont = document.getElementById('modalOptionButtons');
+
+    currentModalSesion = sesion;
+    currentModalAlumnoId = alumnoId;
+    currentModalQNum = parseInt(qNum);
+
+    modalImg.src = imgUrl;
+    modalTitle.textContent = titleText;
+
+    // Detectar opciones disponibles de la fila
+    const row = document.getElementById(`row_${sesion}_${alumnoId}_${qNum}`);
+    optionsCont.innerHTML = '';
+
+    if (row) {
+      const inputs = row.querySelectorAll('input[type="radio"]');
+      inputs.forEach(inp => {
+        const optVal = inp.value;
+        const isChecked = inp.checked;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = (optVal === 'Z') ? '— (Sin Marca)' : optVal;
+        btn.className = `px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+          isChecked 
+            ? (optVal === 'Z' ? 'bg-amber-500 text-white shadow' : 'bg-indigo-600 text-white shadow') 
+            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+        }`;
+        btn.onclick = () => {
+          inp.checked = true;
+          updateQuestionUI(sesion, alumnoId, qNum, optVal, inp);
+          abrirModalZoom(imgUrl, titleText, sesion, alumnoId, qNum); // refrescar botones
+        };
+        optionsCont.appendChild(btn);
+      });
+    }
+
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function modalNavegarPregunta(delta) {
+    const maxQ = (currentModalSesion === 's1') ? 120 : 134;
+    let nextQ = currentModalQNum + delta;
+    if (nextQ < 1) nextQ = 1;
+    if (nextQ > maxQ) nextQ = maxQ;
+
+    const nextRow = document.getElementById(`row_${currentModalSesion}_${currentModalAlumnoId}_${nextQ}`);
+    if (nextRow) {
+      const img = nextRow.querySelector('img');
+      const studentName = document.querySelector(`#panel_alumno_${currentModalAlumnoId} h2`)?.textContent || '';
+      const title = `${studentName} • ${currentModalSesion.toUpperCase()} - Pregunta ${nextQ}`;
+      if (img) {
+        abrirModalZoom(img.src, title, currentModalSesion, currentModalAlumnoId, nextQ);
+      }
+    }
+  }
+
+  function cerrarModalZoom(event) {
+    if (event.target.id === 'modalZoom') {
+      cerrarModalZoomDirecto();
+    }
+  }
+
+  function cerrarModalZoomDirecto() {
+    const modal = document.getElementById('modalZoom');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      cerrarModalZoomDirecto();
+    } else if (!document.getElementById('modalZoom').classList.contains('hidden')) {
+      if (e.key === 'ArrowLeft') {
+        modalNavegarPregunta(-1);
+      } else if (e.key === 'ArrowRight') {
+        modalNavegarPregunta(1);
+      }
+    }
   });
-});
-
-function updateTiraStatus(textarea) {
-  const group    = textarea.closest('.tira-group');
-  const badge    = group.querySelector('.tira-badge');
-  const lenSpan  = group.querySelector('.tira-len');
-  const esperado = parseInt(textarea.dataset.esperado);
-  const actual   = textarea.value.replace(/\s/g, '').length;
-  const ok       = actual === esperado;
-
-  lenSpan.textContent = actual;
-
-  if (ok) {
-    badge.className     = 'tira-badge text-xs font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-700';
-    textarea.className  = textarea.className
-      .replace('border-red-400 bg-red-50', 'border-green-400 bg-green-50');
-    if (!textarea.className.includes('border-green-400')) {
-      textarea.className += ' border-green-400 bg-green-50';
-    }
-  } else {
-    badge.className     = 'tira-badge text-xs font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700';
-    textarea.className  = textarea.className
-      .replace('border-green-400 bg-green-50', 'border-red-400 bg-red-50');
-    if (!textarea.className.includes('border-red-400')) {
-      textarea.className += ' border-red-400 bg-red-50';
-    }
-  }
-}
-
-function updateGlobalStatus() {
-  const totalErrores = document.querySelectorAll(
-    '.tira-input'
-  ).length - [...document.querySelectorAll('.tira-input')].filter(t => {
-    const actual   = t.value.replace(/\s/g, '').length;
-    const esperado = parseInt(t.dataset.esperado);
-    return actual === esperado;
-  }).length;
-
-  document.getElementById('errorCount').textContent      = totalErrores;
-  document.getElementById('footerErrorCount').textContent = totalErrores;
-
-  const btnCalificar = document.getElementById('btnCalificar');
-  const okMsg        = document.getElementById('footerOkMsg');
-  const errCount     = document.getElementById('footerErrorCount');
-
-  if (totalErrores === 0) {
-    btnCalificar.disabled = false;
-    btnCalificar.className = btnCalificar.className
-      .replace('bg-gray-400 cursor-not-allowed', 'bg-indigo-600 hover:bg-indigo-700');
-    document.getElementById('errorCount').className =
-      'inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700';
-    errCount.classList.add('hidden');
-    okMsg.classList.remove('hidden');
-  } else {
-    btnCalificar.disabled = true;
-    btnCalificar.className = btnCalificar.className
-      .replace('bg-indigo-600 hover:bg-indigo-700', 'bg-gray-400 cursor-not-allowed');
-    document.getElementById('errorCount').className =
-      'inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700';
-    errCount.classList.remove('hidden');
-    okMsg.classList.add('hidden');
-  }
-}
-
-// Sanear al cargar (por si llegó con espacios del textarea)
-document.querySelectorAll('.tira-input').forEach(t => {
-  t.value = t.value.trim();
-  updateTiraStatus(t);
-});
-updateGlobalStatus();
-
-// Feedback al enviar
-document.getElementById('revisarForm').addEventListener('submit', function () {
-  const btn = document.getElementById('btnCalificar');
-  btn.disabled   = true;
-  btn.textContent = 'Calificando...';
-});
 </script>
 {% endblock %}
