@@ -76,6 +76,11 @@ class Simulacro(models.Model):
         ),
     )
 
+    mostrar_puntaje_real = models.BooleanField(
+        default=False,
+        verbose_name="Mostrar Puntaje Real a Estudiantes",
+        help_text="Si está activo, en la consulta de estudiante y el PDF descargable se mostrarán los puntajes reales en lugar de los modificados."
+    )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -154,6 +159,34 @@ class ResultadoSimulacro(models.Model):
             return "Calificado"
         return "Incompleto"
 
+    @property
+    def debe_mostrar_puntaje_real(self):
+        return bool(getattr(self.simulacro, 'mostrar_puntaje_real', False))
+
+    @property
+    def puntaje_global_mostrado(self):
+        return self.puntaje_global if self.debe_mostrar_puntaje_real else self.puntaje_global_modificado
+
+    @property
+    def puntaje_matematicas_mostrado(self):
+        return self.puntaje_matematicas if self.debe_mostrar_puntaje_real else self.puntaje_matematicas_modificado
+
+    @property
+    def puntaje_lectura_mostrado(self):
+        return self.puntaje_lectura if self.debe_mostrar_puntaje_real else self.puntaje_lectura_modificado
+
+    @property
+    def puntaje_sociales_mostrado(self):
+        return self.puntaje_sociales if self.debe_mostrar_puntaje_real else self.puntaje_sociales_modificado
+
+    @property
+    def puntaje_naturales_mostrado(self):
+        return self.puntaje_naturales if self.debe_mostrar_puntaje_real else self.puntaje_naturales_modificado
+
+    @property
+    def puntaje_ingles_mostrado(self):
+        return self.puntaje_ingles if self.debe_mostrar_puntaje_real else self.puntaje_ingles_modificado
+
 
 # ================================================================
 # SIMULACRO DIAGNÓSTICO (1 sola sesión, 90 preguntas, 3 columnas)
@@ -193,6 +226,11 @@ class SimulacroDiagnostico(models.Model):
         ),
     )
 
+    mostrar_puntaje_real = models.BooleanField(
+        default=False,
+        verbose_name="Mostrar Puntaje Real a Estudiantes",
+        help_text="Si está activo, en la consulta de estudiante y el PDF descargable se mostrarán los puntajes reales en lugar de los modificados."
+    )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -271,3 +309,31 @@ class ResultadoSimulacroDiagnostico(models.Model):
         if self.respuestas and len(self.respuestas) >= 90:
             return "Calificado"
         return "Incompleto"
+
+    @property
+    def debe_mostrar_puntaje_real(self):
+        return bool(getattr(self.simulacro, 'mostrar_puntaje_real', False))
+
+    @property
+    def puntaje_global_mostrado(self):
+        return self.puntaje_global if self.debe_mostrar_puntaje_real else self.puntaje_global_modificado
+
+    @property
+    def puntaje_matematicas_mostrado(self):
+        return self.puntaje_matematicas if self.debe_mostrar_puntaje_real else self.puntaje_matematicas_modificado
+
+    @property
+    def puntaje_lectura_mostrado(self):
+        return self.puntaje_lectura if self.debe_mostrar_puntaje_real else self.puntaje_lectura_modificado
+
+    @property
+    def puntaje_sociales_mostrado(self):
+        return self.puntaje_sociales if self.debe_mostrar_puntaje_real else self.puntaje_sociales_modificado
+
+    @property
+    def puntaje_naturales_mostrado(self):
+        return self.puntaje_naturales if self.debe_mostrar_puntaje_real else self.puntaje_naturales_modificado
+
+    @property
+    def puntaje_ingles_mostrado(self):
+        return self.puntaje_ingles if self.debe_mostrar_puntaje_real else self.puntaje_ingles_modificado

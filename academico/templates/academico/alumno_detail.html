@@ -521,7 +521,10 @@
                             <td class="px-6 py-4 whitespace-nowrap text-center">{{ resultado.fecha_realizacion|date:"d/m/Y"|default:"-" }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold">
                                 {% if resultado.estado == 'Calificado' %}
-                                    {{ resultado.puntaje_global_modificado|floatformat:"0" }}
+                                    {{ resultado.puntaje_global_mostrado|floatformat:"0" }}
+                                    {% if resultado.debe_mostrar_puntaje_real %}
+                                        <span class="text-[10px] text-blue-600 block font-normal">(Real)</span>
+                                    {% endif %}
                                 {% else %}
                                     -
                                 {% endif %}

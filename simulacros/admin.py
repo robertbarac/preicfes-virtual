@@ -8,12 +8,13 @@ from .models import (
 
 @admin.register(Simulacro)
 class SimulacroAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'mostrar_componentes_s1', 'mostrar_componentes_s2', 'fecha_creacion')
+    list_display = ('nombre', 'mostrar_puntaje_real', 'mostrar_componentes_s1', 'mostrar_componentes_s2', 'fecha_creacion')
+    list_editable = ('mostrar_puntaje_real',)
     search_fields = ('nombre',)
 
     fieldsets = (
         ('Información general', {
-            'fields': ('nombre',),
+            'fields': ('nombre', 'mostrar_puntaje_real'),
         }),
         ('Configuración de Ajuste de Puntajes', {
             'fields': ('umbral', 'umbral_1', 'objetivo_1', 'umbral_2', 'objetivo_2', 'objetivo_3', 'boost_min', 'boost_max'),
@@ -71,12 +72,13 @@ class ResultadoSimulacroAdmin(admin.ModelAdmin):
 
 @admin.register(SimulacroDiagnostico)
 class SimulacroDiagnosticoAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'mostrar_componentes', 'fecha_creacion')
+    list_display = ('nombre', 'mostrar_puntaje_real', 'mostrar_componentes', 'fecha_creacion')
+    list_editable = ('mostrar_puntaje_real',)
     search_fields = ('nombre',)
 
     fieldsets = (
         ('Información general', {
-            'fields': ('nombre',),
+            'fields': ('nombre', 'mostrar_puntaje_real'),
         }),
         ('Configuración de Ajuste de Puntajes', {
             'fields': ('umbral', 'umbral_1', 'objetivo_1', 'umbral_2', 'objetivo_2', 'objetivo_3', 'boost_min', 'boost_max'),

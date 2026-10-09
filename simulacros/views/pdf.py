@@ -501,7 +501,7 @@ class DescargarResultadoIndividualPDFView(LoginRequiredMixin, View):
             rightMargin=20, leftMargin=20, topMargin=18, bottomMargin=18
         )
         
-        elements = _generar_elements_resultado(res, sim_nombre, use_real_scores=False)
+        elements = _generar_elements_resultado(res, sim_nombre, use_real_scores=res.debe_mostrar_puntaje_real)
         doc.build(elements)
         return response
 
