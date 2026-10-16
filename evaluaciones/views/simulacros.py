@@ -26,53 +26,71 @@ class SimulacroAccessMixin(UserPassesTestMixin):
         user = self.request.user
         if not user.is_authenticated:
             return False
-        if user.is_superuser or user.is_staff and not user.es_docente:
+        if user.is_superuser or (user.is_staff and not user.es_docente):
             return True
-            
+
+        pk = self.kwargs.get('pk')
+        if not pk and not hasattr(self, 'get_object'):
+            # Vista de listado
+            if user.es_docente:
+                return True
+            if user.es_personal_gestion:
+                return False
+            if not getattr(user, 'es_estudiante_virtual', False):
+                return False
+            from django.utils import timezone
+            hoy = timezone.now().date()
+            if user.subscriptions.exists():
+                return user.subscriptions.filter(active=True, end_date__gte=hoy).exists()
+            return True
+
         if hasattr(self, 'get_object'):
-            obj = self.get_object()
+            try:
+                obj = self.get_object()
+            except Exception:
+                obj = get_object_or_404(Simulacro, pk=pk)
+        elif pk:
+            obj = get_object_or_404(Simulacro, pk=pk)
         else:
-            obj = get_object_or_404(Simulacro, pk=self.kwargs.get('pk'))
-            
+            return True
+
         if isinstance(obj, IntentoSimulacro):
             simulacro = obj.simulacro
         else:
             simulacro = obj
-        
+
         # Profesores
         if user.es_docente:
             if simulacro.modulo and simulacro.modulo.ciclo:
                 programa = simulacro.modulo.ciclo.programa
                 return user.programas_docente.filter(id=programa.id).exists()
             return True
-            
+
         # Estudiantes: Exclusivo para modalidad virtual (VirtualStudent)
         if user.es_docente or user.es_personal_gestion:
             return False
 
         if not getattr(user, 'es_estudiante_virtual', False):
             return False
-            
+
         from suscripciones.models import Subscription
         from django.utils import timezone
         hoy = timezone.now().date()
-        suscripcion_activa = user.subscriptions.filter(active=True, end_date__gte=hoy).exists()
-        if not suscripcion_activa:
-            return False
-            
-        if not simulacro.modulo or not simulacro.modulo.ciclo:
-            return False
-            
-        programa = simulacro.modulo.ciclo.programa
-        if user.programa_id != programa.id:
-            return False
-            
-        if not simulacro.modulo.ciclo.visible:
-            return False
-            
-        if not simulacro.modulo.activo:
-            return False
-            
+        if user.subscriptions.exists():
+            suscripcion_activa = user.subscriptions.filter(active=True, end_date__gte=hoy).exists()
+            if not suscripcion_activa:
+                return False
+
+        if simulacro.modulo:
+            if simulacro.modulo.ciclo:
+                programa = simulacro.modulo.ciclo.programa
+                if user.programa_id and user.programa_id != programa.id:
+                    return False
+                if not simulacro.modulo.ciclo.visible:
+                    return False
+            if not simulacro.modulo.activo:
+                return False
+
         return True
 
     def handle_no_permission(self):
@@ -161,18 +179,10 @@ class SimulacroListView(LoginRequiredMixin, SimulacroAccessMixin, ListView):
             # Los estudiantes solo ven los que están publicados
             qs = qs.filter(estado='publicado')
             
-            # Y solo aquellos que tienen una ventana activa AHORA (o si ya tienen un intento)
-            # Para simplificar, obtenemos los PK de simulacros disponibles o que el usuario ya ha intentado
-            ahora = timezone.now()
-            ids_con_ventana = VentanaSimulacro.objects.filter(
-                fecha_apertura__lte=ahora, fecha_cierre__gte=ahora
-            ).values_list('simulacro_id', flat=True)
-            
-            ids_intentados = IntentoSimulacro.objects.filter(
-                usuario=self.request.user
-            ).values_list('simulacro_id', flat=True)
-            
-            qs = qs.filter(id__in=list(ids_con_ventana) + list(ids_intentados))
+            # Si el simulacro está asignado a un programa específico, verificar que coincida
+            if self.request.user.programa_id:
+                from django.db.models import Q
+                qs = qs.filter(Q(modulo__isnull=True) | Q(modulo__ciclo__programa_id=self.request.user.programa_id))
             
         return qs.distinct()
 
