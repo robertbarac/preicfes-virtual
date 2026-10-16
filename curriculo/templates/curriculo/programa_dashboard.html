@@ -37,6 +37,7 @@
             </div>
 
             <!-- Fila de Estadísticas Rápidas (Tu Progreso & Puntaje Estimado) -->
+            {% if stats_estudiante %}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Tarjeta Tu Progreso con Gráfico Circular -->
                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-5">
@@ -44,28 +45,28 @@
                         <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                             <circle cx="50" cy="50" r="40" stroke="#E2E8F0" stroke-width="10" fill="none" />
                             <circle cx="50" cy="50" r="40" stroke="#0D9488" stroke-width="10" fill="none"
-                                    stroke-dasharray="251.2" stroke-dashoffset="80.38" stroke-linecap="round" />
+                                    stroke-dasharray="251.2" stroke-dashoffset="{{ stats_estudiante.stroke_dashoffset }}" stroke-linecap="round" />
                         </svg>
                         <div class="absolute flex flex-col items-center justify-center text-center">
-                            <span class="text-lg font-black text-slate-900 leading-none">68%</span>
+                            <span class="text-lg font-black text-slate-900 leading-none">{{ stats_estudiante.pct_completado }}%</span>
                             <span class="text-[8px] font-bold text-slate-400 uppercase tracking-tight mt-0.5">Completado</span>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 flex-1 text-xs">
                         <div class="p-2 rounded-xl bg-blue-50/60 border border-blue-100/80">
-                            <span class="text-blue-600 font-extrabold block text-sm">42</span>
+                            <span class="text-blue-600 font-extrabold block text-sm">{{ stats_estudiante.total_clases }}</span>
                             <span class="text-[10px] text-slate-500 font-medium">Clases completadas</span>
                         </div>
                         <div class="p-2 rounded-xl bg-blue-50/60 border border-blue-100/80">
-                            <span class="text-blue-600 font-extrabold block text-sm">8</span>
+                            <span class="text-blue-600 font-extrabold block text-sm">{{ stats_estudiante.total_simulacros }}</span>
                             <span class="text-[10px] text-slate-500 font-medium">Simulacros hechos</span>
                         </div>
                         <div class="p-2 rounded-xl bg-blue-50/60 border border-blue-100/80">
-                            <span class="text-blue-600 font-extrabold block text-sm">1.240</span>
+                            <span class="text-blue-600 font-extrabold block text-sm">{{ stats_estudiante.total_preguntas_formateado }}</span>
                             <span class="text-[10px] text-slate-500 font-medium">Preguntas respondidas</span>
                         </div>
                         <div class="p-2 rounded-xl bg-amber-50/80 border border-amber-100/80">
-                            <span class="text-amber-600 font-extrabold block text-sm">12 🔥</span>
+                            <span class="text-amber-600 font-extrabold block text-sm">{{ stats_estudiante.racha }} 🔥</span>
                             <span class="text-[10px] text-slate-500 font-medium">Días en racha</span>
                         </div>
                     </div>
@@ -80,25 +81,42 @@
                             </div>
                             <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Puntaje estimado</span>
                         </div>
-                        <span class="inline-flex items-center gap-0.5 text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                            ↗ +18 pts
-                        </span>
+                        {% if stats_estudiante.diff_texto %}
+                            {% if stats_estudiante.diff_tipo == 'positivo' %}
+                            <span class="inline-flex items-center gap-0.5 text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                ↗ {{ stats_estudiante.diff_texto }}
+                            </span>
+                            {% elif stats_estudiante.diff_tipo == 'negativo' %}
+                            <span class="inline-flex items-center gap-0.5 text-xs font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                                ↘ {{ stats_estudiante.diff_texto }}
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-0.5 text-xs font-black text-slate-600 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200">
+                                {{ stats_estudiante.diff_texto }}
+                            </span>
+                            {% endif %}
+                        {% endif %}
                     </div>
                     <div class="my-2">
-                        <span class="text-3xl font-black text-slate-900 tracking-tight">327</span>
+                        {% if stats_estudiante.puntaje_estimado %}
+                        <span class="text-3xl font-black text-slate-900 tracking-tight">{{ stats_estudiante.puntaje_estimado }}</span>
                         <span class="text-xs text-slate-400 font-bold ml-1">/ 500</span>
+                        {% else %}
+                        <span class="text-2xl font-black text-slate-400 tracking-tight">Pendiente</span>
+                        {% endif %}
                     </div>
                     <div class="pt-2 border-t border-slate-100">
                         <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
-                            <span>Meta personal: <strong class="text-slate-900">380</strong></span>
-                            <span class="text-teal-600 font-extrabold">86%</span>
+                            <span>Meta personal: <strong class="text-slate-900">{{ stats_estudiante.meta_personal }}</strong></span>
+                            <span class="text-teal-600 font-extrabold">{{ stats_estudiante.pct_meta }}%</span>
                         </div>
                         <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                            <div class="bg-teal-500 h-2 rounded-full" style="width: 86%"></div>
+                            <div class="bg-teal-500 h-2 rounded-full" style="width: {{ stats_estudiante.pct_meta }}%"></div>
                         </div>
                     </div>
                 </div>
             </div>
+            {% endif %}
 
             <!-- Tus herramientas (Tarjetas de Acceso Rápido estilo mockup) -->
             <div>
