@@ -65,6 +65,12 @@ class User(AbstractUser):
         verbose_name='Foto de perfil',
         help_text='Foto o avatar del perfil'
     )
+    meta_puntaje = models.PositiveIntegerField(
+        default=380,
+        null=True,
+        blank=True,
+        help_text='Meta personal de puntaje ICFES propuesta por el estudiante'
+    )
 
     @property
     def is_observador(self):

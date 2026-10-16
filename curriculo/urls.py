@@ -3,7 +3,7 @@ from .views.programa import (
     ProgramaHubView, ProgramaDashboardView,
     CicloCreateView, CicloUpdateView, CicloDeleteView,
     ModuloCreateView, ModuloUpdateView, ModuloDeleteView,
-    RegistrarAsistenciaView
+    RegistrarAsistenciaView, ActualizarMetaPuntajeView
 )
 
 app_name = 'curriculo'
@@ -14,6 +14,9 @@ urlpatterns = [
 
     # Dashboard por programa
     path('p/<slug:slug>/', ProgramaDashboardView.as_view(), name='programa_dashboard'),
+
+    # Meta Personal
+    path('actualizar-meta/', ActualizarMetaPuntajeView.as_view(), name='actualizar_meta'),
 
     # Ciclo CRUD
     path('p/<slug:slug>/ciclos/crear/', CicloCreateView.as_view(), name='ciclo_create'),

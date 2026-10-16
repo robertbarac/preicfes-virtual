@@ -242,7 +242,7 @@ def obtener_estadisticas_estudiante(user, programa):
         pct_completado = 0
 
     stroke_dashoffset = round(251.2 * (1 - (pct_completado / 100.0)), 2)
-    meta_personal = 380
+    meta_personal = getattr(user, 'meta_puntaje', None) or 380
     pct_meta = min(100, round((puntaje_estimado / meta_personal * 100))) if puntaje_estimado else 0
     total_preguntas_formateado = f"{total_preguntas:,}".replace(",", ".")
 
@@ -260,6 +260,135 @@ def obtener_estadisticas_estudiante(user, programa):
         'meta_personal': meta_personal,
         'pct_meta': pct_meta,
     }
+
+
+def calcular_progreso_areas(user, alumno=None):
+    """
+    Calcula el progreso/rendimiento por área (0-100%) para el estudiante.
+    Retorna None si no hay información evaluada o si el usuario es staff/docente.
+    """
+    if not user.is_authenticated or user.is_superuser or user.es_personal_gestion:
+        return None
+
+    from academico.models import Alumno, Nota
+    from simulacros.models import ResultadoSimulacro, ResultadoSimulacroDiagnostico
+    from evaluaciones.models.talleres import IntentoTaller
+    from evaluaciones.models.simulacros import IntentoSimulacro
+
+    if not alumno:
+        alumno = getattr(user, 'perfil_alumno', None)
+        if not alumno:
+            alumno = Alumno.objects.filter(usuario=user).first()
+        if not alumno and user.numero_documento:
+            alumno = Alumno.objects.filter(identificacion__iexact=user.numero_documento).first()
+
+    if user.es_docente and not getattr(user, 'es_estudiante_virtual', False) and not alumno:
+        return None
+
+    areas_config = {
+        'Lectura Crítica': {
+            'keywords': ['lectura', 'español', 'lenguaje'],
+            'color': 'bg-purple-600',
+            'dot_color': 'bg-purple-600',
+            'valores': []
+        },
+        'Matemáticas': {
+            'keywords': ['matemática', 'razonamiento', 'estadística', 'matematica'],
+            'color': 'bg-blue-600',
+            'dot_color': 'bg-blue-600',
+            'valores': []
+        },
+        'Ciencias Naturales': {
+            'keywords': ['física', 'fisica', 'química', 'quimica', 'biología', 'biologia', 'natural'],
+            'color': 'bg-teal-600',
+            'dot_color': 'bg-teal-600',
+            'valores': []
+        },
+        'Sociales y Ciudadanas': {
+            'keywords': ['social', 'ciudadana', 'filosofía', 'filosofia'],
+            'color': 'bg-rose-500',
+            'dot_color': 'bg-rose-500',
+            'valores': []
+        },
+        'Inglés': {
+            'keywords': ['inglés', 'ingles', 'english'],
+            'color': 'bg-amber-500',
+            'dot_color': 'bg-amber-500',
+            'valores': []
+        },
+    }
+
+    def agregar_valor(nombre_materia, pct):
+        if pct is None:
+            return
+        nombre_lower = (nombre_materia or '').lower()
+        for area_nombre, cfg in areas_config.items():
+            if any(kw in nombre_lower for kw in cfg['keywords']):
+                try:
+                    cfg['valores'].append(float(pct))
+                except (ValueError, TypeError):
+                    pass
+                return
+
+    # 1. Intentos de talleres virtuales (puntaje_porcentaje 0-100)
+    for it in IntentoTaller.objects.filter(usuario=user, fecha_fin__isnull=False, puntaje_porcentaje__isnull=False).select_related('taller__tema__materia'):
+        materia_nombre = ''
+        if it.taller and it.taller.tema and it.taller.tema.materia:
+            materia_nombre = it.taller.tema.materia.nombre
+        agregar_valor(materia_nombre, it.puntaje_porcentaje)
+
+    # 2. Simulacros virtuales
+    for isim in IntentoSimulacro.objects.filter(usuario=user, fecha_fin__isnull=False):
+        if isim.resultados_detallados and isinstance(isim.resultados_detallados, list):
+            for comp in isim.resultados_detallados:
+                mat_nom = comp.get('materia_nombre', '')
+                pct = comp.get('porcentaje')
+                agregar_valor(mat_nom, pct)
+
+    # 3. Presencial: Notas de clase (escala 0.0 - 5.0 -> a porcentaje 0-100)
+    if alumno:
+        for n in Nota.objects.filter(alumno=alumno, clase__estado='vista').select_related('clase__materia'):
+            if n.clase and n.clase.materia and n.nota is not None:
+                try:
+                    pct = (float(n.nota) / 5.0) * 100
+                    agregar_valor(n.clase.materia.nombre, pct)
+                except (ValueError, TypeError):
+                    pass
+
+        # 4. Presencial: Resultados de simulacros
+        for r in ResultadoSimulacro.objects.filter(alumno=alumno):
+            agregar_valor('Lectura Crítica', r.puntaje_lectura)
+            agregar_valor('Matemáticas', r.puntaje_matematicas)
+            agregar_valor('Ciencias Naturales', r.puntaje_naturales)
+            agregar_valor('Sociales y Ciudadanas', r.puntaje_sociales)
+            agregar_valor('Inglés', r.puntaje_ingles)
+
+        for rd in ResultadoSimulacroDiagnostico.objects.filter(alumno=alumno):
+            agregar_valor('Lectura Crítica', rd.puntaje_lectura)
+            agregar_valor('Matemáticas', rd.puntaje_matematicas)
+            agregar_valor('Ciencias Naturales', rd.puntaje_naturales)
+            agregar_valor('Sociales y Ciudadanas', rd.puntaje_sociales)
+            agregar_valor('Inglés', rd.puntaje_ingles)
+
+    resultado = []
+    tiene_datos_area = False
+    for area_nombre, cfg in areas_config.items():
+        if cfg['valores']:
+            promedio = round(sum(cfg['valores']) / len(cfg['valores']))
+            promedio = min(100, max(0, promedio))
+            tiene_datos_area = True
+        else:
+            promedio = None
+        resultado.append({
+            'nombre': area_nombre,
+            'porcentaje': promedio if promedio is not None else 0,
+            'porcentaje_display': f'{promedio}%' if promedio is not None else 'Sin evaluar',
+            'tiene_datos': promedio is not None,
+            'color': cfg['color'],
+            'dot_color': cfg['dot_color'],
+        })
+
+    return resultado if tiene_datos_area else None
 
 class ProgramaDashboardView(LoginRequiredMixin, ProgramaVisibilidadMixin, DetailView):
     """
@@ -329,6 +458,7 @@ class ProgramaDashboardView(LoginRequiredMixin, ProgramaVisibilidadMixin, Detail
 
         # Estadisticas rapidas reales del estudiante (presencial o virtual)
         context['stats_estudiante'] = obtener_estadisticas_estudiante(user, programa)
+        context['progreso_areas'] = calcular_progreso_areas(user)
 
         return context
 
@@ -428,3 +558,29 @@ class RegistrarAsistenciaView(LoginRequiredMixin, View):
             messages.success(request, f"¡Asistencia registrada exitosamente para {clase.titulo}!")
             
         return redirect('curriculo:programa_dashboard', slug=programa.slug)
+
+
+# ── Meta Puntaje Personal ────────────────────────────────────────────────────
+
+class ActualizarMetaPuntajeView(LoginRequiredMixin, View):
+    """
+    Permite al estudiante actualizar su puntaje meta personal (100 - 500).
+    """
+    def post(self, request):
+        meta = request.POST.get('meta_puntaje')
+        if meta:
+            try:
+                meta_val = int(meta)
+                if 100 <= meta_val <= 500:
+                    request.user.meta_puntaje = meta_val
+                    request.user.save(update_fields=['meta_puntaje'])
+                    messages.success(request, f"¡Meta personal actualizada a {meta_val} puntos!")
+                else:
+                    messages.error(request, "La meta debe estar entre 100 y 500 puntos.")
+            except (ValueError, TypeError):
+                messages.error(request, "El puntaje ingresado no es válido.")
+
+        next_url = request.POST.get('next') or request.META.get('HTTP_REFERER')
+        if next_url:
+            return redirect(next_url)
+        return redirect('curriculo:programa_list')
