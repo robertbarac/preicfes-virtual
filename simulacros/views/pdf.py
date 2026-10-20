@@ -489,6 +489,14 @@ class DescargarResultadoIndividualPDFView(LoginRequiredMixin, View):
             pk=resultado_pk
         )
         
+        # Validación de cartera para estudiantes
+        if not request.user.is_staff and not request.user.is_superuser:
+            from cartera.utils import evaluar_bloqueo_cartera
+            bloqueo = evaluar_bloqueo_cartera(alumno=res.alumno, user=request.user)
+            if bloqueo['bloquear']:
+                messages.error(request, "El acceso al informe individual de este simulacro está restringido por compromisos pendientes en Cartera.")
+                return redirect('evaluaciones:mis_notas')
+
         sim_nombre = res.simulacro.nombre
         nombre_alumno = f"{res.alumno.primer_apellido} {res.alumno.segundo_apellido} {res.alumno.nombres}".strip()
         filename = f"Resultado_{nombre_alumno}_{sim_nombre}.pdf"

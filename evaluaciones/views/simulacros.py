@@ -162,6 +162,12 @@ class SimulacroListView(LoginRequiredMixin, SimulacroAccessMixin, ListView):
     context_object_name = 'simulacros'
     paginate_by = 12
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not request.user.is_staff and not request.user.is_superuser:
+            if getattr(request.user, 'es_estudiante_presencial', False) or getattr(request.user, 'perfil_alumno', None):
+                return redirect('evaluaciones:mis_notas')
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         qs = super().get_queryset().select_related('modulo', 'creador').order_by('orden', 'id')
         

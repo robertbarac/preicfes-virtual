@@ -166,9 +166,19 @@
                 <h2 class="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
                     <span>🎯</span> Resultados de Simulacros Presenciales
                 </h2>
+                {% if bloquear_simulacros_por_cartera %}
+                <span class="text-xs px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 font-bold flex items-center gap-1 border border-rose-200">
+                    <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    Bloqueado por Cartera
+                </span>
+                {% else %}
                 <span class="text-xs text-slate-400 font-semibold">Evaluaciones Tipo ICFES</span>
+                {% endif %}
             </div>
 
+            {% if bloquear_simulacros_por_cartera %}
+                {% include 'academico/partials/simulacros_bloqueados_cartera.html' %}
+            {% else %}
             <!-- Simulacros Estándar (2 sesiones) -->
             {% if simulacros_fisicos %}
             <div class="overflow-x-auto mb-6">
@@ -260,13 +270,14 @@
                 Aún no tienes resultados de simulacros presenciales o diagnósticos procesados.
             </div>
             {% endif %}
+            {% endif %}
         </div>
     </div>
     {% endif %}
 
     <!-- 4. ESTADO DE CARTERA Y CUOTAS (Solo modalidad presencial con ficha) -->
     {% if alumno and deuda %}
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
+    <div id="seccion-cartera" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
             <h2 class="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
                 <span>💳</span> Estado de Cartera & Cuotas Asociadas
@@ -288,7 +299,7 @@
             </div>
             <div class="p-3 bg-blue-50 rounded-xl border border-blue-100">
                 <span class="text-blue-600 block text-[10px] font-bold uppercase">Total Cuotas</span>
-                <strong class="text-blue-800 text-sm font-black">{{ cuotas.count }} cuotas</strong>
+                <strong class="text-blue-800 text-sm font-black">{{ cuotas|length }} cuotas</strong>
             </div>
         </div>
 
@@ -312,17 +323,21 @@
                         <td class="px-4 py-3 text-right font-extrabold text-slate-900">${{ c.monto|floatformat:0 }}</td>
                         <td class="px-4 py-3 text-right font-bold text-emerald-600">${{ c.monto_abonado|floatformat:0 }}</td>
                         <td class="px-4 py-3 text-center">
-                            {% if c.monto_abonado >= c.monto %}
+                            {% if c.estado_calculado == "Pagada" or c.monto_abonado >= c.monto %}
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
                                 ✅ Pagada
                             </span>
-                            {% elif c.monto_abonado > 0 %}
+                            {% elif c.estado_calculado == "Vencida" %}
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">
+                                ⚠️ Vencida
+                            </span>
+                            {% elif c.estado_calculado == "Pagada Parcial" or c.monto_abonado > 0 %}
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200">
                                 ⏳ Parcial
                             </span>
                             {% else %}
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 border border-slate-200">
-                                Emitida
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200">
+                                Al Día
                             </span>
                             {% endif %}
                         </td>

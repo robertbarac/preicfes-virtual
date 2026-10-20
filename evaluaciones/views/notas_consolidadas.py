@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from academico.models import Nota, Asistencia, Alumno
 from simulacros.models import ResultadoSimulacro, ResultadoSimulacroDiagnostico
 from cartera.models import Deuda, Cuota
+from cartera.utils import evaluar_bloqueo_cartera
 from ..models.talleres import IntentoTaller
 from ..models.simulacros import IntentoSimulacro
 
@@ -17,14 +18,14 @@ class MisNotasView(LoginRequiredMixin, TemplateView):
         alumno = getattr(user, 'perfil_alumno', None)
         if not alumno:
             alumno = Alumno.objects.filter(usuario=user).first()
+        if not alumno and getattr(user, 'numero_documento', None):
+            alumno = Alumno.objects.filter(identificacion__iexact=user.numero_documento).first()
         
         # 1. Notas de Clases Presenciales (con materia, fecha y calificación)
         notas_presenciales = Nota.objects.none()
         asistencias = Asistencia.objects.none()
         simulacros_fisicos = ResultadoSimulacro.objects.none()
         simulacros_diagnosticos = ResultadoSimulacroDiagnostico.objects.none()
-        cuotas = Cuota.objects.none()
-        deuda = None
 
         if alumno:
             notas_presenciales = Nota.objects.filter(
@@ -45,13 +46,20 @@ class MisNotasView(LoginRequiredMixin, TemplateView):
                 alumno=alumno
             ).select_related('simulacro').order_by('-fecha_realizacion')
 
-            # Cuotas y cartera
-            try:
-                deuda = alumno.deuda
-                cuotas = deuda.cuotas.all().order_by('fecha_vencimiento')
-            except Exception:
-                deuda = None
-                cuotas = Cuota.objects.none()
+        # Evaluar bloqueo por cartera
+        bloqueo_info = evaluar_bloqueo_cartera(alumno=alumno, user=user)
+        # Staff y superusuario no se bloquean
+        bloquear_simulacros_por_cartera = False
+        if not user.is_staff and not user.is_superuser:
+            bloquear_simulacros_por_cartera = bloqueo_info['bloquear']
+
+        deuda = bloqueo_info['deuda']
+        cuotas = bloqueo_info['cuotas']
+        motivo_bloqueo_simulacros = bloqueo_info['motivo']
+        cuotas_afectadas_simulacros = bloqueo_info['cuotas_afectadas']
+        tiene_cuotas_vencidas = bloqueo_info['tiene_cuotas_vencidas']
+        total_abonado = bloqueo_info['total_abonado']
+        total_simulacros_evaluados = simulacros_fisicos.count() + simulacros_diagnosticos.count()
 
         # 3. Intentos de Talleres Virtuales
         intentos_talleres = IntentoTaller.objects.filter(
@@ -79,6 +87,12 @@ class MisNotasView(LoginRequiredMixin, TemplateView):
             'simulacros_diagnosticos': simulacros_diagnosticos,
             'deuda': deuda,
             'cuotas': cuotas,
+            'total_abonado': total_abonado,
+            'bloquear_simulacros_por_cartera': bloquear_simulacros_por_cartera,
+            'motivo_bloqueo_simulacros': motivo_bloqueo_simulacros,
+            'cuotas_afectadas_simulacros': cuotas_afectadas_simulacros,
+            'tiene_cuotas_vencidas': tiene_cuotas_vencidas,
+            'total_simulacros_evaluados': total_simulacros_evaluados,
             'intentos_talleres': intentos_talleres,
             'intentos_simulacros_virtuales': intentos_simulacros_virtuales,
             'is_presencial': is_presencial,

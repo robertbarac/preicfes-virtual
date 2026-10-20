@@ -554,7 +554,8 @@
                     <span>Talleres</span>
                 </a>
 
-                <!-- 4. Simulacros -->
+                <!-- 4. Simulacros (solo virtual / profesores / staff, no para Student presencial) -->
+                {% if not user.es_estudiante_presencial and not user.perfil_alumno %}
                 <a href="{% url 'evaluaciones:simulacro_list' %}"
                     class="sidebar-item {% if 'simulacro' in request.path and 'resultados' not in request.path %}active{% endif %}">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -564,6 +565,7 @@
                     </svg>
                     <span>Simulacros</span>
                 </a>
+                {% endif %}
 
                 <!-- 5. Mis Logros (Boletín de Notas) -->
                 <a href="{% url 'evaluaciones:mis_notas' %}"
