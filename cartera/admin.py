@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import AcuerdoPago, Cuota, Deuda, Egreso, HistorialModificacion, Recibo, MetaRecaudo, TarifaClase
+from .models import AcuerdoPago, Cuota, Deuda, Egreso, ConceptoEgreso, HistorialModificacion, Recibo, MetaRecaudo, TarifaClase
 from ubicaciones.models import Sede
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -271,24 +271,26 @@ class DeudaAdmin(admin.ModelAdmin):
 #     search_fields = ('deuda__alumno__nombres', 'deuda__alumno__primer_apellido')
 #     date_hierarchy = 'fecha_modificacion'
 
+@admin.register(ConceptoEgreso)
+class ConceptoEgresoAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'activo', 'descripcion')
+    list_filter = ('activo',)
+    search_fields = ('nombre', 'descripcion')
+
+
 @admin.register(Egreso)
 class EgresosAdmin(admin.ModelAdmin):
-    list_display = ('sede', 'municipio', 'get_concepto_display', 'valor', 'estado', 'fecha')
+    list_display = ('sede', 'municipio', 'concepto', 'valor', 'estado', 'fecha')
     list_filter = ('estado', 'fecha', 'municipio', 'sede', 'concepto')
-    search_fields = ('concepto', 'contratista')
+    search_fields = ('concepto__nombre', 'contratista')
     date_hierarchy = 'fecha'  # Navegación por fechas
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request).select_related('sede', 'municipio')
+        queryset = super().get_queryset(request).select_related('sede', 'municipio', 'concepto')
         # Si no es superuser, filtrar por municipio del usuario
         if not request.user.is_superuser and hasattr(request.user, 'municipio') and request.user.municipio:
             queryset = queryset.filter(municipio=request.user.municipio)
         return queryset
-
-    def get_concepto_display(self, obj):
-        """Mostrar el nombre legible del concepto"""
-        return dict(obj.CONCEPTO_CHOICES).get(obj.concepto, obj.concepto)
-    get_concepto_display.short_description = 'Concepto'
     
     # Personalizar el formulario de edición
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

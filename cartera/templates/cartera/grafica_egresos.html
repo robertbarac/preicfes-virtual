@@ -60,8 +60,8 @@
                 <label for="concepto" class="block text-sm font-medium text-gray-700">Concepto</label>
                 <select name="concepto" id="concepto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                     <option value="">Todos</option>
-                    {% for key, value in conceptos %}
-                        <option value="{{ key }}" {% if key == concepto_seleccionado %}selected{% endif %}>{{ value }}</option>
+                    {% for conc in conceptos %}
+                        <option value="{{ conc.id }}" {% if conc.id == concepto_seleccionado %}selected{% endif %}>{{ conc.nombre }}</option>
                     {% endfor %}
                 </select>
             </div>

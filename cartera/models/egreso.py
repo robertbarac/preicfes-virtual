@@ -2,6 +2,20 @@ from django.db import models
 from ubicaciones.models import Sede, Municipio
 
 
+class ConceptoEgreso(models.Model):
+    nombre = models.CharField(max_length=100, unique=True, verbose_name="Nombre del concepto")
+    descripcion = models.TextField(blank=True, null=True, verbose_name="Descripción")
+    activo = models.BooleanField(default=True, verbose_name="Activo")
+
+    class Meta:
+        verbose_name = "Concepto de egreso"
+        verbose_name_plural = "Conceptos de egresos"
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
+
+
 class Egreso(models.Model):
     ESTADO_EGRESO = [
         ('publicado', 'Publicado'),
@@ -27,7 +41,12 @@ class Egreso(models.Model):
     sede = models.ForeignKey(Sede, on_delete=models.CASCADE, related_name="egresos")
     municipio = models.ForeignKey('ubicaciones.Municipio', on_delete=models.CASCADE, related_name="egresos", null=True, blank=True)
     fecha = models.DateTimeField()  # Cambiado a DateTimeField
-    concepto = models.CharField(max_length=100, choices=CONCEPTO_CHOICES, default='servicio_tecnico_pc')
+    concepto = models.ForeignKey(
+        ConceptoEgreso,
+        on_delete=models.PROTECT,
+        related_name="egresos",
+        verbose_name="Concepto"
+    )
     contratista = models.CharField(max_length=100)
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     estado = models.CharField(max_length=20, choices=ESTADO_EGRESO, default='publicado')
@@ -46,4 +65,5 @@ class Egreso(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Egreso de {self.concepto} - {self.estado}"
+        return f"Egreso de {self.concepto.nombre if self.concepto else 'Sin concepto'} - {self.estado}"
+

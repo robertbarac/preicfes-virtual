@@ -26,11 +26,20 @@ def get_month_name(month_number):
 
 @register.filter(name='get_concepto_display')
 def get_concepto_display(concepto_key):
-    """Convierte la clave del concepto a su nombre para mostrar"""
+    """Convierte la clave o id del concepto a su nombre para mostrar"""
+    if hasattr(concepto_key, 'nombre'):
+        return concepto_key.nombre
     try:
-        return dict(Egreso.CONCEPTO_CHOICES).get(concepto_key, concepto_key)
+        from cartera.models import ConceptoEgreso
+        conc = ConceptoEgreso.objects.filter(id=int(concepto_key)).first()
+        if conc:
+            return conc.nombre
+    except (ValueError, TypeError, Exception):
+        pass
+    try:
+        return dict(Egreso.CONCEPTO_CHOICES).get(concepto_key, str(concepto_key))
     except (KeyError, AttributeError):
-        return concepto_key
+        return str(concepto_key)
 
 @register.filter(name='divide')
 def divide(value, arg):

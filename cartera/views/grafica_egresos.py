@@ -12,7 +12,7 @@ from calendar import month_name
 from collections import defaultdict
 import json
 
-from cartera.models import Egreso
+from cartera.models import Egreso, ConceptoEgreso
 from ubicaciones.models import Departamento, Municipio
 
 
@@ -84,7 +84,11 @@ class GraficaEgresosView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                     egresos_qs = egresos_qs.filter(municipio_id=municipio_id)
 
         if concepto:
-            egresos_qs = egresos_qs.filter(concepto=concepto)
+            try:
+                conc_id = int(concepto)
+                egresos_qs = egresos_qs.filter(concepto_id=conc_id)
+            except (ValueError, TypeError):
+                egresos_qs = egresos_qs.filter(concepto__nombre__iexact=concepto)
 
         context['departamentos'] = departamentos_qs
         context['municipios'] = municipios_qs
@@ -108,12 +112,12 @@ class GraficaEgresosView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         egresos_mes = egresos_qs.filter(fecha__month=mes_seleccionado)
         total_mes = egresos_mes.aggregate(total=Sum('valor'))['total'] or 0
         
-        egresos_por_concepto = egresos_mes.values('concepto').annotate(total=Sum('valor'))
+        egresos_por_concepto = egresos_mes.values('concepto_id', 'concepto__nombre').annotate(total=Sum('valor'))
         detalles_conceptos = []
         
         for egreso in egresos_por_concepto:
-            concepto_key = egreso['concepto']
-            concepto_display = dict(Egreso.CONCEPTO_CHOICES).get(concepto_key, concepto_key)
+            concepto_key = egreso['concepto_id']
+            concepto_display = egreso['concepto__nombre'] or 'Sin concepto'
             monto = float(egreso['total'] or 0)
             porcentaje = (monto / float(total_mes) * 100) if total_mes > 0 else 0
             
@@ -135,8 +139,8 @@ class GraficaEgresosView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             'total_egresos_mes': total_mes,
             'detalles_conceptos': detalles_conceptos,
             'detalles_conceptos_json': json.dumps(detalles_conceptos),
-            'conceptos': Egreso.CONCEPTO_CHOICES,
-            'concepto_seleccionado': concepto
+            'conceptos': ConceptoEgreso.objects.filter(activo=True).order_by('nombre'),
+            'concepto_seleccionado': int(concepto) if (concepto and str(concepto).isdigit()) else concepto
         })
         
         return context
@@ -173,7 +177,11 @@ class GraficaEgresosView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                     egresos_qs = egresos_qs.filter(municipio_id=municipio_id)
 
         if concepto:
-            egresos_qs = egresos_qs.filter(concepto=concepto)
+            try:
+                conc_id = int(concepto)
+                egresos_qs = egresos_qs.filter(concepto_id=conc_id)
+            except (ValueError, TypeError):
+                egresos_qs = egresos_qs.filter(concepto__nombre__iexact=concepto)
 
         meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
         egresos = [0] * 12
@@ -202,7 +210,11 @@ class GraficaEgresosView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         plt.ylabel('Valor ($)')
         titulo = f'Egresos - {año_seleccionado}'
         if concepto:
-            concepto_display = dict(Egreso.CONCEPTO_CHOICES).get(concepto, concepto)
+            try:
+                conc_obj = ConceptoEgreso.objects.filter(id=int(concepto)).first()
+                concepto_display = conc_obj.nombre if conc_obj else concepto
+            except (ValueError, TypeError):
+                concepto_display = concepto
             titulo += f' - {concepto_display}'
         plt.title(titulo)
         plt.xticks(index, meses)
