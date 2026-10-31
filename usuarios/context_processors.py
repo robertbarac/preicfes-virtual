@@ -46,21 +46,17 @@ def mis_programas(request):
             'es_profesor_ingles': es_profesor_ingles,
         }
         
-    # Si es estudiante (role in ['student', 'virtual_student'])
-    # Verificar si tiene una suscripción activa
-    from suscripciones.models import Subscription
-    from django.utils import timezone
-    hoy = timezone.now().date()
-    suscripcion_activa = user.subscriptions.filter(active=True, end_date__gte=hoy).exists()
-    
-    if suscripcion_activa and user.programa_id:
-        if user.programa.activo:
-            return {
-                'mis_programas': [user.programa],
-                'soy_teacher_de': [],
-                'soy_student_de': [user.programa],
-                'es_profesor_ingles': False,
-            }
+    # Si es estudiante (Student o VirtualStudent)
+    tiene_acceso = user.tiene_acceso_programa_activo() if hasattr(user, 'tiene_acceso_programa_activo') else False
+    prog_efectivo = user.obtener_programa_efectivo() if hasattr(user, 'obtener_programa_efectivo') else user.programa
+
+    if tiene_acceso and prog_efectivo and prog_efectivo.activo:
+        return {
+            'mis_programas': [prog_efectivo],
+            'soy_teacher_de': [],
+            'soy_student_de': [prog_efectivo],
+            'es_profesor_ingles': False,
+        }
             
     return {
         'mis_programas': [],

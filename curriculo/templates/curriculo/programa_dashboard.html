@@ -177,7 +177,7 @@
                     </a>
 
                     <!-- Simulacros -->
-                    <a href="{% url 'evaluaciones:mis_notas' %}" 
+                    <a href="{% if request.user.es_estudiante_virtual or es_teacher %}{% url 'evaluaciones:simulacro_list' %}{% else %}{% url 'evaluaciones:mis_notas' %}{% endif %}" 
                        class="group p-5 rounded-2xl bg-gradient-to-br from-[#B45309] to-[#D97706] text-white shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex flex-col justify-between min-h-[125px]">
                         <div class="flex items-center justify-between">
                             <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white text-lg">

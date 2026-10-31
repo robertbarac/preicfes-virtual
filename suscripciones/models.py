@@ -50,21 +50,22 @@ def invalidar_suscripcion_cache(sender, instance, **kwargs):
 def auto_inscribir_preicfes(sender, instance, created, **kwargs):
     """
     Asigna automáticamente el programa PreICFES al usuario cuando
-    se crea su primera suscripción (si no tiene programa).
+    se guarda una suscripción y el usuario aún no tiene programa.
     """
     if kwargs.get('raw'):
         return
-    if created:
-        user = instance.user
-        from curriculo.models import Programa
-        preicfes = Programa.objects.filter(slug='preicfes').first()
-        if preicfes:
-            if user.groups.filter(name__in=['Student', 'VirtualStudent']).exists() and not user.programa_id:
-                user.programa = preicfes
-                user.save()
-            elif user.es_docente:
-                # Agregar PreICFES a sus programas docente si no tiene ninguno
-                if not user.programas_docente.exists():
-                    user.programas_docente.add(preicfes)
+    user = instance.user
+    from curriculo.models import Programa
+    preicfes = (
+        Programa.objects.filter(slug='preicfes', activo=True).first()
+        or Programa.objects.filter(tipo='preicfes', activo=True).first()
+    )
+    if preicfes:
+        if (user.groups.filter(name__in=['Student', 'VirtualStudent']).exists() or user.es_estudiante) and not user.programa_id:
+            user.programa = preicfes
+            user.save(update_fields=['programa'])
+        elif user.es_docente:
+            if not user.programas_docente.exists():
+                user.programas_docente.add(preicfes)
 
 

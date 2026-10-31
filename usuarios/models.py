@@ -105,6 +105,10 @@ class User(AbstractUser):
 
     @property
     def es_estudiante_virtual(self):
+        if self.groups.filter(name='Student').exists():
+            alumno = getattr(self, 'perfil_alumno', None)
+            if not alumno or alumno.tipo_programa != 'preicfes_virtual':
+                return False
         return self.groups.filter(name='VirtualStudent').exists()
 
     @property
@@ -119,6 +123,45 @@ class User(AbstractUser):
         if self.is_superuser or self.is_staff or self.es_docente or self.is_observador:
             return False
         return True
+
+    def obtener_programa_efectivo(self):
+        """
+        Retorna el programa asignado al estudiante. Si es estudiante (Student o VirtualStudent)
+        y no tiene programa asignado en BD, le asigna automáticamente el programa PreICFES activo.
+        """
+        if self.programa_id and self.programa and self.programa.activo:
+            return self.programa
+        if self.es_estudiante:
+            from curriculo.models import Programa
+            preicfes = (
+                Programa.objects.filter(slug='preicfes', activo=True).first()
+                or Programa.objects.filter(tipo='preicfes', activo=True).first()
+            )
+            if preicfes:
+                self.programa = preicfes
+                if self.pk:
+                    User.objects.filter(pk=self.pk).update(programa=preicfes)
+                return preicfes
+        return self.programa
+
+    def tiene_acceso_programa_activo(self):
+        """
+        Verifica si el estudiante (Student o VirtualStudent) tiene suscripción activa
+        o matrícula activa para acceder a /programa/.
+        """
+        hoy = timezone.now().date()
+        if self.subscriptions.filter(active=True, end_date__gte=hoy).exists():
+            return True
+        # Si tiene suscripciones pero todas están vencidas o inactivas, respetar el bloqueo
+        if self.subscriptions.exists():
+            return False
+        # Si es estudiante (Student o VirtualStudent) sin registro de Subscription aún (ej. creado desde Cartera o Admin)
+        if self.es_estudiante_presencial or self.es_estudiante_virtual:
+            alumno = getattr(self, 'perfil_alumno', None)
+            if alumno and alumno.estado in ('retirado', 'limbo'):
+                return False
+            return self.is_active
+        return False
 
     def __str__(self):
         full = self.get_full_name().strip()
@@ -195,7 +238,7 @@ from django.core.cache import cache
 def invalidar_tema_menu_cache(sender, instance, **kwargs):
     cache.delete('tema_menu_global')
 
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, m2m_changed
 
 @receiver(pre_save, sender=User)
 def sanitizar_user_fields(sender, instance, **kwargs):
@@ -203,6 +246,27 @@ def sanitizar_user_fields(sender, instance, **kwargs):
         instance.email = None
     if instance.numero_documento == "":
         instance.numero_documento = None
+
+
+@receiver(m2m_changed, sender=User.groups.through)
+def auto_asignar_programa_al_cambiar_grupo(sender, instance, action, **kwargs):
+    """
+    Cuando se asigna el grupo Student o VirtualStudent a un usuario (ej. desde el Admin),
+    garantiza que tenga su programa PreICFES asignado y limpia la caché de suscripción.
+    """
+    if action == 'post_add':
+        cache.delete(f'sub_valid_{instance.id}')
+        if not instance.programa_id and instance.groups.filter(name__in=['Student', 'VirtualStudent']).exists():
+            from curriculo.models import Programa
+            preicfes = (
+                Programa.objects.filter(slug='preicfes', activo=True).first()
+                or Programa.objects.filter(tipo='preicfes', activo=True).first()
+            )
+            if preicfes:
+                instance.programa = preicfes
+                User.objects.filter(pk=instance.pk).update(programa=preicfes)
+    elif action in ('post_remove', 'post_clear'):
+        cache.delete(f'sub_valid_{instance.id}')
 
 
 import os

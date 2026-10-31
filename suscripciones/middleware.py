@@ -48,8 +48,11 @@ class SubscriptionCheckMiddleware:
         is_valid = cache.get(cache_key)
         
         if is_valid is None:
-            suscripcion = request.user.subscriptions.order_by('-id').first()
-            is_valid = bool(suscripcion and suscripcion.is_valid)
+            if hasattr(request.user, 'tiene_acceso_programa_activo'):
+                is_valid = request.user.tiene_acceso_programa_activo()
+            else:
+                suscripcion = request.user.subscriptions.order_by('-id').first()
+                is_valid = bool(suscripcion and suscripcion.is_valid)
             cache.set(cache_key, is_valid, 3600)  # Cachear 1 hora (signals invalidarán al cambiar)
 
         # If the student DOES NOT have a subscription or it's INVALID

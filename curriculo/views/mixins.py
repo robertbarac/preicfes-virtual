@@ -108,12 +108,12 @@ class ProgramaVisibilidadMixin(UserPassesTestMixin):
                     user.clases.filter(materia__programas=programa).exists()
                 )
             else:
-                # Alumno: debe ser su programa asignado y tener suscripción activa
-                from suscripciones.models import Subscription
-                from django.utils import timezone
-                hoy = timezone.now().date()
-                suscripcion_activa = user.subscriptions.filter(active=True, end_date__gte=hoy).exists()
-                tiene_acceso = (suscripcion_activa and user.programa_id == programa.id)
+                # Alumno (Student o VirtualStudent): garantizar programa efectivo y verificar acceso activo
+                prog_efectivo = user.obtener_programa_efectivo() if hasattr(user, 'obtener_programa_efectivo') else user.programa
+                tiene_acceso_activo = user.tiene_acceso_programa_activo() if hasattr(user, 'tiene_acceso_programa_activo') else False
+                tiene_acceso = bool(
+                    tiene_acceso_activo and prog_efectivo and prog_efectivo.id == programa.id
+                )
                 
             if not tiene_acceso:
                 return False

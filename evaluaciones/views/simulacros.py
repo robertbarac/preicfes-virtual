@@ -84,7 +84,8 @@ class SimulacroAccessMixin(UserPassesTestMixin):
         if simulacro.modulo:
             if simulacro.modulo.ciclo:
                 programa = simulacro.modulo.ciclo.programa
-                if user.programa_id and user.programa_id != programa.id:
+                prog_efectivo = user.obtener_programa_efectivo() if hasattr(user, 'obtener_programa_efectivo') else user.programa
+                if prog_efectivo and prog_efectivo.id != programa.id:
                     return False
                 if not simulacro.modulo.ciclo.visible:
                     return False
