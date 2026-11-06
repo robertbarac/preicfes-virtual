@@ -536,7 +536,11 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                                {{ resultado.registrador.get_full_name|default:resultado.registrador.username|default:"Sistema" }}
+                                {% if resultado.registrador %}
+                                    {{ resultado.registrador.get_full_name|default:resultado.registrador.username }}
+                                {% else %}
+                                    Sistema
+                                {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center font-medium">
                                 {% if resultado.estado == 'Calificado' %}
