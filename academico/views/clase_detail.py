@@ -9,13 +9,22 @@ class ClaseDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     context_object_name = 'clase'
 
     def test_func(self):
-        return self.request.user.is_staff
+        clase = self.get_object()
+        return self.request.user.is_staff or self.request.user == clase.profesor
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         clase = self.get_object()
-        
+        user = self.request.user
+
+        puede_registrar = (
+            user.is_superuser or 
+            user.groups.filter(name='SecretariaAcademica').exists() or 
+            (clase.estado != 'vista' and user == clase.profesor)
+        )
+
         context.update({
-            'titulo': f'Detalles de la Clase - {clase}'
+            'titulo': f'Detalles de la Clase - {clase}',
+            'puede_registrar': puede_registrar,
         })
         return context
