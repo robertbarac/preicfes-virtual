@@ -43,13 +43,100 @@
             {% if form.contenido_texto.errors %}<div class="text-red-500 text-sm mt-1">{{ form.contenido_texto.errors }}</div>{% endif %}
         </div>
 
-        <!-- Grupo Dinámico: Archivo Imagen -->
+        <!-- Grupo Dinámico: LaTeX -->
+        <div id="group_latex" class="mb-4 hidden dynamic-group">
+            <div class="flex items-center justify-between mb-1">
+                <label for="latex_input" class="block text-sm font-bold text-gray-700">
+                    Fórmula / Código LaTeX
+                </label>
+                <span class="text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full font-mono font-semibold">
+                    📐 Modo KaTeX
+                </span>
+            </div>
+            <textarea id="latex_input" rows="4"
+                placeholder="Ejemplo: x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}"
+                class="w-full p-3 font-mono text-sm border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-slate-50 text-slate-800 leading-relaxed"></textarea>
+            
+            <p class="text-xs text-gray-500 mt-1">
+                Ingresa la expresión matemática en sintaxis LaTeX (ej: fracciones <code class="text-indigo-600 font-mono">\frac{a}{b}</code>, exponentes <code class="text-indigo-600 font-mono">x^2</code>, integrales <code class="text-indigo-600 font-mono">\int_a^b</code>). No es necesario incluir signos de dólar ($).
+            </p>
+
+            <!-- Vista Previa en Vivo -->
+            <div class="mt-4 p-4 bg-slate-50 border border-dashed border-indigo-200 rounded-xl shadow-sm">
+                <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>👁️ Vista previa en tiempo real:</span>
+                    <span id="latex_status" class="text-[11px] text-gray-400 font-normal">Listo</span>
+                </div>
+                <div id="latex_preview" class="min-h-[55px] flex items-center justify-center text-xl text-slate-900 overflow-x-auto py-2 bg-white rounded-lg border border-gray-100 px-3">
+                    <span class="text-gray-400 italic text-sm">La fórmula renderizada se mostrará aquí...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grupo Dinámico: Archivo Imagen (Con soporte para Pegar Ctrl+V y Drag & Drop) -->
         <div id="group_imagen" class="mb-4 hidden dynamic-group">
-            <label for="{{ form.archivo_imagen.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                Subir Imagen / GIF
-            </label>
-            {{ form.archivo_imagen }}
-            {% if form.archivo_imagen.errors %}<div class="text-red-500 text-sm mt-1">{{ form.archivo_imagen.errors }}</div>{% endif %}
+            <div class="flex items-center justify-between mb-1">
+                <label class="block text-sm font-bold text-gray-700">
+                    Imagen o GIF
+                </label>
+                <span class="text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full font-semibold">
+                    📋 Soporta Ctrl+V
+                </span>
+            </div>
+
+            {% if form.instance.archivo_imagen %}
+            <div class="mb-3 p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
+                <img src="{{ form.instance.archivo_imagen.url }}" alt="Imagen actual" class="h-14 w-14 object-cover rounded-lg border shadow-xs">
+                <div class="text-xs text-gray-600">
+                    <p class="font-bold text-gray-800">Imagen actual guardada</p>
+                    <p>Si pegas con Ctrl+V o seleccionas otra imagen, reemplazará a esta.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Zona Interactiva de Pegado y Arrastre -->
+            <div id="image_drop_zone"
+                tabindex="0"
+                class="border-2 border-dashed border-gray-300 hover:border-indigo-500 rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 bg-gray-50/70 hover:bg-indigo-50/30 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100">
+                
+                <div id="drop_zone_prompt" class="space-y-2">
+                    <div class="mx-auto w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl shadow-xs">
+                        📋
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-800">
+                            Presiona <kbd class="px-2 py-0.5 text-xs font-semibold text-gray-800 bg-white border border-gray-300 rounded shadow-xs">Ctrl + V</kbd> para pegar una imagen copiada
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            o arrastra tu archivo aquí, o <span class="text-indigo-600 font-semibold hover:underline">haz clic para examinar</span>
+                        </p>
+                    </div>
+                    <p class="text-[11px] text-gray-400">Compatible con capturas de pantalla, recortes de Windows, imágenes web copiadas, PNG, JPG o GIF.</p>
+                </div>
+
+                <!-- Preview de la imagen pegada o seleccionada -->
+                <div id="image_preview_box" class="hidden space-y-3">
+                    <div class="relative inline-block max-w-full">
+                        <img id="image_preview_img" src="" alt="Vista previa" class="max-h-64 max-w-full rounded-xl shadow-md border border-gray-200 mx-auto object-contain bg-white">
+                    </div>
+                    <div id="image_preview_info" class="text-xs text-gray-600 font-medium"></div>
+                    <div>
+                        <button type="button" id="btn_quitar_imagen" class="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 font-semibold bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors border border-red-200">
+                            <span>✕ Quitar imagen</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input real de archivo (oculto visualmente pero activo en el formulario) -->
+            <div class="mt-2">
+                <div class="opacity-0 h-0 w-0 overflow-hidden">
+                    {{ form.archivo_imagen }}
+                </div>
+                {% if form.archivo_imagen.errors %}
+                <div class="text-red-500 text-sm mt-1">{{ form.archivo_imagen.errors }}</div>
+                {% endif %}
+            </div>
         </div>
 
         <!-- Grupo Dinámico: URL -->
@@ -72,31 +159,9 @@
     </form>
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const tipoSelect = document.getElementById("{{ form.tipo.id_for_label }}");
-    const groupTexto = document.getElementById("group_texto");
-    const groupImagen = document.getElementById("group_imagen");
-    const groupUrl = document.getElementById("group_url");
-
-    function updateFields() {
-        const value = tipoSelect.value;
-        // Ocultar todos
-        document.querySelectorAll('.dynamic-group').forEach(el => el.classList.add('hidden'));
-
-        if(value === 'texto') {
-            groupTexto.classList.remove('hidden');
-        } else if(value === 'imagen') {
-            groupImagen.classList.remove('hidden');
-        } else if(value === 'youtube' || value === 'enlace') {
-            groupUrl.classList.remove('hidden');
-        }
-    }
-
-    tipoSelect.addEventListener("change", updateFields);
-    updateFields(); // inicializar
-});
-</script>
+<!-- KaTeX CDN para preview de LaTeX -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 
 <!-- Quill.js — editor de texto enriquecido (MIT, sin API key) -->
 <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
@@ -107,45 +172,236 @@ document.addEventListener("DOMContentLoaded", function() {
   .ql-editor { min-height: 140px; }
   .quill-hidden { display: none !important; }
 </style>
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener("DOMContentLoaded", function() {
+    const tipoSelect = document.getElementById("{{ form.tipo.id_for_label }}");
+    const groupTexto = document.getElementById("group_texto");
+    const groupLatex = document.getElementById("group_latex");
+    const groupImagen = document.getElementById("group_imagen");
+    const groupUrl = document.getElementById("group_url");
+
+    const latexInput = document.getElementById("latex_input");
+    const latexPreview = document.getElementById("latex_preview");
+    const latexStatus = document.getElementById("latex_status");
     const textoArea = document.querySelector('textarea.tinymce-contenido');
-    if (!textoArea) return;
 
-    const wrapper = document.createElement('div');
-    textoArea.parentNode.insertBefore(wrapper, textoArea);
-    textoArea.classList.add('quill-hidden');
-
-    const quill = new Quill(wrapper, {
-        theme: 'snow',
-        modules: {
-            toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{ 'script': 'sub' }, { 'script': 'super' }],
-                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                ['clean']
-            ]
-        },
-    });
-
-    // Cargar contenido existente al editar
-    if (textoArea.value) {
-        quill.clipboard.dangerouslyPasteHTML(textoArea.value);
+    // ── Lógica de renderizado en vivo para LaTeX ──────────────────────────────
+    function renderLatexPreview() {
+        if (!latexInput || !latexPreview) return;
+        const formula = latexInput.value.trim();
+        if (!formula) {
+            latexPreview.innerHTML = '<span class="text-gray-400 italic text-sm">La fórmula renderizada se mostrará aquí...</span>';
+            if (latexStatus) {
+                latexStatus.textContent = "Listo";
+                latexStatus.className = "text-[11px] text-gray-400 font-normal";
+            }
+            return;
+        }
+        try {
+            katex.render(formula, latexPreview, {
+                displayMode: true,
+                throwOnError: true
+            });
+            if (latexStatus) {
+                latexStatus.textContent = "✓ Sintaxis válida";
+                latexStatus.className = "text-[11px] text-emerald-600 font-semibold";
+            }
+        } catch (err) {
+            latexPreview.innerHTML = `<span class="text-rose-500 text-sm font-mono break-all">${err.message || 'Error de sintaxis LaTeX'}</span>`;
+            if (latexStatus) {
+                latexStatus.textContent = "⚠️ Error de sintaxis";
+                latexStatus.className = "text-[11px] text-rose-500 font-semibold";
+            }
+        }
     }
 
-    // Sincronizar con el textarea al enviar
-    document.getElementById('bloqueForm').addEventListener('submit', function () {
-        textoArea.value = quill.root.innerHTML;
+    if (latexInput) {
+        latexInput.addEventListener("input", renderLatexPreview);
+    }
+
+    // ── Inicialización de Quill para texto enriquecido ─────────────────────────
+    let quill = null;
+    if (textoArea) {
+        const wrapper = document.createElement('div');
+        textoArea.parentNode.insertBefore(wrapper, textoArea);
+        textoArea.classList.add('quill-hidden');
+
+        quill = new Quill(wrapper, {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'script': 'sub' }, { 'script': 'super' }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['clean']
+                ]
+            },
+        });
+
+        // Si estamos editando y el tipo actual es texto, cargar en Quill
+        if (textoArea.value && tipoSelect.value === 'texto') {
+            quill.clipboard.dangerouslyPasteHTML(textoArea.value);
+        }
+        // Si estamos editando y el tipo actual es LaTeX, cargar en el editor LaTeX
+        if (textoArea.value && tipoSelect.value === 'latex' && latexInput) {
+            latexInput.value = textoArea.value;
+            renderLatexPreview();
+        }
+    }
+
+    // ── Alternancia de grupos dinámicos ───────────────────────────────────────
+    function updateFields() {
+        const value = tipoSelect.value;
+        document.querySelectorAll('.dynamic-group').forEach(el => el.classList.add('hidden'));
+
+        if (value === 'texto') {
+            groupTexto.classList.remove('hidden');
+            if (quill) {
+                setTimeout(() => quill.focus(), 50);
+            }
+        } else if (value === 'latex') {
+            groupLatex.classList.remove('hidden');
+            if (latexInput) {
+                // Si latexInput está vacío pero textoArea tenía algo guardado
+                if (!latexInput.value && textoArea && textoArea.value && !textoArea.value.startsWith('<')) {
+                    latexInput.value = textoArea.value;
+                }
+                renderLatexPreview();
+                setTimeout(() => latexInput.focus(), 50);
+            }
+        } else if (value === 'imagen') {
+            groupImagen.classList.remove('hidden');
+            if (dropZone) {
+                setTimeout(() => dropZone.focus(), 50);
+            }
+        } else if (value === 'youtube' || value === 'enlace') {
+            groupUrl.classList.remove('hidden');
+        }
+    }
+
+    // ── Lógica de Pegado (Ctrl+V) y Drag & Drop para Imágenes ──────────────────
+    const fileInput = document.getElementById("{{ form.archivo_imagen.id_for_label }}");
+    const dropZone = document.getElementById("image_drop_zone");
+    const dropPrompt = document.getElementById("drop_zone_prompt");
+    const previewBox = document.getElementById("image_preview_box");
+    const previewImg = document.getElementById("image_preview_img");
+    const previewInfo = document.getElementById("image_preview_info");
+    const btnQuitar = document.getElementById("btn_quitar_imagen");
+
+    function mostrarPreviewImagen(file, origen) {
+        if (!file || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (previewImg) previewImg.src = e.target.result;
+            if (previewBox) previewBox.classList.remove('hidden');
+            if (dropPrompt) dropPrompt.classList.add('hidden');
+            if (previewInfo) {
+                const sizeKb = (file.size / 1024).toFixed(1);
+                previewInfo.innerHTML = `<strong>${file.name}</strong> (${sizeKb} KB) &bull; <span class="text-indigo-600 font-semibold">${origen}</span>`;
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function resetearImagen() {
+        if (fileInput) fileInput.value = '';
+        if (previewImg) previewImg.src = '';
+        if (previewBox) previewBox.classList.add('hidden');
+        if (dropPrompt) dropPrompt.classList.remove('hidden');
+    }
+
+    if (btnQuitar) {
+        btnQuitar.addEventListener('click', function(e) {
+            e.stopPropagation();
+            resetearImagen();
+        });
+    }
+
+    if (dropZone && fileInput) {
+        dropZone.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        // Arrastrar y soltar
+        ['dragenter', 'dragover'].forEach(name => {
+            dropZone.addEventListener(name, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('border-indigo-500', 'bg-indigo-50/60');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(name => {
+            dropZone.addEventListener(name, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('border-indigo-500', 'bg-indigo-50/60');
+            });
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0 && files[0].type.startsWith('image/')) {
+                fileInput.files = files;
+                mostrarPreviewImagen(files[0], "📂 Archivo arrastrado");
+            }
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                mostrarPreviewImagen(this.files[0], "📁 Archivo seleccionado");
+            }
+        });
+    }
+
+    // Captura global de Ctrl+V / Pegado de imagen del portapapeles
+    window.addEventListener('paste', function(e) {
+        if (tipoSelect.value !== 'imagen') return;
+
+        const clipItems = (e.clipboardData || window.clipboardData)?.items;
+        if (!clipItems) return;
+
+        for (let i = 0; i < clipItems.length; i++) {
+            if (clipItems[i].type.indexOf('image') !== -1) {
+                e.preventDefault();
+                const blob = clipItems[i].getAsFile();
+                if (!blob) continue;
+
+                const ext = blob.type === 'image/jpeg' ? 'jpg' : (blob.type === 'image/webp' ? 'webp' : 'png');
+                const now = new Date();
+                const timestamp = now.getFullYear() +
+                    String(now.getMonth()+1).padStart(2, '0') +
+                    String(now.getDate()).padStart(2, '0') + '_' +
+                    String(now.getHours()).padStart(2, '0') +
+                    String(now.getMinutes()).padStart(2, '0') +
+                    String(now.getSeconds()).padStart(2, '0');
+                const file = new File([blob], `captura_${timestamp}.${ext}`, { type: blob.type });
+
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                if (fileInput) {
+                    fileInput.files = dataTransfer.files;
+                    mostrarPreviewImagen(file, "📋 Pegada del portapapeles");
+                }
+                break;
+            }
+        }
     });
 
-    // Re-mostrar el editor si el tipo es "texto" (ya lo hace el JS anterior,
-    // pero Quill necesita estar visible para renderizarse correctamente)
-    const tipoSel = document.getElementById("{{ form.tipo.id_for_label }}");
-    if (tipoSel) {
-        tipoSel.addEventListener('change', function () {
-            if (this.value === 'texto') {
-                // Forzar reflow del editor por si estaba oculto
-                setTimeout(() => quill.focus(), 50);
+    tipoSelect.addEventListener("change", updateFields);
+    updateFields(); // Inicializar estado
+
+    // ── Sincronización al enviar el formulario ────────────────────────────────
+    const bloqueForm = document.getElementById('bloqueForm');
+    if (bloqueForm && textoArea) {
+        bloqueForm.addEventListener('submit', function () {
+            if (tipoSelect.value === 'latex' && latexInput) {
+                textoArea.value = latexInput.value.trim();
+            } else if (tipoSelect.value === 'texto' && quill) {
+                textoArea.value = quill.root.innerHTML;
             }
         });
     }

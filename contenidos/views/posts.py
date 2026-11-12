@@ -13,12 +13,15 @@ class PostListView(ListView):
     context_object_name = 'posts'
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related('modulo', 'tema', 'tema__materia')
         
         # Filtros opcionales
+        q = self.request.GET.get('q', '').strip()
         materia_id = self.request.GET.get('materia')
         tema_id = self.request.GET.get('tema')
         
+        if q:
+            queryset = queryset.filter(titulo__icontains=q)
         if materia_id:
             queryset = queryset.filter(tema__materia_id=materia_id)
         if tema_id:
@@ -30,6 +33,7 @@ class PostListView(ListView):
         context = super().get_context_data(**kwargs)
         context['materias'] = Materia.objects.all().order_by('nombre')
         context['temas'] = Tema.objects.all().order_by('materia__nombre', 'nombre')
+        context['current_q'] = self.request.GET.get('q', '').strip()
         context['current_materia'] = self.request.GET.get('materia', '')
         context['current_tema'] = self.request.GET.get('tema', '')
         return context

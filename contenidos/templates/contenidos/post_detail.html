@@ -65,6 +65,14 @@
                     <span>Ir a recurso externo</span>
                 </a>
             </div>
+
+            {% elif bloque.tipo == 'latex' %}
+            <!-- RENDERIZA FÓRMULA / ECUACIÓN LATEX -->
+            <div class="my-6 p-6 bg-slate-50 border border-slate-200/90 rounded-2xl shadow-sm overflow-x-auto text-center hover:border-indigo-200 transition-colors">
+                <div class="katex-render text-xl sm:text-2xl text-slate-900 inline-block py-1 font-serif" data-latex="{{ bloque.contenido_texto }}">
+                    {{ bloque.contenido_texto }}
+                </div>
+            </div>
             {% endif %}
 
             <!-- Acciones del bloque (Admin/Staff) -->
@@ -113,4 +121,54 @@
         </div>
     </div>
 </article>
+
+<!-- KaTeX CDN para renderizado de fórmulas matemáticas -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    function initKatex() {
+        if (typeof katex === 'undefined') {
+            setTimeout(initKatex, 50);
+            return;
+        }
+
+        // 1. Renderizar bloques explícitos de LaTeX
+        document.querySelectorAll('.katex-render').forEach(function(el) {
+            const formula = el.getAttribute('data-latex') || el.textContent.trim();
+            if (formula) {
+                try {
+                    katex.render(formula, el, {
+                        displayMode: true,
+                        throwOnError: false
+                    });
+                } catch (e) {
+                    console.error("Error renderizando KaTeX:", e);
+                }
+            }
+        });
+
+        // 2. Renderizar expresiones inline ($...$ o $$...$$) dentro de bloques de texto
+        if (typeof renderMathInElement !== 'undefined') {
+            const proseContainer = document.querySelector('.prose');
+            if (proseContainer) {
+                renderMathInElement(proseContainer, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true}
+                    ],
+                    throwOnError: false,
+                    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+                });
+            }
+        }
+    }
+
+    initKatex();
+});
+</script>
 {% endblock %}

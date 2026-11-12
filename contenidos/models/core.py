@@ -31,13 +31,14 @@ class BloqueContenido(models.Model):
         ('imagen', 'Imagen/GIF'),
         ('youtube', 'Video de YouTube'),
         ('enlace', 'Enlace Externo'),
+        ('latex', 'Fórmula / Ecuación LaTeX'),
     )
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='bloques')
     tipo = models.CharField(max_length=20, choices=TIPOS)
     orden = models.PositiveIntegerField(default=0)
     
     # Campos dinámicos según el tipo de bloque
-    contenido_texto = models.TextField(blank=True, null=True, help_text="Para bloques de texto")
+    contenido_texto = models.TextField(blank=True, null=True, help_text="Para bloques de texto o fórmulas LaTeX")
     archivo_imagen = models.ImageField(upload_to='contenidos/bloques/', blank=True, null=True, help_text="Para imágenes o GIFs")
     url = models.URLField(blank=True, null=True, help_text="Para YouTube o enlaces externos")
 
