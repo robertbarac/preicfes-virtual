@@ -1,0 +1,338 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF: {{ post.titulo }} | PreVirtual</title>
+    
+    <!-- Tailwind CSS desde static -->
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+    
+    <!-- KaTeX CDN para renderizado de fórmulas matemáticas -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    
+    <!-- html2pdf.js para descarga directa a archivo PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+
+        /* Imágenes, fórmulas y enlaces evitan partirse por la mitad */
+        .bloque-imagen, .bloque-latex, .bloque-recurso, figure, img, .katex-pdf-render {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            break-inside: avoid-page !important;
+        }
+
+        /* El texto extenso fluye naturalmente entre páginas */
+        .bloque-texto {
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+        }
+
+        .prose p {
+            orphans: 3;
+            widows: 3;
+        }
+
+        .prose h1, .prose h2, .prose h3, .prose h4 {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+        }
+
+        /* Logo institucional en el encabezado */
+        .logo-header {
+            height: 48px !important;
+            max-height: 48px !important;
+            width: auto !important;
+            max-width: 140px !important;
+            object-fit: contain !important;
+            display: inline-block !important;
+        }
+
+        /* Imágenes del contenido */
+        .bloque-imagen img, .prose img {
+            max-width: 100% !important;
+            height: auto !important;
+            object-fit: contain !important;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            #documento-impresion {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+            }
+            .bloque-imagen, .bloque-latex, .bloque-recurso, figure, .katex-pdf-render {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                break-inside: avoid-page !important;
+            }
+            .bloque-texto {
+                page-break-inside: auto !important;
+                break-inside: auto !important;
+            }
+            .logo-header {
+                height: 48px !important;
+                max-height: 48px !important;
+                width: auto !important;
+                max-width: 140px !important;
+                object-fit: contain !important;
+                display: inline-block !important;
+            }
+            .bloque-imagen img {
+                max-width: 100% !important;
+                height: auto !important;
+                max-height: 380px !important;
+                display: block !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                object-fit: contain !important;
+            }
+            @page {
+                size: letter portrait;
+                margin: 15mm 12mm 15mm 12mm;
+            }
+        }
+    </style>
+</head>
+<body class="py-6 px-3 sm:px-6">
+
+    <!-- Barra de Herramientas de Control (Solo visible en pantalla, se oculta al imprimir) -->
+    <div class="no-print max-w-4xl mx-auto mb-6 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-4 border border-slate-800">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">📄</span>
+            <div>
+                <h2 class="font-bold text-sm sm:text-base">Generador de PDF de Contenido</h2>
+                <p class="text-xs text-slate-400">Vista exclusiva para Superusuario &bull; KaTeX + Texto + Imágenes</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center flex-wrap gap-2.5">
+            <button type="button" onclick="window.print()" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-md transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                <span>Imprimir / Guardar PDF</span>
+            </button>
+
+            <button type="button" id="btn-descargar-pdf" onclick="descargarPDFDirecto()" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-md transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <span id="texto-descargar">Descargar Archivo</span>
+            </button>
+
+            <a href="{% url 'contenidos:post_detail' post.pk %}" class="inline-flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs sm:text-sm px-3.5 py-2 rounded-xl transition-all border border-slate-700">
+                ✕ Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Documento Imprimible Membretado -->
+    <main id="documento-impresion" class="max-w-4xl mx-auto bg-white p-8 sm:p-12 rounded-2xl shadow-xl border border-slate-200">
+        
+        <!-- Encabezado Membretado Institucional -->
+        <header class="border-b-2 border-indigo-600 pb-5 mb-8">
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <img src="{% static 'images/logo.png' %}" alt="Logo PreVirtual" class="logo-header" style="height: 48px !important; max-height: 48px !important; width: auto !important; max-width: 140px !important; object-fit: contain !important; display: inline-block !important;" onerror="this.style.display='none'">
+                    <div>
+                        <h1 class="text-xl font-black tracking-tight text-slate-900 uppercase">PreICFES Victor Valdez</h1>
+                        <p class="text-xs text-indigo-700 font-bold uppercase tracking-wider">Plataforma Académica PreVirtual</p>
+                    </div>
+                </div>
+                <div class="text-right text-xs text-slate-500">
+                    <span class="inline-block px-2.5 py-1 rounded bg-slate-100 font-semibold text-slate-700">
+                        Post #{{ post.id }} &bull; {{ post.get_estado_display }}
+                    </span>
+                    <p class="mt-1">Generado: {% now "d/m/Y H:i" %}</p>
+                </div>
+            </div>
+
+            <!-- Título y Metadatos del Post -->
+            <div class="mt-6">
+                <div class="flex items-center gap-2 text-xs font-semibold text-indigo-700 uppercase tracking-wider mb-1.5">
+                    <span>{{ post.modulo.nombre|default:"Módulo General" }}</span>
+                    <span>&bull;</span>
+                    <span>{{ post.tema.materia.nombre|default:"General" }}</span>
+                    {% if post.tema %}
+                    <span>&bull;</span>
+                    <span>{{ post.tema.nombre }}</span>
+                    {% endif %}
+                </div>
+                <h2 class="text-3xl font-extrabold text-slate-900 leading-tight">{{ post.titulo }}</h2>
+                <div class="text-xs text-slate-500 mt-2 flex items-center gap-4">
+                    <span>📅 Publicado: {{ post.fecha_creacion|date:"d de F, Y" }}</span>
+                    {% if post.creador %}
+                    <span>👤 Docente/Autor: {{ post.creador.get_full_name|default:post.creador.username }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <!-- Bloques del Contenido en Orden -->
+        <div class="space-y-6 text-slate-800 leading-relaxed">
+            {% for bloque in bloques %}
+            <div class="bloque-item {% if bloque.tipo == 'texto' %}bloque-texto{% elif bloque.tipo == 'imagen' %}bloque-imagen{% elif bloque.tipo == 'latex' %}bloque-latex{% else %}bloque-recurso{% endif %}" id="bloque-pdf-{{ bloque.id }}">
+                
+                {% if bloque.tipo == 'texto' %}
+                <!-- Texto Enriquecido -->
+                <div class="prose max-w-none text-base text-slate-800 leading-relaxed font-sans">
+                    {{ bloque.contenido_texto|safe }}
+                </div>
+
+                {% elif bloque.tipo == 'imagen' %}
+                <!-- Imagen / GIF -->
+                {% if bloque.archivo_imagen %}
+                <div class="my-5 text-center bloque-imagen" style="page-break-inside: avoid; break-inside: avoid;">
+                    <img src="{{ bloque.archivo_imagen.url }}" alt="Imagen de soporte"
+                        class="max-h-[380px] max-w-full rounded-xl mx-auto border border-slate-200 object-contain shadow-xs block"
+                        style="page-break-inside: avoid; break-inside: avoid; margin: 0 auto;">
+                </div>
+                {% endif %}
+
+                {% elif bloque.tipo == 'latex' %}
+                <!-- Fórmula / Ecuación LaTeX (KaTeX) -->
+                <div class="my-5 p-5 bg-slate-50/90 border border-slate-200 rounded-xl text-center overflow-x-auto">
+                    <div class="katex-pdf-render text-xl sm:text-2xl text-slate-900 inline-block font-serif" data-latex="{{ bloque.contenido_texto }}">
+                        {{ bloque.contenido_texto }}
+                    </div>
+                </div>
+
+                {% elif bloque.tipo == 'youtube' or bloque.tipo == 'enlace' %}
+                <!-- Recurso Externo / Video -->
+                <div class="my-4 p-4 rounded-xl border border-indigo-100 bg-indigo-50/50 flex items-start gap-3">
+                    <span class="text-xl">{% if bloque.tipo == 'youtube' %}🎥{% else %}🔗{% endif %}</span>
+                    <div class="text-xs">
+                        <p class="font-bold text-indigo-900">
+                            {% if bloque.tipo == 'youtube' %}Video complementario en YouTube{% else %}Enlace a recurso externo{% endif %}
+                        </p>
+                        <a href="{{ bloque.url }}" class="text-indigo-600 underline font-mono break-all mt-0.5 block">
+                            {{ bloque.url }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+            {% empty %}
+            <div class="p-8 text-center text-slate-400 bg-slate-50 rounded-xl">
+                <p>Este post no contiene bloques de información registrados.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pie de Página Institucional -->
+        <footer class="border-t border-slate-200 mt-12 pt-4 text-center text-xs text-slate-400">
+            <p class="font-semibold text-slate-600">PreICFES Virtual Victor Valdez &bull; Material Pedagógico Exclusivo</p>
+            <p class="mt-0.5">Prohibida su reproducción comercial no autorizada.</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // 1. Renderizar todas las fórmulas KaTeX al cargar
+        document.addEventListener("DOMContentLoaded", function() {
+            // Renderizar fórmulas explícitas
+            document.querySelectorAll('.katex-pdf-render').forEach(function(el) {
+                const formula = el.getAttribute('data-latex') || el.textContent.trim();
+                if (formula) {
+                    try {
+                        katex.render(formula, el, {
+                            displayMode: true,
+                            throwOnError: false
+                        });
+                    } catch (e) {
+                        console.error("Error renderizando KaTeX:", e);
+                    }
+                }
+            });
+
+            // Renderizar expresiones matemáticas inline dentro de los párrafos ($...$ o $$...$$)
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(document.getElementById('documento-impresion'), {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true}
+                    ],
+                    throwOnError: false,
+                    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+                });
+            }
+        });
+
+        // 2. Descarga directa con html2pdf.js con protección contra cortes de página
+        async function descargarPDFDirecto() {
+            const elemento = document.getElementById('documento-impresion');
+            const btn = document.getElementById('btn-descargar-pdf');
+            const texto = document.getElementById('texto-descargar');
+
+            if (btn) btn.disabled = true;
+            if (texto) texto.textContent = "Cargando imágenes...";
+
+            // Asegurarse de que todas las imágenes del documento estén totalmente cargadas
+            const imgs = Array.from(elemento.querySelectorAll('img'));
+            await Promise.all(imgs.map(img => {
+                if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
+                return new Promise(resolve => {
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                });
+            }));
+
+            if (texto) texto.textContent = "Generando PDF...";
+
+            const tituloLimpio = "{{ post.titulo|escapejs }}".replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 40);
+            const nombreArchivo = `PreVirtual_Contenido_${tituloLimpio}.pdf`;
+
+            const opt = {
+                margin:       [12, 12, 12, 12],
+                filename:     nombreArchivo,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    logging: false,
+                    scrollX: 0,
+                    scrollY: 0
+                },
+                jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' },
+                pagebreak:    { 
+                    mode: ['css', 'legacy'],
+                    avoid: ['.bloque-imagen', '.bloque-latex', '.bloque-recurso', 'img', 'figure', '.katex-pdf-render', 'header', 'footer']
+                }
+            };
+
+            try {
+                await html2pdf().set(opt).from(elemento).save();
+            } catch (err) {
+                console.error("Error al generar PDF:", err);
+                // Fallback automático al diálogo nativo de impresión si falla
+                window.print();
+            } finally {
+                if (btn) btn.disabled = false;
+                if (texto) texto.textContent = "Descargar Archivo";
+            }
+        }
+    </script>
+</body>
+</html>
+

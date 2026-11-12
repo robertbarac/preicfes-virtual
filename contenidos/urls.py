@@ -1,5 +1,5 @@
 from django.urls import path
-from .views.posts import PostListView, PostCreateView, PostDetailView, PostUpdateView, PostDeleteView
+from .views.posts import PostListView, PostCreateView, PostDetailView, PostPDFView, PostUpdateView, PostDeleteView
 from .views.bloques import BloqueContenidoCreateView, BloqueContenidoUpdateView, BloqueContenidoDeleteView
 
 app_name = 'contenidos'
@@ -9,6 +9,7 @@ urlpatterns = [
     path('', PostListView.as_view(), name='post_list'),
     path('crear/', PostCreateView.as_view(), name='post_create'),
     path('<int:pk>/', PostDetailView.as_view(), name='post_detail'),
+    path('<int:pk>/pdf/', PostPDFView.as_view(), name='post_pdf'),
     path('<int:pk>/editar/', PostUpdateView.as_view(), name='post_update'),
     path('<int:pk>/eliminar/', PostDeleteView.as_view(), name='post_delete'),
     

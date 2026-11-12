@@ -6,14 +6,31 @@
 <article class="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden mb-12">
     <!-- Encabezado del Post -->
     <header class="bg-gradient-to-r from-indigo-600 to-blue-500 px-8 py-10 text-white">
-        <div class="flex items-center space-x-2 text-indigo-100 text-sm font-medium mb-3">
-            <span>{{ post.modulo.nombre|default:"Estructura Base" }}</span>
-            <span>&bull;</span>
-            <span>{{ post.tema.nombre|default:"Lección Core" }}</span>
-        </div>
-        <h1 class="text-4xl font-extrabold tracking-tight mb-2">{{ post.titulo }}</h1>
-        <div class="opacity-80 text-sm">
-            Publicado el {{ post.fecha_creacion|date:"d de F, Y" }}
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <div class="flex items-center space-x-2 text-indigo-100 text-sm font-medium mb-3">
+                    <span>{{ post.modulo.nombre|default:"Estructura Base" }}</span>
+                    <span>&bull;</span>
+                    <span>{{ post.tema.nombre|default:"Lección Core" }}</span>
+                </div>
+                <h1 class="text-4xl font-extrabold tracking-tight mb-2">{{ post.titulo }}</h1>
+                <div class="opacity-80 text-sm">
+                    Publicado el {{ post.fecha_creacion|date:"d de F, Y" }}
+                </div>
+            </div>
+
+            {% if request.user.is_superuser %}
+            <div class="self-start sm:self-center">
+                <a href="{% url 'contenidos:post_pdf' post.pk %}" target="_blank"
+                    class="inline-flex items-center gap-2 bg-white/20 hover:bg-white text-white hover:text-indigo-900 border border-white/30 backdrop-blur-sm font-bold py-2.5 px-4 rounded-xl shadow-md transition-all text-sm group"
+                    title="Generar e Imprimir PDF (Exclusivo Superusuario)">
+                    <svg class="w-5 h-5 text-indigo-200 group-hover:text-indigo-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span>Generar PDF</span>
+                </a>
+            </div>
+            {% endif %}
         </div>
     </header>
 
@@ -107,7 +124,17 @@
             </svg>
             Volver a contenidos
         </a>
-        <div class="flex space-x-3">
+        <div class="flex space-x-3 items-center">
+            {% if request.user.is_superuser %}
+            <a href="{% url 'contenidos:post_pdf' post.pk %}" target="_blank"
+                class="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2 px-3.5 rounded shadow-sm text-sm transition-colors"
+                title="Generar PDF del contenido (Solo Superusuarios)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>Generar PDF</span>
+            </a>
+            {% endif %}
             {% if perms.contenidos.change_post or user.is_staff %}
             <a href="{% url 'contenidos:post_update' post.pk %}"
                 class="bg-white border hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded shadow-sm text-sm transition-colors">Editar

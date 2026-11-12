@@ -2,6 +2,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from contenidos.models import Post
 from contenidos.forms import PostForm
 from curriculo.views.mixins import HistorialMixin
@@ -46,6 +47,24 @@ class PostDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Traemos los bloques ordenados automáticamente por la Meta ordering del modelo
+        context['bloques'] = self.object.bloques.all()
+        return context
+
+class PostPDFView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    """
+    Vista de generación e impresión de PDF del post, restringida exclusivamente a superusuarios.
+    Permite imprimir o descargar en PDF con soporte completo para texto enriquecido,
+    fórmulas matemáticas KaTeX/LaTeX, imágenes y diseño membretado.
+    """
+    model = Post
+    template_name = 'contenidos/post_pdf.html'
+    context_object_name = 'post'
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         context['bloques'] = self.object.bloques.all()
         return context
 
