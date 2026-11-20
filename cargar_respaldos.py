@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import django
 
 # Configuración de entorno de Django
@@ -13,6 +14,7 @@ from django.db import models, transaction
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, Permission
 from academico.models import Alumno
+from cartera.models import Egreso, ConceptoEgreso
 from usuarios.models import User
 
 
@@ -117,6 +119,31 @@ def cargar_fixture_seguro(ruta_json):
         print("  🔄 Mapeando modelo 'usuarios.usuario' -> 'usuarios.user' y 'cedula' -> 'numero_documento'...")
         data_json = data_json.replace('"model": "usuarios.usuario"', '"model": "usuarios.user"')
         data_json = data_json.replace('"cedula":', '"numero_documento":')
+
+    # Mapeo automático de Egreso.concepto antiguo (texto/slug) -> ConceptoEgreso (ID entero FK)
+    try:
+        items_json = json.loads(data_json)
+        choices_map = dict(Egreso.CONCEPTO_CHOICES)
+        conceptos_cache = {}
+        egresos_convertidos = 0
+
+        for entry in items_json:
+            if entry.get('model') == 'cartera.egreso':
+                fields = entry.get('fields', {})
+                valor_concepto = fields.get('concepto')
+                if isinstance(valor_concepto, str):
+                    if valor_concepto not in conceptos_cache:
+                        nombre_legible = choices_map.get(valor_concepto, valor_concepto.replace('_', ' ').capitalize())
+                        concepto_obj, _ = ConceptoEgreso.objects.get_or_create(nombre=nombre_legible)
+                        conceptos_cache[valor_concepto] = concepto_obj.pk
+                    fields['concepto'] = conceptos_cache[valor_concepto]
+                    egresos_convertidos += 1
+
+        if egresos_convertidos > 0:
+            print(f"  🔄 Convertidos {egresos_convertidos} egresos de concepto texto -> ID de ConceptoEgreso.")
+            data_json = json.dumps(items_json)
+    except Exception as e:
+        print(f"  ⚠️ Aviso al preprocesar egresos: {e}")
 
     deserialized_objects = list(deserialize("json", data_json, ignorenonexistent=True))
     

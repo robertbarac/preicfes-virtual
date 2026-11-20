@@ -688,6 +688,8 @@
                 <span class="text-emerald-600">Paz y Salvo</span>
                 {% elif tiene_cuotas_vencidas %}
                 <span class="text-rose-600">Cuenta con Cuota(s) Vencida(s)</span>
+                {% elif bloquear_simulacros_por_cartera %}
+                <span class="text-rose-600">Cuenta con Cuota(s) Parcial(es) Vencida(s)</span>
                 {% else %}
                 <span class="text-blue-600">Al Día con Cuotas Pendientes</span>
                 {% endif %}
@@ -696,9 +698,9 @@
             <div class="flex items-center gap-2">
               <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider
                 {% if deuda.saldo_pendiente <= 0 %}bg-emerald-100 text-emerald-800 border border-emerald-200
-                {% elif tiene_cuotas_vencidas %}bg-rose-100 text-rose-800 border border-rose-200
+                {% elif tiene_cuotas_vencidas or bloquear_simulacros_por_cartera %}bg-rose-100 text-rose-800 border border-rose-200
                 {% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
-                {% if deuda.saldo_pendiente <= 0 %}Paz y Salvo{% elif tiene_cuotas_vencidas %}Mora / Vencida{% else %}Al Día{% endif %}
+                {% if deuda.saldo_pendiente <= 0 %}Paz y Salvo{% elif tiene_cuotas_vencidas or bloquear_simulacros_por_cartera %}Mora / Vencida{% else %}Al Día{% endif %}
               </span>
             </div>
           </div>

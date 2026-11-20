@@ -7,6 +7,7 @@ from django.utils import timezone
 from academico.models import Alumno, Asistencia, Nota, Inasistencia
 from simulacros.models import ResultadoSimulacro, ResultadoSimulacroDiagnostico
 from cartera.models import Deuda, Cuota
+from cartera.utils import evaluar_bloqueo_cartera
 from evaluaciones.models.simulacros import IntentoSimulacro
 from evaluaciones.models.talleres import IntentoTaller
 from usuarios.models import User
@@ -225,119 +226,21 @@ class ConsultaEstudianteView(View):
                     fecha_fin__isnull=False
                 ).select_related('taller', 'taller__modulo', 'taller__tema', 'clase', 'clase__materia').order_by('-fecha_fin'))
 
-            # 3. Cartera y Cuotas (Solo visualización / Lectura)
-            deuda = None
-            cuotas = []
-            total_abonado = 0
-            tiene_cuotas_vencidas = False
-            bloquear_simulacros_por_cartera = False
-            motivo_bloqueo_simulacros = None
-            cuotas_afectadas_simulacros = []
-            suma_montos_pagadas_o_parciales = 0
-            suma_abonados_pagadas_o_parciales = 0
-
-            # Obtener deuda para cualquier tipo de estudiante (Student presencial o VirtualStudent)
-            if isinstance(alumno, Alumno) and hasattr(alumno, 'deuda'):
-                try:
-                    deuda = alumno.deuda
-                except Exception:
-                    deuda = None
-
-            if not deuda:
-                doc_target = (
-                    getattr(alumno, 'identificacion', None) or 
-                    (usuario_actividades.numero_documento if usuario_actividades else None) or 
-                    identificacion
-                )
-                if doc_target:
-                    clean_doc = re.sub(r'[^0-9a-zA-Z]', '', str(doc_target))
-                    deuda = Deuda.objects.filter(
-                        Q(alumno__identificacion__iexact=doc_target) |
-                        Q(alumno__identificacion__iexact=clean_doc)
-                    ).select_related('alumno').first()
-
-            if not deuda and usuario_actividades:
-                deuda = Deuda.objects.filter(alumno__usuario=usuario_actividades).select_related('alumno').first()
-
-            if deuda:
-                try:
-                    cuotas = list(deuda.cuotas.all().order_by('fecha_vencimiento'))
-                    today = timezone.localtime(timezone.now()).date()
-
-                    for idx, cuota in enumerate(cuotas, 1):
-                        cuota.numero_cuota = idx
-                        cuota.saldo_restante = max(0, cuota.monto - cuota.monto_abonado)
-
-                        if cuota.estado == 'pagada' or cuota.monto_abonado >= cuota.monto:
-                            cuota.estado_calculado = "Pagada"
-                            cuota.badge_color = "bg-emerald-100 text-emerald-800 border-emerald-200"
-                        elif cuota.estado == 'pagada_parcial' or cuota.monto_abonado > 0:
-                            cuota.estado_calculado = "Pagada Parcial"
-                            cuota.badge_color = "bg-amber-100 text-amber-800 border-amber-200"
-                        elif cuota.estado == 'vencida' or today > cuota.fecha_vencimiento:
-                            cuota.estado_calculado = "Vencida"
-                            cuota.badge_color = "bg-rose-100 text-rose-800 border-rose-200"
-                        else:
-                            cuota.estado_calculado = "Al Día"
-                            cuota.badge_color = "bg-blue-100 text-blue-800 border-blue-200"
-
-                        # Se calcula sumando los montos abonados de las cuotas de su deuda
-                        if cuota.estado in ['pagada', 'pagada_parcial'] or cuota.monto_abonado > 0:
-                            total_abonado += cuota.monto_abonado
-
-                    if total_abonado == 0 and deuda.valor_total and deuda.saldo_pendiente is not None:
-                        total_abonado = max(0, deuda.valor_total - deuda.saldo_pendiente)
-
-                    # --- Lógica ordenada para visualización de simulacros ---
-                    # Condición 1: Tiene al menos una cuota vencida
-                    # (estado 'vencida' o fecha de vencimiento menor a hoy con saldo pendiente > 0)
-                    cuotas_vencidas = [
-                        c for c in cuotas 
-                        if c.estado == 'vencida' or (today > c.fecha_vencimiento and c.saldo_restante > 0)
-                    ]
-                    tiene_cuotas_vencidas = len(cuotas_vencidas) > 0
-
-                    # Condición 2: No tiene vencidas, pero tiene pagadas parciales y
-                    # la suma de los montos de las cuotas que lleva pagadas y/o pagadas parciales
-                    # sea mayor a la suma de sus montos abonados.
-                    cuotas_pagadas_o_parciales = [
-                        c for c in cuotas 
-                        if c.estado in ['pagada', 'pagada_parcial'] or c.monto_abonado > 0
-                    ]
-                    tiene_pagadas_parciales = any(
-                        c.estado == 'pagada_parcial' or (0 < c.monto_abonado < c.monto) 
-                        for c in cuotas
-                    )
-
-                    suma_montos_pagadas_o_parciales = sum(c.monto for c in cuotas_pagadas_o_parciales)
-                    suma_abonados_pagadas_o_parciales = sum(c.monto_abonado for c in cuotas_pagadas_o_parciales)
-
-                    condicion_parciales_incompletas = (
-                        not tiene_cuotas_vencidas
-                        and tiene_pagadas_parciales
-                        and (suma_montos_pagadas_o_parciales > suma_abonados_pagadas_o_parciales)
-                    )
-
-                    # Aplicar bloqueo si se cumple la condición 1 o la condición 2:
-                    if tiene_cuotas_vencidas:
-                        bloquear_simulacros_por_cartera = True
-                        motivo_bloqueo_simulacros = 'cuotas_vencidas'
-                        cuotas_afectadas_simulacros = cuotas_vencidas
-                    elif condicion_parciales_incompletas:
-                        bloquear_simulacros_por_cartera = True
-                        motivo_bloqueo_simulacros = 'pagadas_parciales'
-                        cuotas_afectadas_simulacros = [
-                            c for c in cuotas 
-                            if c.estado == 'pagada_parcial' or (0 < c.monto_abonado < c.monto)
-                        ]
-                except Exception:
-                    deuda = None
-                    cuotas = []
-                    total_abonado = 0
-                    tiene_cuotas_vencidas = False
-                    bloquear_simulacros_por_cartera = False
-                    motivo_bloqueo_simulacros = None
-                    cuotas_afectadas_simulacros = []
+            # 3. Cartera y Cuotas (Lógica unificada desde cartera.utils)
+            bloqueo_info = evaluar_bloqueo_cartera(
+                alumno=alumno if isinstance(alumno, Alumno) else None,
+                user=usuario_actividades,
+                identificacion=getattr(alumno, 'identificacion', None) or identificacion,
+            )
+            deuda = bloqueo_info['deuda']
+            cuotas = bloqueo_info['cuotas']
+            total_abonado = bloqueo_info['total_abonado']
+            tiene_cuotas_vencidas = bloqueo_info['tiene_cuotas_vencidas']
+            bloquear_simulacros_por_cartera = bloqueo_info['bloquear']
+            motivo_bloqueo_simulacros = bloqueo_info['motivo']
+            cuotas_afectadas_simulacros = bloqueo_info['cuotas_afectadas']
+            suma_montos_pagadas_o_parciales = bloqueo_info['suma_montos_pagadas_o_parciales']
+            suma_abonados_pagadas_o_parciales = bloqueo_info['suma_abonados_pagadas_o_parciales']
 
             total_simulacros_evaluados = 0
             if es_presencial:

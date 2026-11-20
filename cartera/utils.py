@@ -141,12 +141,16 @@ def generar_fechas_pago(fecha_inicio, fecha_fin, frecuencia_pago, valor_total):
     return cuotas
 
 
-def evaluar_bloqueo_cartera(alumno=None, user=None):
+def evaluar_bloqueo_cartera(alumno=None, user=None, identificacion=None):
     """
     Evalúa si un estudiante tiene bloqueo de resultados de simulacros por cartera.
-    Condición 1: Tiene al menos una cuota vencida (estado 'vencida' o fecha_vencimiento < hoy y saldo_restante > 0).
-    Condición 2: No tiene vencidas, pero tiene pagadas parciales y la suma de montos de cuotas
-                 pagadas y/o pagadas parciales > suma de sus montos abonados.
+    Condición 1: Tiene al menos una cuota vencida sin pagar (estado 'vencida' con saldo > 0,
+                 o fecha_vencimiento < hoy sin abonos).
+    Condición 2: No tiene vencidas sin pagar, pero tiene cuotas pagadas parciales cuya
+                 fecha_vencimiento < hoy (ya vencidas) y la suma de montos de cuotas causadas
+                 (fecha_vencimiento < hoy) pagadas/parciales > suma de sus montos abonados.
+    Nota: Los abonos parciales en cuotas futuras (fecha_vencimiento >= hoy) NO bloquean,
+          permitiendo que los estudiantes que adelantan pagos puedan ver sus resultados.
     """
     import re
     from django.utils import timezone
@@ -175,7 +179,8 @@ def evaluar_bloqueo_cartera(alumno=None, user=None):
     if not deuda:
         doc_target = (
             getattr(alumno, 'identificacion', None) or 
-            (getattr(user, 'numero_documento', None) if user else None)
+            (getattr(user, 'numero_documento', None) if user else None) or
+            identificacion
         )
         if doc_target:
             clean_doc = re.sub(r'[^0-9a-zA-Z]', '', str(doc_target))
@@ -204,8 +209,12 @@ def evaluar_bloqueo_cartera(alumno=None, user=None):
                 cuota.estado_calculado = "Pagada"
                 cuota.badge_color = "bg-emerald-100 text-emerald-800 border-emerald-200"
             elif cuota.estado == 'pagada_parcial' or cuota.monto_abonado > 0:
-                cuota.estado_calculado = "Pagada Parcial"
-                cuota.badge_color = "bg-amber-100 text-amber-800 border-amber-200"
+                if today > cuota.fecha_vencimiento:
+                    cuota.estado_calculado = "Parcial (Vencida)"
+                    cuota.badge_color = "bg-rose-100 text-rose-800 border-rose-200"
+                else:
+                    cuota.estado_calculado = "Abono Anticipado"
+                    cuota.badge_color = "bg-teal-100 text-teal-800 border-teal-200"
             elif cuota.estado == 'vencida' or today > cuota.fecha_vencimiento:
                 cuota.estado_calculado = "Vencida"
                 cuota.badge_color = "bg-rose-100 text-rose-800 border-rose-200"
@@ -222,46 +231,59 @@ def evaluar_bloqueo_cartera(alumno=None, user=None):
         resultado['total_abonado'] = total_abonado
         resultado['cuotas'] = cuotas
 
-        # Condición 1: Tiene al menos una cuota vencida
+        # Si el estudiante ya está a paz y salvo, nunca bloquear
+        if deuda.saldo_pendiente is not None and deuda.saldo_pendiente <= 0:
+            return resultado
+
+        # Calcular el monto real exigible hasta hoy (evitando doble conteo cuando
+        # CuotaUpdateView transfirió el saldo de una cuota parcial a la siguiente,
+        # y respetando excedentes ya descontados de cuotas siguientes).
+        exigible_a_hoy = 0
+        for i, c in enumerate(cuotas):
+            if today > c.fecha_vencimiento:
+                es_parcial = (c.estado == 'pagada_parcial') or (0 < c.monto_abonado < c.monto)
+                siguiente = cuotas[i + 1] if i + 1 < len(cuotas) else None
+                if es_parcial and siguiente is not None and today > siguiente.fecha_vencimiento:
+                    # El faltante de esta cuota ya fue sumado en `siguiente.monto`
+                    exigible_a_hoy += c.monto_abonado
+                else:
+                    exigible_a_hoy += max(c.monto, c.monto_abonado)
+
+        # Si el total abonado por el alumno (incluyendo adelantos o pagos en cuotas
+        # siguientes) ya cubre todo lo exigible hasta hoy, NO debe bloquearse.
+        if total_abonado >= exigible_a_hoy:
+            for c in cuotas:
+                if c.estado_calculado == "Parcial (Vencida)":
+                    c.estado_calculado = "Parcial (Cubierta)"
+                    c.badge_color = "bg-emerald-100 text-emerald-800 border-emerald-200"
+            return resultado
+
+        # Condición 1: Tiene al menos una cuota vencida sin pagar
         cuotas_vencidas = [
             c for c in cuotas 
-            if c.estado == 'vencida' or (today > c.fecha_vencimiento and c.saldo_restante > 0)
+            if (today > c.fecha_vencimiento and c.saldo_restante > 0 and c.monto_abonado == 0)
+            or (c.estado == 'vencida' and c.saldo_restante > 0 and today > c.fecha_vencimiento)
         ]
         tiene_cuotas_vencidas = len(cuotas_vencidas) > 0
         resultado['tiene_cuotas_vencidas'] = tiene_cuotas_vencidas
 
-        # Condición 2: Pagadas parciales incompletas
-        cuotas_pagadas_o_parciales = [
-            c for c in cuotas 
-            if c.estado in ['pagada', 'pagada_parcial'] or c.monto_abonado > 0
+        # Condición 2: Cuotas pagadas parciales YA VENCIDAS (fecha_vencimiento < hoy)
+        cuotas_parciales_vencidas = [
+            c for c in cuotas
+            if (c.estado == 'pagada_parcial' or (0 < c.monto_abonado < c.monto))
+            and today > c.fecha_vencimiento
         ]
-        tiene_pagadas_parciales = any(
-            c.estado == 'pagada_parcial' or (0 < c.monto_abonado < c.monto) 
-            for c in cuotas
-        )
-
-        suma_montos = sum(c.monto for c in cuotas_pagadas_o_parciales)
-        suma_abonados = sum(c.monto_abonado for c in cuotas_pagadas_o_parciales)
-        resultado['suma_montos_pagadas_o_parciales'] = suma_montos
-        resultado['suma_abonados_pagadas_o_parciales'] = suma_abonados
-
-        condicion_parciales_incompletas = (
-            not tiene_cuotas_vencidas
-            and tiene_pagadas_parciales
-            and (suma_montos > suma_abonados)
-        )
+        resultado['suma_montos_pagadas_o_parciales'] = exigible_a_hoy
+        resultado['suma_abonados_pagadas_o_parciales'] = total_abonado
 
         if tiene_cuotas_vencidas:
             resultado['bloquear'] = True
             resultado['motivo'] = 'cuotas_vencidas'
             resultado['cuotas_afectadas'] = cuotas_vencidas
-        elif condicion_parciales_incompletas:
+        elif cuotas_parciales_vencidas and total_abonado < exigible_a_hoy:
             resultado['bloquear'] = True
             resultado['motivo'] = 'pagadas_parciales'
-            resultado['cuotas_afectadas'] = [
-                c for c in cuotas 
-                if c.estado == 'pagada_parcial' or (0 < c.monto_abonado < c.monto)
-            ]
+            resultado['cuotas_afectadas'] = cuotas_parciales_vencidas
 
     except Exception:
         pass
