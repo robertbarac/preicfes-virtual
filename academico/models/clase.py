@@ -37,7 +37,7 @@ class Clase(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name="clases",
-        limit_choices_to={'groups__name': 'Profesor'},  # Solo usuarios del grupo "Profesor"
+        limit_choices_to=models.Q(groups__name='Profesor') | models.Q(is_superuser=True),  # Profesores o superusuarios
         null=True,
         blank=True
     )
@@ -65,9 +65,9 @@ class Clase(models.Model):
     def clean(self):
         # Solo realizar validaciones de profesor si se ha asignado uno
         if self.profesor:
-            # Validación 1: El profesor debe pertenecer al grupo "Profesor"
-            if not self.profesor.groups.filter(name="Profesor").exists():
-                raise ValidationError({'profesor': 'El usuario seleccionado no pertenece al grupo de Profesores.'})
+            # Validación 1: El profesor debe pertenecer al grupo "Profesor" o ser superusuario
+            if not (self.profesor.is_superuser or self.profesor.groups.filter(name="Profesor").exists()):
+                raise ValidationError({'profesor': 'El usuario seleccionado debe pertenecer al grupo de Profesores o ser superusuario.'})
 
             # Validación 3: Evitar superposición de horarios para el mismo profesor
             clases_profesor = Clase.objects.filter(

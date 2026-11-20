@@ -67,6 +67,10 @@ class CustomUserAdmin(UserAdmin):
 
     filter_horizontal = ('groups', 'user_permissions', 'programas_docente')
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        return queryset.distinct(), True
+
     def get_grupo(self, obj):
         if obj.groups.exists():
             return ", ".join([g.name for g in obj.groups.all()])

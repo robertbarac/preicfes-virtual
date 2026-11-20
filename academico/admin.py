@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django import forms
+from django.db.models import Q
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from .models import Alumno, Clase, Grupo, Materia, Nota, Asistencia
 from ubicaciones.models import Municipio, Salon
+from usuarios.models import User
 
 class AlumnoAdminForm(forms.ModelForm):
     class Meta:
@@ -268,7 +270,7 @@ class ClaseAdmin(admin.ModelAdmin):
     list_display = ('materia', 'fecha', 'horario', 'salon', 'profesor', 'grupo', 'estado')
     list_filter = ('estado', 'fecha', 'horario', 'salon', 'materia', 'grupo__salon__sede', 'profesor', 'grupo__salon__sede__municipio', 'grupo__codigo')
     search_fields = ('materia__nombre', 'profesor__username', 'grupo__codigo', 'estado')
-    autocomplete_fields = ['taller']
+    autocomplete_fields = ['taller', 'profesor']
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request).select_related(
@@ -292,6 +294,11 @@ class ClaseAdmin(admin.ModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         user = request.user
+        if db_field.name == "profesor":
+            kwargs["queryset"] = User.objects.filter(
+                Q(groups__name="Profesor") | Q(is_superuser=True)
+            ).distinct().order_by("first_name", "last_name", "username")
+
         if not user.is_superuser:
             departamento = getattr(user, 'departamento', None)
             municipio = getattr(user, 'municipio', None)
