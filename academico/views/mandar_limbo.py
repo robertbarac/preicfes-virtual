@@ -9,6 +9,38 @@ def es_usuario_limbo(user):
     return user.username in ('vvgomez', 'claudia2019') or user.is_superuser
 
 
+def obtener_o_crear_grupo_limbo(sede):
+    """Obtiene o crea el grupo LIMBO para una sede sin colisiones de código."""
+    grupo_limbo = Grupo.objects.filter(
+        codigo__istartswith='LIMBO',
+        salon__sede=sede
+    ).first()
+
+    if grupo_limbo:
+        return grupo_limbo
+
+    # Obtener o crear un salón "Limbo" en la sede (número 999 como convención)
+    salon_limbo = Salon.objects.filter(sede=sede, numero=999).first()
+    if not salon_limbo:
+        salon_limbo = Salon.objects.create(
+            sede=sede,
+            numero=999,
+            capacidad_sillas=999
+        )
+
+    # Generar código único (max_length=20)
+    base_codigo = f'LIMBO-{sede.nombre[:10].upper().replace(" ", "")}'[:20]
+    codigo = base_codigo
+    if Grupo.objects.filter(codigo=codigo).exists():
+        sufijo = f'-{sede.id}'
+        codigo = f'{base_codigo[:20 - len(sufijo)]}{sufijo}'
+
+    return Grupo.objects.create(
+        salon=salon_limbo,
+        codigo=codigo
+    )
+
+
 @login_required
 def mandar_limbo(request, pk):
     if not es_usuario_limbo(request.user):
@@ -24,27 +56,13 @@ def mandar_limbo(request, pk):
         messages.info(request, 'El alumno ya se encuentra en el Limbo.')
         return redirect('alumno_detail', pk=pk)
 
+    if not alumno.grupo_actual or not alumno.grupo_actual.salon or not alumno.grupo_actual.salon.sede:
+        messages.error(request, 'El alumno no tiene un grupo/sede asignado para determinar su grupo Limbo.')
+        return redirect('alumno_detail', pk=pk)
+
     # Obtener la sede actual del alumno
     sede = alumno.grupo_actual.salon.sede
-
-    # Buscar un grupo LIMBO ya existente en esa sede
-    grupo_limbo = Grupo.objects.filter(
-        codigo__istartswith='LIMBO',
-        salon__sede=sede
-    ).first()
-
-    if not grupo_limbo:
-        # Obtener o crear un salón "Limbo" en la sede (número 999 como convención)
-        salon_limbo, _ = Salon.objects.get_or_create(
-            sede=sede,
-            numero=999,
-            defaults={'capacidad_sillas': 999}
-        )
-        # Crear el grupo LIMBO para esa sede
-        grupo_limbo = Grupo.objects.create(
-            salon=salon_limbo,
-            codigo=f'LIMBO-{sede.nombre[:10].upper().replace(" ", "")}'
-        )
+    grupo_limbo = obtener_o_crear_grupo_limbo(sede)
 
     alumno.estado = 'limbo'
     alumno.grupo_actual = grupo_limbo
@@ -82,22 +100,7 @@ def mandar_grupo_limbo(request, pk):
         return redirect('grupo_detalle', pk=pk)
 
     sede = grupo.salon.sede
-
-    grupo_limbo = Grupo.objects.filter(
-        codigo__istartswith='LIMBO',
-        salon__sede=sede
-    ).first()
-
-    if not grupo_limbo:
-        salon_limbo, _ = Salon.objects.get_or_create(
-            sede=sede,
-            numero=999,
-            defaults={'capacidad_sillas': 999}
-        )
-        grupo_limbo = Grupo.objects.create(
-            salon=salon_limbo,
-            codigo=f'LIMBO-{sede.nombre[:10].upper().replace(" ", "")}'
-        )
+    grupo_limbo = obtener_o_crear_grupo_limbo(sede)
 
     for alumno in alumnos:
         alumno.estado = 'limbo'

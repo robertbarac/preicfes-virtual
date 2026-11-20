@@ -211,8 +211,22 @@ def vincular_alumnos_con_usuarios():
     print(f"✅ Se vincularon automáticamente {vinculados} alumnos presenciales con sus cuentas de usuario de la plataforma.")
 
 
+def sincronizar_secuencias_bd():
+    """Resetea las secuencias autoincrementales de PostgreSQL tras cargas masivas."""
+    from django.core.management.color import no_style
+    from django.db import connection
+    from django.apps import apps
+    sqls = connection.ops.sequence_reset_sql(no_style(), apps.get_models())
+    if sqls:
+        with connection.cursor() as cursor:
+            for sql in sqls:
+                cursor.execute(sql)
+        print(f"🔧 Sincronizadas {len(sqls)} secuencias de base de datos.")
+
+
 if __name__ == '__main__':
     archivos = sys.argv[1:] if len(sys.argv) > 1 else ['virtualrespaldo.json', 'respaldo.json']
     for archivo in archivos:
         cargar_fixture_seguro(archivo)
     vincular_alumnos_con_usuarios()
+    sincronizar_secuencias_bd()
