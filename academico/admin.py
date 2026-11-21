@@ -168,14 +168,15 @@ def procesar_transicion_limbo(alumno):
             )
 
         alumno.grupo_actual = grupo_limbo
+        alumno.grupo_secundario = None
 
 
 @admin.register(Alumno)
 class AlumnoAdmin(admin.ModelAdmin):
     form = AlumnoAdminForm
-    list_display = ('nombres', 'primer_apellido', 'estado', 'fecha_ingreso', 'fecha_culminacion', 'tipo_programa', 'municipio', 'get_departamento', 'grupo_actual', 'nombres_padre', 'celular_padre', 'nombres_madre', 'celular_madre')
+    list_display = ('nombres', 'primer_apellido', 'estado', 'fecha_ingreso', 'fecha_culminacion', 'tipo_programa', 'municipio', 'get_departamento', 'grupo_actual', 'grupo_secundario', 'nombres_padre', 'celular_padre', 'nombres_madre', 'celular_madre')
     list_editable = ('estado',)
-    list_filter = ('estado', EstadoDeudaFilter, FechaCulminacionAlumnoRangeFilter, 'tipo_programa', 'es_becado', 'municipio', 'municipio__departamento', 'fecha_ingreso', 'grupo_actual')
+    list_filter = ('estado', EstadoDeudaFilter, FechaCulminacionAlumnoRangeFilter, 'tipo_programa', 'es_becado', 'municipio', 'municipio__departamento', 'fecha_ingreso', 'grupo_actual', 'grupo_secundario')
     search_fields = ('nombres', 'primer_apellido', 'segundo_apellido', 'identificacion', 'nombres_padre', 'celular_padre', 'nombres_madre', 'celular_madre')
     actions = ['enviar_a_limbo']
 
@@ -185,7 +186,7 @@ class AlumnoAdmin(admin.ModelAdmin):
         for alumno in queryset:
             alumno.estado = 'limbo'
             procesar_transicion_limbo(alumno)
-            alumno.save(update_fields=['estado', 'grupo_actual'])
+            alumno.save(update_fields=['estado', 'grupo_actual', 'grupo_secundario'])
             count += 1
         self.message_user(request, f'{count} alumnos fueron enviados al Limbo exitosamente.')
 
@@ -217,14 +218,15 @@ class AlumnoAdmin(admin.ModelAdmin):
                 # Mostrar todos los municipios si es superusuario
                 kwargs["queryset"] = Municipio.objects.all()
 
-        # Filtrar grupos según el municipio del alumno
-        if db_field.name == "grupo_actual":
+        # Filtrar grupos según el municipio del alumno (o del usuario si está creando)
+        if db_field.name in ("grupo_actual", "grupo_secundario"):
             alumno_id = request.resolver_match.kwargs.get('object_id')
             if alumno_id:
                 alumno = Alumno.objects.get(id=alumno_id)
                 if alumno.municipio:
-                    # Filtrar grupos por el municipio del alumno
                     kwargs["queryset"] = Grupo.objects.filter(salon__sede__municipio=alumno.municipio)
+            elif not request.user.is_superuser and getattr(request.user, 'municipio', None):
+                kwargs["queryset"] = Grupo.objects.filter(salon__sede__municipio=request.user.municipio)
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 

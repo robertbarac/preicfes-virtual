@@ -119,6 +119,15 @@ class Alumno(models.Model):
     )
     municipio = models.ForeignKey(Municipio, on_delete=models.PROTECT, related_name="alumnos")
     grupo_actual = models.ForeignKey(Grupo, on_delete=models.PROTECT, related_name="alumnos_actuales")
+    grupo_secundario = models.ForeignKey(
+        Grupo,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="alumnos_secundarios",
+        verbose_name="Segundo Grupo (Opcional)",
+        help_text="Grupo adicional si el alumno asiste a un segundo horario (ej. sábados)."
+    )
     vendedor = models.ForeignKey(
         Vendedor, 
         on_delete=models.SET_NULL, 
@@ -128,6 +137,10 @@ class Alumno(models.Model):
         verbose_name="Vendedor"
     )
 
+    @property
+    def grupos_ids(self):
+        return [gid for gid in (self.grupo_actual_id, self.grupo_secundario_id) if gid]
+
     def clean(self):
         super().clean()
         try:
@@ -136,6 +149,18 @@ class Alumno(models.Model):
                     raise ValidationError({'grupo_actual': 'El grupo seleccionado no pertenece al municipio del alumno.'})
         except Exception:
             pass
+
+        if self.grupo_secundario_id:
+            if self.grupo_actual_id and self.grupo_secundario_id == self.grupo_actual_id:
+                raise ValidationError({'grupo_secundario': 'El segundo grupo no puede ser el mismo que el grupo actual.'})
+            try:
+                if self.grupo_secundario and self.municipio:
+                    if self.grupo_secundario.salon.sede.municipio != self.municipio:
+                        raise ValidationError({'grupo_secundario': 'El segundo grupo debe pertenecer al mismo municipio del alumno.'})
+            except ValidationError:
+                raise
+            except Exception:
+                pass
 
         if self.identificacion:
             ident_clean = str(self.identificacion).strip()

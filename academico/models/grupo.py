@@ -17,5 +17,13 @@ class Grupo(models.Model):
             )
         super().save(*args, **kwargs)
 
+    def obtener_alumnos(self):
+        """Retorna todos los alumnos pertenecientes a este grupo (como grupo principal o secundario)."""
+        from django.db.models import Q
+        from .alumno import Alumno
+        return Alumno.objects.filter(
+            Q(grupo_actual=self) | Q(grupo_secundario=self)
+        ).distinct().order_by('primer_apellido', 'segundo_apellido', 'nombres')
+
     def __str__(self):
         return f"{self.codigo} - {self.salon.sede.nombre}"

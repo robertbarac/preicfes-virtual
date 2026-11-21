@@ -68,8 +68,8 @@ class GrupoDetailView(LoginRequiredMixin, DetailView):
         context['graphic'] = graphic
         # --- Fin Gráfico ---
 
-        # Obtener alumnos del grupo
-        alumnos = Alumno.objects.filter(grupo_actual=grupo).order_by('primer_apellido', 'segundo_apellido', 'nombres')
+        # Obtener alumnos del grupo (como grupo principal o secundario)
+        alumnos = grupo.obtener_alumnos()
         context['alumnos'] = alumnos
 
         # Identificar alumnos con cuotas vencidas

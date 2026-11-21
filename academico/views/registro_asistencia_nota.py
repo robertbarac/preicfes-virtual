@@ -26,9 +26,9 @@ class RegistroAsistenciaNotaView(LoginRequiredMixin, UserPassesTestMixin, Detail
         context = super().get_context_data(**kwargs)
         clase = self.get_object()
         
-        # Obtener o crear registros de asistencia y nota para cada alumno
-        alumnos_registros = []  # Nota: ahora es con "s" en todos los lugares
-        for alumno in clase.grupo.alumnos_actuales.all():
+        # Obtener o crear registros de asistencia y nota para cada alumno (grupo principal y secundario)
+        alumnos_registros = []
+        for alumno in clase.grupo.obtener_alumnos():
             asistencia, _ = Asistencia.objects.get_or_create(
                 alumno=alumno,
                 clase=clase,
@@ -65,8 +65,8 @@ class RegistroAsistenciaNotaView(LoginRequiredMixin, UserPassesTestMixin, Detail
             messages.error(request, 'No tiene permiso para registrar asistencia en este momento.')
             return redirect('profesor_clases', profesor_id=request.user.id)
         
-        # Procesar cada alumno
-        for alumno in clase.grupo.alumnos_actuales.all():
+        # Procesar cada alumno (grupo principal y secundario)
+        for alumno in clase.grupo.obtener_alumnos():
             # Actualizar asistencia
             asistencia = Asistencia.objects.get_or_create(
                 alumno=alumno,

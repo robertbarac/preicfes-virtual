@@ -25,7 +25,7 @@ class GrupoCalificarDiagnosticoView(LoginRequiredMixin, View):
 
     def get(self, request, grupo_id):
         grupo = get_object_or_404(Grupo, id=grupo_id)
-        alumnos = Alumno.objects.filter(grupo_actual=grupo).order_by('primer_apellido', 'segundo_apellido')
+        alumnos = grupo.obtener_alumnos()
         simulacros = SimulacroDiagnostico.objects.all()
 
         context = {

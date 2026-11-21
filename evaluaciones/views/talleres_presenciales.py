@@ -71,25 +71,31 @@ class MisClasesPresencialesView(LoginRequiredMixin, ListView):
         user = self.request.user
         alumno = get_alumno_for_user(user)
             
-        if not alumno or not alumno.grupo_actual:
+        if not alumno or not alumno.grupos_ids:
             return Clase.objects.none()
+
+        grupos_ids = alumno.grupos_ids
+        base_qs = Clase.objects.filter(
+            grupo_id__in=grupos_ids
+        ).select_related('materia', 'salon', 'salon__sede', 'grupo', 'profesor', 'taller')
 
         fecha_str = self.request.GET.get('fecha')
         if fecha_str:
             try:
                 fecha_filtro = datetime.strptime(fecha_str, '%Y-%m-%d').date()
-                return Clase.objects.filter(
-                    grupo=alumno.grupo_actual,
-                    fecha=fecha_filtro
-                ).select_related('materia', 'salon', 'profesor', 'taller').order_by('horario')
+                return base_qs.filter(fecha=fecha_filtro).order_by('horario')
             except ValueError:
                 pass
 
-        hoy = timezone.now().date()
-        return Clase.objects.filter(
-            grupo=alumno.grupo_actual,
-            fecha__gte=hoy - timedelta(days=2)
-        ).select_related('materia', 'salon', 'profesor', 'taller').order_by('-fecha', 'horario')
+        hoy = timezone.localtime(timezone.now()).date()
+        clases_hoy = base_qs.filter(fecha=hoy).order_by('horario')
+        if clases_hoy.exists():
+            return clases_hoy
+
+        return base_qs.filter(
+            fecha__gte=hoy - timedelta(days=2),
+            fecha__lte=hoy
+        ).order_by('-fecha', 'horario')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

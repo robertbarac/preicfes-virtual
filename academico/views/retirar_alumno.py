@@ -19,7 +19,8 @@ def retirar_alumno(request, pk):
     alumno.estado = 'retirado'
     alumno.fecha_retiro = timezone.localtime(timezone.now()).date()
     alumno.grupo_actual = grupo_retirados
+    alumno.grupo_secundario = None
     # Usar update_fields para evitar la validación del método clean()
-    alumno.save(update_fields=['estado', 'fecha_retiro', 'grupo_actual'])
+    alumno.save(update_fields=['estado', 'fecha_retiro', 'grupo_actual', 'grupo_secundario'])
     messages.success(request, 'El alumno ha sido retirado exitosamente.')
     return redirect('alumno_detail', pk=alumno.pk)

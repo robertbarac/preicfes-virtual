@@ -66,8 +66,9 @@ def mandar_limbo(request, pk):
 
     alumno.estado = 'limbo'
     alumno.grupo_actual = grupo_limbo
+    alumno.grupo_secundario = None
     # Usar update_fields para evitar la validación del método clean()
-    alumno.save(update_fields=['estado', 'grupo_actual'])
+    alumno.save(update_fields=['estado', 'grupo_actual', 'grupo_secundario'])
 
     messages.success(request, f'El alumno ha sido enviado al Limbo. Grupo asignado: {grupo_limbo.codigo}.')
     return redirect('alumno_detail', pk=alumno.pk)
@@ -105,7 +106,8 @@ def mandar_grupo_limbo(request, pk):
     for alumno in alumnos:
         alumno.estado = 'limbo'
         alumno.grupo_actual = grupo_limbo
-        alumno.save(update_fields=['estado', 'grupo_actual'])
+        alumno.grupo_secundario = None
+        alumno.save(update_fields=['estado', 'grupo_actual', 'grupo_secundario'])
 
     messages.success(
         request, 

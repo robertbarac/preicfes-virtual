@@ -39,7 +39,7 @@ class AlumnoForm(forms.ModelForm):
             'celular', 
             'nombres_padre', 'primer_apellido_padre', 'segundo_apellido_padre', 'celular_padre',
             'nombres_madre', 'primer_apellido_madre', 'segundo_apellido_madre', 'celular_madre',
-            'municipio', 'grupo_actual'
+            'municipio', 'grupo_actual', 'grupo_secundario'
         ]
         
         help_texts = {
@@ -49,7 +49,8 @@ class AlumnoForm(forms.ModelForm):
             'fecha_nacimiento': 'Fecha de nacimiento del estudiante',
             'identificacion': 'Número de documento de identidad',
             'municipio': 'Ciudad de residencia',
-            'grupo_actual': 'Grupo al que pertenece el estudiante'
+            'grupo_actual': 'Grupo principal al que pertenece el estudiante',
+            'grupo_secundario': 'Segundo grupo opcional (ej. horario de sábados, mismo municipio)'
         }
 
 

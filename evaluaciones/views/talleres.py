@@ -241,11 +241,11 @@ class TallerResolverView(LoginRequiredMixin, ProgramaVisibilidadMixin, TemplateV
             from academico.models import Asistencia
             
             alumno = getattr(user, 'perfil_alumno', None)
-            if alumno and alumno.grupo_actual:
-                asignaciones = AsignacionTallerGrupo.objects.filter(taller=taller, grupo=alumno.grupo_actual, activo=True)
+            if alumno and alumno.grupos_ids:
+                asignaciones = AsignacionTallerGrupo.objects.filter(taller=taller, grupo_id__in=alumno.grupos_ids, activo=True)
                 if asignaciones.exists():
-                    # Verificar si registra asistencia presencial a la clase de su grupo
-                    tiene_asistencia = Asistencia.objects.filter(alumno=alumno, clase__grupo=alumno.grupo_actual, asistio=True).exists()
+                    # Verificar si registra asistencia presencial a la clase de alguno de sus grupos
+                    tiene_asistencia = Asistencia.objects.filter(alumno=alumno, clase__grupo_id__in=alumno.grupos_ids, asistio=True).exists()
                     if not tiene_asistencia:
                         messages.error(request, "Acceso Restringido: Debes contar con asistencia confirmada a tu clase presencial para presentar este examen/taller.")
                         return redirect('evaluaciones:taller_detail', pk=taller.pk)

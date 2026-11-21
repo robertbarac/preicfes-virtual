@@ -59,6 +59,12 @@
                         <dt class="text-sm font-medium text-gray-500">Grupo Actual</dt>
                         <dd class="text-sm text-gray-900">{{ alumno.grupo_actual.codigo }}</dd>
                     </div>
+                    {% if alumno.grupo_secundario %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Segundo Grupo</dt>
+                        <dd class="text-sm text-indigo-700 font-semibold">{{ alumno.grupo_secundario.codigo }} ({{ alumno.grupo_secundario.salon.sede.nombre }})</dd>
+                    </div>
+                    {% endif %}
                     <div>
                         <dt class="text-sm font-medium text-gray-500">Sede</dt>
                         <dd class="text-sm text-gray-900">{{ alumno.grupo_actual.salon.sede.nombre }}</dd>

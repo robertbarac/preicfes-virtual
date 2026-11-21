@@ -21,7 +21,7 @@ from ..calculos import calificar, calcular_puntaje_icfes, modificar_puntajes
 class GrupoCalificarSimulacroView(LoginRequiredMixin, View):
     def get(self, request, grupo_id):
         grupo = get_object_or_404(Grupo, id=grupo_id)
-        alumnos = Alumno.objects.filter(grupo_actual=grupo).order_by('primer_apellido', 'segundo_apellido')
+        alumnos = grupo.obtener_alumnos()
         simulacros = Simulacro.objects.all()
 
         context = {
